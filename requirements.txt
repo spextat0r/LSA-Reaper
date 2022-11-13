@@ -1,0 +1,2 @@
+python-nmap>=0.7.1
+netifaces>=0.11.0
