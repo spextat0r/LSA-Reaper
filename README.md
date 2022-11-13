@@ -15,6 +15,12 @@ git clone https://github.com/SecureAuthCorp/impacket.git
 cd impacket
 sudo python3 setup.py install
 ```
+or
+```
+git clone https://github.com/samiam1086/LSA-Reaper.git
+cd LSA-Reaper
+sudo sh setup.sh
+```
 
 ## Methodology
 LSA-Reaper will begin by ping sweeping all provided IPs or IP ranges for alive hosts. LSA-Reaper will then create a SMB share with a random username and password that will act as the exfiltration point. LSA-Reaper will then execute the net use command on the victim machine via wmiexec or atexec to make the victim machine mount the share as a network drive and then execute msbuild to execute the payload which will dump LSA and save it to the mounted SMB share.
