@@ -796,7 +796,7 @@ if __name__ == '__main__':
                                                                          '(default ADMIN$)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
-    parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON')
+    parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-drive', action='store', default = 'Q', help='Set the drive letter for the remote device to connect with default=Q')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
@@ -810,7 +810,6 @@ if __name__ == '__main__':
                         help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
 
     group = parser.add_argument_group('authentication')
-
     group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
     group.add_argument('-no-pass', action="store_true", help='don\'t ask for password (useful for -k)')
     group.add_argument('-k', action="store_true",
