@@ -8,11 +8,11 @@ LSA-Reaper is a remote command line LSA dumping tool that uses [Impacket's](http
 ## Requirements
 ```
 Linux
-impacket
+Impacket
 pip pypykatz
 pip netifaces
 pip python-nmap
-samba
+Samba
 ```
 
 ## Installation
