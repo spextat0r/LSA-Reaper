@@ -39,7 +39,7 @@ LSA-Reaper will begin by ping sweeping all provided IPs or IP ranges for alive h
 ```
 sudo python3 lsa-reaper.py
 ```
-![](/assets/helpimage.png)
+![](/assets/hlp.png)
 
 ## Examples
 ```
