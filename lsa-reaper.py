@@ -696,6 +696,7 @@ def mt_execute(ip): # multithreading requires a function
         elif options.method == 'atexec':
             atsvc_exec = TSCH_EXEC(username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip, command, None, False)
             atsvc_exec.play(ip)
+        print("{} {}: Completed".format(green_plus, ip))
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
