@@ -310,16 +310,13 @@ class WMIEXEC:
         try:
             iInterface = dcom.CoCreateInstanceEx(wmi.CLSID_WbemLevel1Login, wmi.IID_IWbemLevel1Login)
             iWbemLevel1Login = wmi.IWbemLevel1Login(iInterface)
-            iWbemServices = iWbemLevel1Login.NTLMLogin('//./root/cimv2', NULL, NULL)
+            iWbemServices = iWbemLevel1Login.NTLMLogin('//./root/cimv2', NULL, NULL) # if firewall blocking program hangs here
             iWbemLevel1Login.RemRelease()
 
             win32Process, _ = iWbemServices.GetObject('Win32_Process')
 
             self.shell = RemoteShell(self.__share, win32Process, smbConnection, self.__shell_type, silentCommand)
-            if self.__command != ' ':
-                self.shell.onecmd(self.__command)
-            else:
-                self.shell.cmdloop()
+            self.shell.onecmd(self.__command)
         except  (Exception, KeyboardInterrupt) as e:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
@@ -362,78 +359,6 @@ class RemoteShell(cmd.Cmd):
         # If the user wants to just execute a command without cmd.exe, set raw command and set no output
         if self.__silentCommand is True:
             self.__shell = ''
-
-    def do_shell(self, s):
-        os.system(s)
-
-    def do_help(self, line):
-        print("""
- lcd {path}                 - changes the current local directory to {path}
- exit                       - terminates the server process (and this session)
- lput {src_file, dst_path}   - uploads a local file to the dst_path (dst_path = default current directory)
- lget {file}                 - downloads pathname to the current local dir
- ! {cmd}                    - executes a local shell cmd
-""")
-
-    def do_lcd(self, s):
-        if s == '':
-            print(os.getcwd())
-        else:
-            try:
-                os.chdir(s)
-            except Exception as e:
-                logging.error(str(e))
-
-    def do_lget(self, src_path):
-
-        try:
-            import ntpath
-            newPath = ntpath.normpath(ntpath.join(self.__pwd, src_path))
-            drive, tail = ntpath.splitdrive(newPath)
-            filename = ntpath.basename(tail)
-            fh = open(filename, 'wb')
-            logging.info("Downloading %s\\%s" % (drive, tail))
-            self.__transferClient.getFile(drive[:-1] + '$', tail, fh.write)
-            fh.close()
-
-        except Exception as e:
-            logging.error(str(e))
-
-            if os.path.exists(filename):
-                os.remove(filename)
-
-    def do_lput(self, s):
-        try:
-            params = s.split(' ')
-            if len(params) > 1:
-                src_path = params[0]
-                dst_path = params[1]
-            elif len(params) == 1:
-                src_path = params[0]
-                dst_path = ''
-
-            src_file = os.path.basename(src_path)
-            fh = open(src_path, 'rb')
-            dst_path = dst_path.replace('/', '\\')
-            import ntpath
-            pathname = ntpath.join(ntpath.join(self.__pwd, dst_path), src_file)
-            drive, tail = ntpath.splitdrive(pathname)
-            logging.info("Uploading %s to %s" % (src_file, pathname))
-            self.__transferClient.putFile(drive[:-1] + '$', tail, fh.read)
-            fh.close()
-        except Exception as e:
-            logging.critical(str(e))
-            pass
-
-    def do_exit(self, s):
-        return True
-
-    def do_EOF(self, s):
-        print()
-        return self.do_exit(s)
-
-    def emptyline(self):
-        return False
 
     def do_cd(self, s):
         self.execute_remote('cd ' + s)
