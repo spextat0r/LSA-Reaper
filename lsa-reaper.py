@@ -799,7 +799,7 @@ if __name__ == '__main__':
     parser.add_argument('-drive', action='store', default = 'Q', help='Set the drive letter for the remote device to connect with default=Q')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
-    parser.add_argument('-ip', action='store', help='Your local ip for the remote device to connect to')
+    parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
                                                        'map the result with '
