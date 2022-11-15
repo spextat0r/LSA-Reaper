@@ -186,7 +186,7 @@ class TSCH_EXEC:
   </Actions>
 </Task>
         """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]),
-(xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
+            (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
         taskCreated = False
         try:
             if logging.getLogger().level == logging.DEBUG:
