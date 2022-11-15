@@ -890,6 +890,10 @@ if __name__ == '__main__':
 
         if options.ip is not None: # did they give us the local ip in the command line
             local_ip = options.ip
+            ifaces = ni.interfaces()
+            if local_ip in ifaces:
+                local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
+                print("local IP => " + local_ip)
         else:
             # print local interfaces and ips
             print("")
