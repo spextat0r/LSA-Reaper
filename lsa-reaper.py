@@ -14,7 +14,6 @@ import argparse
 import threading
 import subprocess
 import netifaces as ni
-import concurrent.futures
 from base64 import b64encode
 from datetime import datetime
 from pebble import ProcessPool
