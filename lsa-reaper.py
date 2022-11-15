@@ -185,8 +185,8 @@ class TSCH_EXEC:
     </Exec>
   </Actions>
 </Task>
-        """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]), 
-            (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
+        """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]),
+(xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
         taskCreated = False
         try:
             if logging.getLogger().level == logging.DEBUG:
@@ -240,6 +240,7 @@ class TSCH_EXEC:
         waitOnce = True
         while True:
             try:
+                time.sleep(5)
                 if logging.getLogger().level == logging.DEBUG:
                     logging.info('{}: Attempting to read ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
                 smbConnection.getFile('ADMIN$', 'Temp\\%s' % tmpFileName, output_callback)
@@ -719,14 +720,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(add_help=True, description="")
     parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
-    parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from '
-                                                           '(default ADMIN$)')
+    parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from (default ADMIN$) (wmiexec ONLY)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-drive', action='store', default = 'Q', help='Set the drive letter for the remote device to connect with default=Q')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
-    parser.add_argument('-timeout', action='store', type=int, default=10, help='Set the timeout in seconds for each thread default=10')
+    parser.add_argument('-timeout', action='store', type=int, default=15, help='Set the timeout in seconds for each thread default=15 (WARNING atexec requires a ~8 second minumum)')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
