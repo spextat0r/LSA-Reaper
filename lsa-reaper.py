@@ -17,6 +17,7 @@ import netifaces as ni
 import concurrent.futures
 from base64 import b64encode
 from datetime import datetime
+from pebble import ProcessPool
 
 from six import PY2
 from impacket import version
@@ -31,6 +32,7 @@ from impacket.ntlm import compute_lmhash, compute_nthash
 from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
 from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_GSS_NEGOTIATE, RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 from impacket.smbconnection import SMBConnection, SMB_DIALECT, SMB2_DIALECT_002, SMB2_DIALECT_21
+
 
 
 OUTPUT_FILENAME = '__' + str(time.time())
@@ -295,13 +297,13 @@ class WMIEXEC:
             dialect = smbConnection.getDialect()
             if logging.getLogger().level == logging.DEBUG:
                 if dialect == SMB_DIALECT:
-                    logging.info("SMBv1 dialect used")
+                    logging.info("{}: SMBv1 dialect used".format(addr))
                 elif dialect == SMB2_DIALECT_002:
-                    logging.info("SMBv2.0 dialect used")
+                    logging.info("{}: SMBv2.0 dialect used".format(addr))
                 elif dialect == SMB2_DIALECT_21:
-                    logging.info("SMBv2.1 dialect used")
+                    logging.info("{}: SMBv2.1 dialect used".format(addr))
                 else:
-                    logging.info("SMBv3.0 dialect used")
+                    logging.info("{}: SMBv3.0 dialect used".format(addr))
         else:
             smbConnection = None
 
@@ -321,7 +323,7 @@ class WMIEXEC:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
-            logging.error(str(e))
+            logging.error('{}: {}'.format(addr, str(e)))
             if smbConnection is not None:
                 smbConnection.logoff()
             dcom.disconnect()
@@ -686,6 +688,7 @@ def setup_share():
     return share_name, share_user, share_pass, payload_name, share_group
 
 def mt_execute(ip): # multithreading requires a function
+    print("{} Attacking {}".format(green_plus, ip))
     try:
         if options.method == 'wmiexec':
             executer = WMIEXEC(command, username, password, domain, options.hashes, options.aesKey, options.share, False, options.k, options.dc_ip, 'cmd')
@@ -698,7 +701,7 @@ def mt_execute(ip): # multithreading requires a function
             import traceback
 
             traceback.print_exc()
-        logging.error(str(e))
+        logging.error('{}: {}'.format(ip, str(e)))
         pass
 
 # Process command-line arguments.
@@ -723,6 +726,7 @@ if __name__ == '__main__':
     parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-drive', action='store', default = 'Q', help='Set the drive letter for the remote device to connect with default=Q')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
+    parser.add_argument('-timeout', action='store', type=int, default=10, help='Set the timeout in seconds for each thread default=10')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
@@ -811,8 +815,6 @@ if __name__ == '__main__':
         else:
             drive_letter = 'Q'
 
-
-
         if options.ip is not None: # did they give us the local ip in the command line
             local_ip = options.ip
             ifaces = ni.interfaces()
@@ -857,21 +859,18 @@ if __name__ == '__main__':
         print("")
 
         # multithreading yeah
-        with concurrent.futures.ThreadPoolExecutor(max_workers=options.threads) as thread_exe:
+        with ProcessPool(max_workers=options.threads) as thread_exe: # changed to pebble from concurrent futures because pebble supports timeout correctly
             for ip in addresses:
                 if options.localauth:
                     domain = ip
-                print("{} Attacking {}".format(green_plus, ip))
                 try:
-                    out = thread_exe.submit(mt_execute, ip)
+                    out = thread_exe.schedule(mt_execute, (ip,), timeout=options.timeout)
                 except Exception as e:
                     if logging.getLogger().level == logging.DEBUG:
                         import traceback
-
                         traceback.print_exc()
                     logging.error(str(e))
                     continue
-
                 except KeyboardInterrupt as e:
                     continue
 
