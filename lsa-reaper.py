@@ -185,7 +185,7 @@ class TSCH_EXEC:
     </Exec>
   </Actions>
 </Task>
-        """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]), 
+        """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]),
             (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
         taskCreated = False
         try:
@@ -502,12 +502,14 @@ def load_smbclient_auth_file(path):
 ############################################################################### END OF WMIEXEC#####################################################
 
 def do_ip(inpu): # check if the inputted ips are up so we dont scan thigns we dont need to
+    print('\n[scanning hosts]')
     scanner = nmap.PortScanner()
     if os.path.isfile(inpu):  # if its in a file the arguments are different
         scanner.scan(arguments='-n -sn -iL {}'.format(inpu))
     else:
         scanner.scan(hosts=inpu, arguments='-n -sn')
     uphosts = scanner.all_hosts()
+    print('[scan complete]')
 
     return uphosts
 
@@ -739,7 +741,7 @@ if __name__ == '__main__':
 
     group = parser.add_argument_group('authentication')
     group.add_argument('-localauth', action='store_true', default = False, help='Authenticate with a local account to the machine')
-    group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
+    group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH or just NTHASH')
     group.add_argument('-no-pass', action="store_true", help='don\'t ask for password (useful for -k)')
     group.add_argument('-k', action="store_true",
                        help='Use Kerberos authentication. Grabs credentials from ccache file '
@@ -814,6 +816,9 @@ if __name__ == '__main__':
             drive_letter = str(options.drive).upper()
         else:
             drive_letter = 'Q'
+
+        if options.hashes is not None and options.hashes.find(':') == -1: # quick check to prevent formatting error with hashes
+            options.hashes = ':{}'.format(options.hashes)
 
         if options.ip is not None: # did they give us the local ip in the command line
             local_ip = options.ip
