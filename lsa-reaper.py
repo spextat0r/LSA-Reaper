@@ -61,7 +61,7 @@ reaper_banner = """
 """.format(color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset)
 
 with open('log.txt', 'a') as f:
-    f.write(timestamp + '\n')
+    f.write('{}{}{}'.format('\n', timestamp, '\n'))
     f.close()
 
 ################################################# START OF ATEXEC #########################################################################
@@ -908,6 +908,10 @@ if __name__ == '__main__':
         print(command)
         print("")
 
+        with open('log.txt', 'a') as f:
+            f.write('Total targets: {}\n'.format(len(addresses)))
+            f.close()
+        print('Total targets: {}'.format(len(addresses)))
         # multithreading yeah
         with ProcessPool(max_workers=options.threads) as thread_exe: # changed to pebble from concurrent futures because pebble supports timeout correctly
             for ip in addresses:
@@ -929,6 +933,12 @@ if __name__ == '__main__':
 
         time.sleep(2)
         os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+
+        with open('log.txt', 'a') as f:
+            f.write('Extracted LSA: {}/{}\n'.format(len([name for name in os.listdir("./loot/{}".format(timestamp)) if os.path.isfile(os.path.join("./loot/{}".format(timestamp), name))])-1, len(addresses)))
+            f.close()
+        #for when you're attacking a lot of targets to quickly see how many we got
+        print('\n{} Total Extracted LSA: {}/{}\n'.format(green_plus, len([name for name in os.listdir("./loot/{}".format(timestamp)) if os.path.isfile(os.path.join("./loot/{}".format(timestamp), name))])-1, len(addresses)))
 
         if options.ap != False:
             print("\n[parsing files]")
