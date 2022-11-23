@@ -259,7 +259,7 @@ class TSCH_EXEC:
         waitOnce = True
         while True:
             try:
-                time.sleep(5)
+                time.sleep(6)
                 with open('log.txt', 'a') as f:
                     f.write('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
                     f.close()
