@@ -60,6 +60,10 @@ reaper_banner = """
     ░  ░      ░        ░  ░      ░        ░  ░     ░  ░            ░  ░   ░  {}                                                                                   
 """.format(color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset)
 
+with open('log.txt', 'a') as f:
+    f.write(timestamp + '\n')
+    f.close()
+
 ################################################# START OF ATEXEC #########################################################################
 class TSCH_EXEC:
     def __init__(self, username='', password='', domain='', hashes=None, aesKey=None, doKerberos=False, kdcHost=None,
@@ -94,6 +98,9 @@ class TSCH_EXEC:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
+            with open('log.txt', 'a') as f:
+                f.write('{}: {}\n'.format(addr, e))
+                f.close()
             logging.error('{}: {}'.format(addr, e))
             if str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') >=0:
                 logging.info('When STATUS_OBJECT_NAME_NOT_FOUND is received, try running again. It might work')
@@ -101,6 +108,9 @@ class TSCH_EXEC:
     def doStuff(self, rpctransport, addr):
         def output_callback(data):
             try:
+                with open('log.txt', 'a') as f:
+                    f.write('{}: {}\n'.format(addr, data.decode(CODEC)))
+                    f.close()
                 if logging.getLogger().level == logging.DEBUG:
                     print('{}: {}'.format(addr, data.decode(CODEC)))
             except UnicodeDecodeError:
@@ -189,11 +199,17 @@ class TSCH_EXEC:
             (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
         taskCreated = False
         try:
+            with open('log.txt', 'a') as f:
+                f.write('{}: Creating task \\{}\n'.format(addr, tmpName))
+                f.close()
             if logging.getLogger().level == logging.DEBUG:
                 logging.info('{}: Creating task \\{}'.format(addr, tmpName))
             tsch.hSchRpcRegisterTask(dce, '\\%s' % tmpName, xml, tsch.TASK_CREATE, NULL, tsch.TASK_LOGON_NONE)
             taskCreated = True
 
+            with open('log.txt', 'a') as f:
+                f.write('{}: Running task \\{}\n'.format(addr, tmpName))
+                f.close()
             if logging.getLogger().level == logging.DEBUG:
                 logging.info('{}: Running task \\{}'.format(addr, tmpName))
             done = False
@@ -217,6 +233,9 @@ class TSCH_EXEC:
                     done = True
                 else:
                     time.sleep(2)
+            with open('log.txt', 'a') as f:
+                f.write('{}: Deleting task \\{}\n'.format(addr, tmpName))
+                f.close()
             if logging.getLogger().level == logging.DEBUG:
                 logging.info('{}: Deleting task \\{}'.format(addr, tmpName))
             tsch.hSchRpcDelete(dce, '\\%s' % tmpName)
@@ -241,6 +260,9 @@ class TSCH_EXEC:
         while True:
             try:
                 time.sleep(5)
+                with open('log.txt', 'a') as f:
+                    f.write('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
+                    f.close()
                 if logging.getLogger().level == logging.DEBUG:
                     logging.info('{}: Attempting to read ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
                 smbConnection.getFile('ADMIN$', 'Temp\\%s' % tmpFileName, output_callback)
@@ -257,6 +279,9 @@ class TSCH_EXEC:
                         raise
                 else:
                     raise
+        with open('log.txt', 'a') as f:
+            f.write('{}: Deleting file ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
+            f.close()
         if logging.getLogger().level == logging.DEBUG:
             logging.debug('{}: Deleting file ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
         smbConnection.deleteFile('ADMIN$', 'Temp\\%s' % tmpFileName)
@@ -295,6 +320,17 @@ class WMIEXEC:
                                             self.__nthash, self.__aesKey, kdcHost=self.__kdcHost)
 
             dialect = smbConnection.getDialect()
+            with open('log.txt', 'a') as f:
+                if dialect == SMB_DIALECT:
+                    f.write("{}: SMBv1 dialect used\n".format(addr))
+                elif dialect == SMB2_DIALECT_002:
+                    f.write("{}: SMBv2.0 dialect used\n".format(addr))
+                elif dialect == SMB2_DIALECT_21:
+                    f.write("{}: SMBv2.1 dialect used\n".format(addr))
+                else:
+                    f.write("{}: SMBv3.0 dialect used\n".format(addr))
+                f.close()
+
             if logging.getLogger().level == logging.DEBUG:
                 if dialect == SMB_DIALECT:
                     logging.info("{}: SMBv1 dialect used".format(addr))
@@ -323,6 +359,9 @@ class WMIEXEC:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
+            with open('log.txt', 'a') as f:
+                f.write('{}: {}\n'.format(addr, str(e)))
+                f.close()
             logging.error('{}: {}'.format(addr, str(e)))
             if smbConnection is not None:
                 smbConnection.logoff()
@@ -446,6 +485,9 @@ class RemoteShell(cmd.Cmd):
 
     def send_data(self, data):
         self.execute_remote(data, self.__shell_type)
+        with open('log.txt', 'a') as f:
+            f.write(self.__outputBuffer + '\n')
+            f.close()
         if logging.getLogger().level == logging.DEBUG:
             print(self.__outputBuffer)
         self.__outputBuffer = ''
@@ -704,6 +746,9 @@ def mt_execute(ip): # multithreading requires a function
             import traceback
 
             traceback.print_exc()
+        with open('log.txt', 'a') as f:
+            f.write('{}: {}\n'.format(ip, str(e)))
+            f.close()
         logging.error('{}: {}'.format(ip, str(e)))
         pass
 
@@ -874,6 +919,9 @@ if __name__ == '__main__':
                     if logging.getLogger().level == logging.DEBUG:
                         import traceback
                         traceback.print_exc()
+                    with open('log.txt', 'a') as f:
+                        f.write(str(e) + '\n')
+                        f.close()
                     logging.error(str(e))
                     continue
                 except KeyboardInterrupt as e:
