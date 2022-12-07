@@ -906,15 +906,22 @@ if __name__ == '__main__':
         if options.ip is not None: # did they give us the local ip in the command line
             local_ip = options.ip
             ifaces = ni.interfaces()
-            if local_ip in ifaces:
-                local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
-                print("local IP => " + local_ip)
+            try: # check to see if the interface has an ip
+                if local_ip in ifaces:
+                    local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
+                    print("local IP => " + local_ip)
+            except BaseException as exc:
+                print('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
+                exit(0)
         else:
             # print local interfaces and ips
             print("")
             ifaces = ni.interfaces()
             for face in ifaces:
-                print(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
+                try: # check to see if the interface has an ip
+                    print(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
+                except BaseException as exc:
+                    continue
 
             local_ip = input("\nEnter you local ip: ")
 
