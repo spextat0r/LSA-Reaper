@@ -12,6 +12,7 @@ Impacket
 pip pypykatz
 pip netifaces
 pip python-nmap
+pip Pebble
 Samba
 ```
 
