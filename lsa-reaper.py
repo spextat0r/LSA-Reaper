@@ -1093,7 +1093,7 @@ if __name__ == '__main__':
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user,share_pass))
 
         #automatically find the best drive to use
-        if options.drive is None and options.method == 'wmiexec':
+        if options.drive is None and options.method == 'wmiexec' and options.oe == False:
             drive_letter = auto_drive(addresses, domain)
 
         gen_payload(share_name, payload_name, drive_letter) # creates the payload
