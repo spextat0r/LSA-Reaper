@@ -48,7 +48,7 @@ if __name__ == '__main__':
         exit(1)
 
     parser = argparse.ArgumentParser(add_help=True, description="")
-    parser.add_argument('dir', action='store', help='The directory that holds the .sam files (ex. /home/kali)')
+    parser.add_argument('sam', action='store', help='The directory that holds the .sam files (ex. /home/kali)')
     parser.add_argument('wmi', action='store', help='The directory that holds wmiexec.py (ex /home/kali/impacket/examples)')
     parser.add_argument('reaper', action='store', help='The directory that holds lsa-reaper.py (ex /home/kali/LSA-Reaper)')
     parser.add_argument('-account', action='store', help='Specific account to use (will ignore all others)')
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     command = input('\nEnter the command from lsa-reaper: ')
 
-    for root, dirs, files in os.walk('{}/'.format(options.dir)): # get all file names with .sam
+    for root, dirs, files in os.walk('{}/'.format(options.sam)): # get all file names with .sam
         for file in files:
             if file.endswith('.sam'):
                 file_list.append(file)
