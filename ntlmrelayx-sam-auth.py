@@ -3,7 +3,7 @@
 ##                                                                 ##
 ##                                                                 ##
 ##   This is a helper program for lsa-reaper                       ##
-##   that is ment to be used with ntlmrelayx's SAM dump files      ##
+##   that is meant to be used with ntlmrelayx's SAM dump files      ##
 ##   it will parse the files and auto steal LSA Memory from        ##
 ##   any that have working SAM creds                               ##
 ##                                                                 ##
