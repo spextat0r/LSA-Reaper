@@ -14,6 +14,7 @@
 # sam hash format Username:account_id:LMHHASH:NTHASH:::
 
 import os
+import sys
 import time
 import argparse
 import threading
@@ -97,13 +98,13 @@ if __name__ == '__main__':
                 target_ip = item[:item.find('_')]
                 username = samhash[:samhash.find(':')]
                 password_hash = samhash[samhash.find(':', samhash.find(':')+1)+1: samhash.find(':::')]
-                if options.account is not None:
+                if options.account is not None and options.account != '':
                     if options.account == username:
                         try:
                             out = thread_exe.schedule(execute_order, (password_hash, username, target_ip, command,), timeout=60)
                         except Exception as e:
                             print(str(e))
-                elif options.account is None:
+                elif options.account is None or options.account == '':
                     try:
                         out = thread_exe.schedule(execute_order, (password_hash, username, target_ip, command,), timeout=60)
                     except Exception as e:
