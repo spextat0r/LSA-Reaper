@@ -42,19 +42,6 @@ sudo python3 lsa-reaper.py
 ```
 ![](/assets/hlp.png)
 
-## Arguments
-target - Target is a position argument formatted as domain/username:'Password'@IP for a domain account or username:'Password'@IP for a local machine account for both :'Password' is not required and if left empty will prompt for the account's password. Target is not required if -oe is present.
-
--share - Share is an optional argument for the wmiexec method to determine which share on the remote machine the output of wmiexec should be stored on and retrieved from.
-
--ts - ts or timestamp will add a timestamp to any output.
-
--debug - Debug is an optional argument that will turn debug output (more verbose) on.
-
--oe - oe is an optional argument that will cause LSA-Reaper to only create the payload, command, and SMB share. This argument is quite useful for when you want to use LSA-Reaper's payload and SMB share with another execution method that is not built in to LSA-Reaper such as Impacket's smbexec.py.
-
--ap - ap is an optional argument
-
 ## Examples
 ```
 sudo python3 lsa-reaper.py domain/user:'Password'@ip
