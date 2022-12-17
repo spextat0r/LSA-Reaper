@@ -960,7 +960,7 @@ if __name__ == '__main__':
     parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
-    parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90 (WARNING atexec requires a ~8 second minumum)')
+    parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
