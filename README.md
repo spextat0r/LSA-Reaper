@@ -42,6 +42,15 @@ sudo python3 lsa-reaper.py
 ```
 ![](/assets/hlp.png)
 
+## Arguments
+target - Target is a position argument formatted as domain/username:'Password'@IP for a domain account or username:'Password'@IP for a local machine account for both :'Password' is not required and if left empty will prompt for the account's password. Target is not required if -oe is present.
+
+-share - Share is an optional argument for the wmiexec method to determine which share on the remote machine the output of wmiexec should be stored on and retrieved from.
+
+-ts - ts or timestamp will add a timestamp to any output.
+
+-debug - Debug is a positional argument that will turn debug output (more verbose) on.
+
 ## Examples
 ```
 sudo python3 lsa-reaper.py domain/user:'Password'@ip
