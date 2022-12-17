@@ -49,7 +49,11 @@ target - Target is a position argument formatted as domain/username:'Password'@I
 
 -ts - ts or timestamp will add a timestamp to any output.
 
--debug - Debug is a positional argument that will turn debug output (more verbose) on.
+-debug - Debug is an optional argument that will turn debug output (more verbose) on.
+
+-oe - oe is an optional argument that will cause LSA-Reaper to only create the payload, command, and SMB share. This argument is quite useful for when you want to use LSA-Reaper's payload and SMB share with another execution method that is not built in to LSA-Reaper such as Impacket's smbexec.py.
+
+-ap - ap is an optional argument
 
 ## Examples
 ```
