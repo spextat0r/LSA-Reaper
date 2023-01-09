@@ -1157,8 +1157,9 @@ if __name__ == '__main__':
 
         dmp_files = [f for f in os.listdir("{}/loot/{}/".format(cwd, timestamp)) if f.endswith('.dmp')] # this should enable us to change the filenames to hostname_ip.dmp
         for file in dmp_files:
-            if file[:file.find(".")] in hostnames:
-                os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + addresses[hostnames.index(file[:file.find(".")])])))
+            for name in hostnames:
+                if file[:file.find(".")].lower() == name[:name.find(".")].lower():
+                    os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + addresses[hostnames.index(file[:file.find(".")])])))
 
         if options.ap != False:
             print("\n[parsing files]")
