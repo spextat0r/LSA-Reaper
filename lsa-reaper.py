@@ -1159,7 +1159,7 @@ if __name__ == '__main__':
         for file in dmp_files:
             for name in hostnames:
                 if file[:file.find(".")].lower() == name[:name.find(".")].lower():
-                    os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + addresses[hostnames.index(file[:file.find(".")])])))
+                    os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + addresses[hostnames.index(name)])))
 
         if options.ap != False:
             print("\n[parsing files]")
