@@ -92,4 +92,4 @@ With this set and saved we can move to LSA-Reaper.
 
 Run smbexec-modified.py through proxychains.
 
-![](/assets/smbexecrun.png)
+![](/assets/smbexecrunn.png)
