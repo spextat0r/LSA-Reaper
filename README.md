@@ -78,7 +78,7 @@ First things first you need to run mitm6 and ntlmrelayx
 
 Once these are running you should begin to receive connections. These can be checked using the ```socks``` command within ntlmrelayx. Once you have gotten a connection with Admin Status of True you are good to get the ball rolling.
 
-![]("/assets/sock connection.png")
+![](/assets/sock\ connection.png)
 
 With this connection we no longer need ntlmrelayx gathering connection so we can run the command ```stopservers```
 
