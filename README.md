@@ -83,3 +83,13 @@ Once these are running you should begin to receive connections. These can be che
 With this connection we no longer need ntlmrelayx gathering connection so we can run the command ```stopservers```
 
 ![](/assets/stopservers.png)
+
+Now we need to modify our proxychains.conf in /etc/ (It may be called proxychains4.conf). This is because the ```-socks``` argument on ntlmrelayx starts a socks4 server on local port 1080.
+
+![](/assets/proxychains.png)
+
+With this set and saved we can move to LSA-Reaper.
+
+Run smbexec-modified.py through proxychains.
+
+![](/assets/smbexecrun.png)
