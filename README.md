@@ -96,6 +96,22 @@ When prompted for a password simply press enter.
 
 ![](/assets/smbexecrunn.png)
 
-Now run the command ```net use``` to view if any network drives are mounted on the target server.
+Now run the command ```net use``` to view if any network drives are mounted on the target server. (This is so we can change the drive letter LSA-Reaper uses if the default of Q: is already in use)
 
 ![](/assets/netuse.png)
+
+Now startup LSA-Reaper
+
+![](/assets/runningreaper.png)
+
+Now that LSA-Reaper is running we can begin to execute each command from the large payload individually, (This is a limitation of smbexec and youll lose your shell if you try to run them all at once)
+
+![](/assets/mountshare.png)
+
+![](/assets/msbuild.png)
+
+![](/assets/dismountshare.png)
+
+Now you can press enter to end LSA-Reaper and navigate to the ```loot``` directory within the LSA-Reaper folder and then into the newest loot file. All that is left to do is use pypykatz to dump the DMP file.
+
+![](/assets/dumped.png)
