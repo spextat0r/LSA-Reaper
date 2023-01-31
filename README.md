@@ -68,3 +68,11 @@ sudo python3 lsa-reaper.py -localauth localuser@10.0.0.100
 ![](/assets/Reaper-Running.png)
 
 ![](/assets/example.png)
+
+## Usage with Impacket's ntlmrelayx
+First things first you need to run mitm6 and ntlmrelayx
+![](/assets/mitm6.png)
+![](/assets/mitm6run.png)
+
+![](/assets/ntlmrelay.png)
+![](/assets/relayrun.png)
