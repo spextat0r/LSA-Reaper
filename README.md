@@ -90,6 +90,12 @@ Now we need to modify our proxychains.conf in /etc/ (It may be called proxychain
 
 With this set and saved we can move to LSA-Reaper.
 
-Run smbexec-modified.py through proxychains.
+Run smbexec-modified.py through proxychains. (Note that the domain is not the fqdn which should be testenvironment.local for our example. It MUST be what ntlmrelayx puts for the domain in the socks connections)
+
+When prompted for a password simply press enter.
 
 ![](/assets/smbexecrunn.png)
+
+Now run the command ```net use``` to view if any network drives are mounted on the target server.
+
+![](/assets/netuse.png)
