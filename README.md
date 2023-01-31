@@ -71,8 +71,17 @@ sudo python3 lsa-reaper.py -localauth localuser@10.0.0.100
 
 ## Usage with Impacket's ntlmrelayx
 First things first you need to run mitm6 and ntlmrelayx
+
 ![](/assets/mitm6.png)
 ![](/assets/mitm6run.png)
 
 ![](/assets/ntlmrelay.png)
 ![](/assets/relayrun.png)
+
+Once these are running you should begin to receive connections. These can be checked using the ```socks``` command within ntlmrelayx. Once you have gotten a connection with Admin Status of True you are good to get the ball rolling.
+
+![](/assets/sock connection.png)
+
+With this connection we no longer need ntlmrelayx gathering connection so we can run the command ```stopservers```
+
+![](/assets/stopservers.png)
