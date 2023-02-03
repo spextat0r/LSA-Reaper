@@ -100,7 +100,7 @@ Now run the command ```net use``` to view if any network drives are mounted on t
 
 ![](/assets/netuse.png)
 
-Now startup LSA-Reaper
+Now startup LSA-Reaper with the -oe flag
 
 ![](/assets/runningreaper.png)
 
