@@ -389,6 +389,9 @@ if __name__ == '__main__':
     if password == '' and username != '' and options.hashes is None and options.no_pass is False and options.aesKey is None:
         from getpass import getpass
         password = getpass("Password:")
+    
+    if options.hashes is not None and options.hashes.find(':') == -1: # quick check to prevent formatting error with hashes
+        options.hashes = ':{}'.format(options.hashes)
 
     if options.target_ip is None:
         options.target_ip = remoteName
