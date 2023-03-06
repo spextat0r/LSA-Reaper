@@ -161,11 +161,13 @@ class SMBEXECShell():
             self.send_data(command2run, addr)
         else:
             tmphold = self.send_data(command2run[:command2run.find('&')], addr)
-            if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred').find == -1): # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares
+            if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred') == -1): # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares ##
                 command2run = command2run[command2run.find('&&')+3:]
                 tmphold = self.send_data(command2run[:command2run.find('&')], addr)
                 command2run = command2run[command2run.find('&&') + 3:]
                 tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+            else:
+                print('{}: {}'.format(addr, tmphold))
 
     def finish(self):
         # Just in case the service is still created
