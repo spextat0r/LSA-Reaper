@@ -45,7 +45,7 @@ from impacket.dcerpc.v5 import transport, scmr
 
 
 BATCH_FILENAME = 'execute.bat'
-SERVICE_NAME = 'BTOBTO'
+SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 OUTPUT_FILENAME = '__' + str(time.time())
 CODEC = sys.stdout.encoding
 timestamp = str(datetime.fromtimestamp(time.time())).replace(' ', '_')
