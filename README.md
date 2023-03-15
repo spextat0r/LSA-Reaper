@@ -3,6 +3,8 @@
   <img width="400" height="400" src="/assets/lsareaper.png">
 </p>
 
+## You are responsible for your own actions use this software on your own systems ONLY!
+
 LSA-Reaper is a remote command line LSA dumping tool that uses [Impacket's](https://github.com/SecureAuthCorp/impacket) wmiexec or atexec.
 
 ## Requirements
