@@ -7,6 +7,10 @@
 
 LSA-Reaper is a remote command line LSA dumping tool that uses [Impacket's](https://github.com/SecureAuthCorp/impacket) wmiexec or atexec.
 
+## Credits
+
+[Marantral](https://github.com/Marantral) for being awesome and helping with MsBuild and RegSvr32 payloads!
+
 ## Requirements
 ```
 Linux
