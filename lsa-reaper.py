@@ -11,6 +11,7 @@ import socket
 import random
 import string
 import logging
+import fnmatch
 import argparse
 import threading
 import subprocess
@@ -1272,6 +1273,13 @@ if __name__ == '__main__':
     # Init the example's logger theme
     logger.init(options.ts)
 
+    if options.payload == 'dllsideload' and options.method == 'wmiexec':
+        cont = input("{}[!]{} Warning you are attempting to run dllsideload via wmiexec which will work, however it will hang until timeout do you want to (c)ontinue, (n)o exit, or (y)es switch to smbexec: ".format(color_YELL, color_reset))
+        if cont.lower() == 'n':
+            exit(0)
+        elif cont.lower() == 'y':
+            options.method = 'smbexec'
+
     if options.codec is not None:
         CODEC = options.codec
     else:
@@ -1427,10 +1435,10 @@ if __name__ == '__main__':
         os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
 
         with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('Total Extracted LSA: {}/{}\n'.format(len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-1, len(addresses)))
+            f.write('Total Extracted LSA: {}/{}\n'.format(len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
             f.close()
         # for when you're attacking a lot of targets to quickly see how many we got
-        print('\n{} Total Extracted LSA: {}/{}\n'.format(green_plus, len([name for name in os.listdir("{}/loot/{}".format(cwd, timestamp)) if os.path.isfile(os.path.join("{}/loot/{}".format(cwd, timestamp), name))])-2, len(addresses)))
+        print('\n{} Total Extracted LSA: {}/{}'.format(green_plus, len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
