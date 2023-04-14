@@ -1266,7 +1266,7 @@ if __name__ == '__main__':
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
     parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
-    parser.add_argument('-payloadname', action='store', help='Set the name for the payload file')
+    parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
@@ -1277,10 +1277,10 @@ if __name__ == '__main__':
     parser.add_argument('-service-name', action='store', metavar="service_name", default=SERVICE_NAME,
                         help='The name of the service used to trigger the payload (SMBEXEC only)')
 
-    parser.add_argument('-sharename', action='store', help='Set the name of the attacker share')
-    parser.add_argument('-shareuser', action='store', help='Set the username of the user for the share')
-    parser.add_argument('-sharepassword', action='store', help='Set the password for shareuser')
-    parser.add_argument('-sharegroup', action='store', help='Set the group for shareuser')
+    parser.add_argument('-sharename', action='store', help='Set the name of the attacker share Default=random')
+    parser.add_argument('-shareuser', action='store', help='Set the username of the user for the share Default=random')
+    parser.add_argument('-sharepassword', action='store', help='Set the password for shareuser Default=random')
+    parser.add_argument('-sharegroup', action='store', help='Set the group for shareuser Default=random')
 
     group = parser.add_argument_group('authentication')
     group.add_argument('-localauth', action='store_true', default=False, help='Authenticate with a local account to the machine')
