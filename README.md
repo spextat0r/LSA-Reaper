@@ -9,6 +9,7 @@ LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](http
 
 ## Credits
 
+[Impacket](https://github.com/SecureAuthCorp/impacket) for making awesome open source tools
 [Marantral](https://github.com/Marantral) for being awesome and helping with MsBuild and RegSvr32 payloads!
 
 ## Requirements
