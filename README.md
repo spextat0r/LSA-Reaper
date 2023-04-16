@@ -92,7 +92,7 @@ Once these are running you should begin to receive connections. These can be che
 
 ![](/assets/sockconnection.png)
 
-With this connection we no longer need ntlmrelayx gathering connection so we can run the command ```stopservers```
+With this connection we no longer need ntlmrelayx gathering relays so we can run the command ```stopservers```
 
 ![](/assets/stopservers.png)
 
