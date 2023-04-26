@@ -5,7 +5,7 @@ then
     echo "Impacket is already downloaded" 
 else
     cd ..
-    git clone https://github.com/SecureAuthCorp/impacket.git
+    sudo git clone https://github.com/fortra/impacket.git
     cd impacket
     sudo python3 setup.py install
 fi
