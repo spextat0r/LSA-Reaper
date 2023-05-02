@@ -46,7 +46,7 @@ from threading import Thread
 from impacket import version, smbserver
 from impacket.dcerpc.v5 import transport, scmr
 
-BATCH_FILENAME = 'execute.bat'
+BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
 SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 OUTPUT_FILENAME = '__' + str(time.time())
 CODEC = sys.stdout.encoding
@@ -1355,7 +1355,7 @@ if __name__ == '__main__':
     if options.runasppl:
         if options.debug == False:
             print("I HIGHLY recommend turning on -debug")
-        plzno = input("{}[!]{} RunAsPPL Bypass uses a kernel driver are you absolutely sure you want to use this? Also this only works every other time (y/N): ".format(color_YELL, color_reset))
+        plzno = input("{}[!]{} RunAsPPL Bypass uses a kernel driver which theoretically can cause a BSOD are you absolutely sure you want to use this? Also this only works every other time (y/N): ".format(color_YELL, color_reset))
         if plzno.lower() != 'y':
             sys.exit(0)
 
