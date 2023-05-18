@@ -59,8 +59,8 @@ from impacket.dcerpc.v5 import transport, scmr
 from impacket.krb5.keytab import Keytab
 
 OUTPUT_FILENAME = '__output'
-BATCH_FILENAME = 'execute.bat'
-SERVICE_NAME = 'BTOBTO'
+BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
+SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 CODEC = sys.stdout.encoding
 command = ''
 class CMDEXEC:
