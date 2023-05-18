@@ -57,10 +57,10 @@ from impacket.dcerpc.v5 import transport, scmr
 from impacket.krb5.keytab import Keytab
 
 OUTPUT_FILENAME = '__output'
-BATCH_FILENAME  = 'execute.bat'
+BATCH_FILENAME  = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
 SMBSERVER_DIR   = '__tmp'
 DUMMY_SHARE     = 'TMP'
-SERVICE_NAME    = 'BTOBTO'
+SERVICE_NAME    = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 CODEC = sys.stdout.encoding
 
 class SMBServer(Thread):
