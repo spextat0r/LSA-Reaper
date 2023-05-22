@@ -1226,11 +1226,13 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                         print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
                         try:
                             os.system("sudo systemctl stop smbd")
+                            print(green_plus + " Stopped the smbd service")
                         except BaseException as e:
                             pass
 
                         try:
                             os.system("sudo cp " + cwd + "{}/smb.conf /etc/samba/smb.conf")
+                            print(green_plus + " Cleaned up the smb.conf file")
                         except BaseException as e:
                             pass
 
@@ -1241,11 +1243,13 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
                         try:
                             os.system("sudo userdel " + share_user)
+                            print(green_plus + " Removed the user: " + share_user)
                         except BaseException as e:
                             pass
 
                         try:
                             os.system("sudo groupdel " + share_group)
+                            print(green_plus + " Removed the group: " + share_group)
                         except BaseException as e:
                             pass
 
@@ -1642,11 +1646,13 @@ if __name__ == '__main__':
 
         try:
             os.system("sudo systemctl stop smbd")
+            print(green_plus + " Stopped the smbd service")
         except BaseException as e:
             pass
 
         try:
             os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
+            print(green_plus + " Cleaned up the smb.conf file")
         except BaseException as e:
             pass
 
@@ -1657,11 +1663,13 @@ if __name__ == '__main__':
 
         try:
             os.system("sudo userdel " + share_user)
+            print(green_plus + " Removed the user: " + share_user)
         except BaseException as e:
             pass
 
         try:
             os.system("sudo groupdel " + share_group)
+            print(green_plus + " Removed the group: " + share_group)
         except BaseException as e:
             pass
 
@@ -1684,11 +1692,13 @@ if __name__ == '__main__':
 
     try:
         os.system("sudo systemctl stop smbd")
+        print(green_plus + " Stopped the smbd service")
     except BaseException as e:
         pass
 
     try:
         os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
+        print(green_plus + " Cleaned up the smb.conf file")
     except BaseException as e:
         pass
 
@@ -1699,11 +1709,13 @@ if __name__ == '__main__':
 
     try:
         os.system("sudo userdel " + share_user)
+        print(green_plus + " Removed the user: " + share_user)
     except BaseException as e:
         pass
 
     try:
         os.system("sudo groupdel " + share_group)
+        print(green_plus + " Removed the group: " + share_group)
     except BaseException as e:
         pass
 
