@@ -1128,11 +1128,13 @@ def alt_exec():
 
     try:
         os.system("sudo systemctl stop smbd")
+        print(green_plus + " Stopped the smbd service")
     except BaseException as e:
         pass
 
     try:
         os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
+        print(green_plus + " Cleaned up the smb.conf file")
     except BaseException as e:
         pass
 
@@ -1143,11 +1145,13 @@ def alt_exec():
 
     try:
         os.system("sudo userdel " + share_user)
+        print(green_plus + " Removed the user: " + share_user)
     except BaseException as e:
         pass
 
     try:
         os.system("sudo groupdel " + share_group)
+        print(green_plus + " Removed the group: " + share_group)
     except BaseException as e:
         pass
 
