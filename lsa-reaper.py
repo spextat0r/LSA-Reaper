@@ -1097,10 +1097,10 @@ def setup_share():
 
     # create the user for the share
     # generate the group
-    print("{} Creating the group".format(green_plus))
+    print("{} Creating the group: {}".format(green_plus, share_group))
     os.system("sudo groupadd --system " + share_group)
     # make the user
-    print("{} Creating the user".format(green_plus))
+    print("{} Creating the user: {}".format(green_plus, share_user))
     os.system("sudo useradd --system --no-create-home --group " + share_group + " -s /bin/false " + share_user)
     # give the user access to the share folder
     print("{} Giving the user rights".format(green_plus))
