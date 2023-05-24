@@ -1542,6 +1542,10 @@ if __name__ == '__main__':
 
         if '-oe' not in sys.argv:  # why scan if we not gonna do anything
             addresses = do_ip(address, local_ip)  # gets a list of up hosts
+            
+            if len(addresses) > 1: # ensure that there are targets otherwise whats the point
+                print("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
+                exit(0)
 
             if len(addresses) > 500:  # ensure that they dont waste over 25 gb of storage
                 print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses) * 52) / 1024)))
