@@ -54,6 +54,8 @@ sudo python3 lsa-reaper.py
 ![](/assets/hlp.png)
 
 ## Examples
+
+ALL of these command arguments are interchangeable
 ```
 sudo python3 lsa-reaper.py domain/user:'Password'@ip
 
