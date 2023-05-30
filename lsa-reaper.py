@@ -1302,6 +1302,7 @@ if __name__ == '__main__':
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-oe', action='store_true', default=False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
     parser.add_argument('-ap', action='store_true', default=False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
+    parser.add_argument('-sh', action='store_true', default=False, help='Skips any hosts that have been previously attacked. (Stored in hist file)')
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
@@ -1464,6 +1465,38 @@ if __name__ == '__main__':
 
             if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
                 printnlog("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
+                exit(0)
+
+            if os.path.isfile('{}/hist'.format(cwd)):
+                if options.sh:
+                    with open('{}/hist'.format(cwd), 'r') as f: # read this history file to an array
+                        history_ips = f.readlines()
+                        f.close()
+                    history_ips_cleaned = []
+                    for item in history_ips: # remove \r and \n
+                        item = item.replace("\r", "")
+                        history_ips_cleaned.append(item.replace("\n", ""))
+
+
+                    skipped_count = 0
+                    ips_to_remove = []
+                    for currip in addresses:
+                        if currip in history_ips_cleaned:
+                            ips_to_remove.append(currip) # need to pass it to an array first because if we just remove from the array we will skip every other one 
+                            skipped_count += 1
+
+                    if skipped_count > 0: # first check to see if we did get any to remove if so remove them from addresses
+                        for eachip in ips_to_remove:
+                            addresses.remove(eachip)
+
+                    printnlog('{}[+]{} Skipped {} hosts from history'.format(color_BLU, color_reset, skipped_count))
+
+            with open('{}/hist'.format(cwd), 'a') as f:
+                for currip in addresses:
+                    f.write(currip + '\n')
+
+            if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
+                printnlog("{}[!]{} There are no targets up or the provided list is empty or you skipped all of the targets from previous history.".format(color_RED, color_reset))
                 exit(0)
 
             if len(addresses) > 500:  # ensure that they dont waste over 25 gb of storage
