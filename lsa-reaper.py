@@ -1482,7 +1482,7 @@ if __name__ == '__main__':
                     ips_to_remove = []
                     for currip in addresses:
                         if currip in history_ips_cleaned:
-                            ips_to_remove.append(currip) # need to pass it to an array first because if we just remove from the array we will skip every other one 
+                            ips_to_remove.append(currip) # need to pass it to an array first because if we just remove from the array we will skip every other one
                             skipped_count += 1
 
                     if skipped_count > 0: # first check to see if we did get any to remove if so remove them from addresses
@@ -1490,6 +1490,7 @@ if __name__ == '__main__':
                             addresses.remove(eachip)
 
                     printnlog('{}[+]{} Skipped {} hosts from history'.format(color_BLU, color_reset, skipped_count))
+                    lognoprint('Skipped hosts: {}'.format(ips_to_remove))
 
             with open('{}/hist'.format(cwd), 'a') as f:
                 for currip in addresses:
