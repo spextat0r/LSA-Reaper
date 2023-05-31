@@ -42,6 +42,8 @@ from __future__ import print_function
 import sys
 import os
 import cmd
+import random
+import string
 import argparse
 
 try:
