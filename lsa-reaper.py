@@ -254,7 +254,7 @@ class SMBEXECShell():
         try:
             data_out = self.__outputBuffer.decode(CODEC)
             if logging.getLogger().level == logging.DEBUG:
-                print(data_out)
+                print('{}: {}'.format(addr, data_out))
             with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
                 f.write(data_out)
                 f.close()
@@ -549,7 +549,7 @@ class WMIEXEC:
 
             win32Process, _ = iWbemServices.GetObject('Win32_Process')
 
-            self.shell = RemoteShell(self.__share, win32Process, smbConnection, self.__shell_type, silentCommand)
+            self.shell = RemoteShell(self.__share, win32Process, smbConnection, self.__shell_type, addr, silentCommand)
             self.shell.onecmd(self.__command)
         except (Exception, KeyboardInterrupt) as e:
             if logging.getLogger().level == logging.DEBUG:
@@ -569,20 +569,20 @@ class WMIEXEC:
 
 
 class RemoteShell(cmd.Cmd):
-    def __init__(self, share, win32Process, smbConnection, shell_type, silentCommand=False):
+    def __init__(self, share, win32Process, smbConnection, shell_type, addr, silentCommand=False):
         cmd.Cmd.__init__(self)
         self.__share = share
         self.__output = '\\' + OUTPUT_FILENAME
         self.__outputBuffer = str('')
         self.__shell = 'cmd.exe /Q /c '
         self.__shell_type = shell_type
-        self.__pwsh = 'powershell.exe -NoP -NoL -sta -NonI -W Hidden -Exec Bypass -Enc '
         self.__win32Process = win32Process
         self.__transferClient = smbConnection
         self.__silentCommand = silentCommand
         self.__pwd = str('C:\\')
         self.__noOutput = False
-        self.intro = '[!] Launching semi-interactive shell - Careful what you execute\n[!] Press help for extra shell commands'
+        self.__addr = addr
+
 
         # We don't wanna deal with timeouts from now on.
         if self.__transferClient is not None:
@@ -682,9 +682,9 @@ class RemoteShell(cmd.Cmd):
         with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
             f.write(self.__outputBuffer)
             f.close()
-        lognoprint(self.__outputBuffer + '\n')
+        lognoprint('{}: {}\n'.format(self.__addr, self.__outputBuffer))
         if logging.getLogger().level == logging.DEBUG:
-            print(self.__outputBuffer)
+            print('{}: {}\n'.format(self.__addr, self.__outputBuffer))
         self.__outputBuffer = ''
 
 
