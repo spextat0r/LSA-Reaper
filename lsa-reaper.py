@@ -158,7 +158,6 @@ class SMBEXECShell():
         self.__command = ''
         self.__shell = '%COMSPEC% /Q /c '
         self.__shell_type = shell_type
-        self.__pwsh = 'powershell.exe -NoP -NoL -sta -NonI -W Hidden -Exec Bypass -Enc '
         self.__serviceName = serviceName
         self.__rpc = rpc
 
@@ -216,8 +215,7 @@ class SMBEXECShell():
         if len(self.__outputBuffer) > 0:
             # Stripping CR/LF
             self.prompt = self.__outputBuffer.decode().replace('\r\n', '') + '>'
-            if self.__shell_type == 'powershell':
-                self.prompt = 'PS ' + self.prompt + ' '
+
             self.__outputBuffer = b''
 
     def get_output(self):
@@ -608,8 +606,7 @@ class RemoteShell(cmd.Cmd):
             self.execute_remote('cd ')
             self.__pwd = self.__outputBuffer.strip('\r\n')
             self.prompt = (self.__pwd + '>')
-            if self.__shell_type == 'powershell':
-                self.prompt = 'PS ' + self.prompt + ' '
+
             self.__outputBuffer = ''
 
     def default(self, line):
@@ -663,9 +660,6 @@ class RemoteShell(cmd.Cmd):
         self.__transferClient.deleteFile(self.__share, self.__output)
 
     def execute_remote(self, data, shell_type='cmd'):
-        if shell_type == 'powershell':
-            data = '$ProgressPreference="SilentlyContinue";' + data
-            data = self.__pwsh + b64encode(data.encode('utf-16le')).decode()
 
         command = self.__shell + data
 
