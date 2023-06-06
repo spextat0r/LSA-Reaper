@@ -35,7 +35,6 @@
 # albert-a's fix of 'sed -ri "s|(command\s*\+=.*')del|\1%COMSPEC% /Q /c del|" /usr/share/doc/python3-impacket/examples/smbexec.py'
 # This makes smbexec.py work much better over a relay on ntlmrelayx.py and in general with certain Server 2019 builds of Windows
 #!!# This is a heavily modified version of forta's smbexec.py to allow for a command to be passed from the command line as an argument rather than drop into a shell
-# ADDED multithreading to allow for multiple hosts to be attacked at once
 #
 
 from __future__ import division
@@ -155,7 +154,26 @@ class RemoteShell():
         self.__scHandle = resp['lpScHandle']
         self.transferClient = rpc.get_smb_connection()
         self.do_cd('')
-        self.send_data(command, addr)
+
+        command_failed = False
+        if command.find('&') == -1:
+            self.send_data(command, addr)
+        else:
+            splitone = command.split(' && ')
+            final = []
+            for item in splitone:
+                secondsplit = item.split(' & ')
+                for thing in secondsplit:
+                    final.append(thing)
+
+            for comand in final:
+                if command_failed == False:
+                    tmphold = self.send_data(comand, addr)
+                else:
+                    print("{}: Skipping {} due to net use command failing".format(addr, comand))
+
+                if options.unsafe_exec == False and tmphold.find('The command completed successfully') == -1 and tmphold.find('System error 85 has occurred') != -1:
+                    command_failed = True
 
 
     def finish(self):
@@ -218,7 +236,10 @@ class RemoteShell():
     def send_data(self, data, addr):
         self.execute_remote(data, self.__shell_type)
         try:
+            dat_out = self.__outputBuffer.decode(CODEC)
             print('{}: {}'.format(addr, self.__outputBuffer.decode(CODEC)))
+            self.__outputBuffer = b''
+            return dat_out
         except UnicodeDecodeError:
             logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                           'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
@@ -276,6 +297,7 @@ if __name__ == '__main__':
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-ts', action='store_true', help='adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
+    parser.add_argument('-unsafe-exec', action='store_true', help='Allows commands to continue running even if a drive is in use when net use was attempted')
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=30, help='Set the timeout in seconds for each thread default=30')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
