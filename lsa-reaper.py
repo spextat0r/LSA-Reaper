@@ -1493,7 +1493,7 @@ if __name__ == '__main__':
             ifaces = ni.interfaces()
             for face in ifaces:
                 try:  # check to see if the interface has an ip
-                    printnlog(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
+                    printnlog('{} {}'.format(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr']))
                 except BaseException as exc:
                     continue
 
