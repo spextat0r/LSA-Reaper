@@ -262,7 +262,7 @@ class SMBEXECShell():
                 f.close()
 
             lognoprint('{}: {}\n'.format(addr, data_out))
-
+            self.__outputBuffer = b''
             return data_out
         except UnicodeDecodeError:
             logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
