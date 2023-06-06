@@ -388,6 +388,8 @@ if __name__ == '__main__':
 
     options = parser.parse_args()
 
+    print('WARNING: The multiple command at once feature is extremely basic and has no error checking besides preventing overwriting of a mounted network drive')
+
     # Init the example's logger theme
     logger.init(options.ts)
 
