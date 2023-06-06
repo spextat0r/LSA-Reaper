@@ -44,6 +44,7 @@ import cmd
 import random
 import string
 import argparse
+
 try:
     import ConfigParser
 except ImportError:
@@ -59,11 +60,12 @@ from impacket.dcerpc.v5 import transport, scmr
 from impacket.krb5.keytab import Keytab
 
 OUTPUT_FILENAME = '__output'
-BATCH_FILENAME  = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
-SMBSERVER_DIR   = '__tmp'
-DUMMY_SHARE     = 'TMP'
-SERVICE_NAME    = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
+BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
+SMBSERVER_DIR = '__tmp'
+DUMMY_SHARE = 'TMP'
+SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 CODEC = sys.stdout.encoding
+command_failed = False
 
 class SMBServer(Thread):
     def __init__(self):
@@ -82,27 +84,27 @@ class SMBServer(Thread):
         # Here we write a mini config for the server
         smbConfig = ConfigParser.ConfigParser()
         smbConfig.add_section('global')
-        smbConfig.set('global','server_name','server_name')
-        smbConfig.set('global','server_os','UNIX')
-        smbConfig.set('global','server_domain','WORKGROUP')
-        smbConfig.set('global','log_file',SMBSERVER_DIR + '/smb.log')
-        smbConfig.set('global','credentials_file','')
+        smbConfig.set('global', 'server_name', 'server_name')
+        smbConfig.set('global', 'server_os', 'UNIX')
+        smbConfig.set('global', 'server_domain', 'WORKGROUP')
+        smbConfig.set('global', 'log_file', SMBSERVER_DIR + '/smb.log')
+        smbConfig.set('global', 'credentials_file', '')
 
         # Let's add a dummy share
         smbConfig.add_section(DUMMY_SHARE)
-        smbConfig.set(DUMMY_SHARE,'comment','')
-        smbConfig.set(DUMMY_SHARE,'read only','no')
-        smbConfig.set(DUMMY_SHARE,'share type','0')
-        smbConfig.set(DUMMY_SHARE,'path',SMBSERVER_DIR)
+        smbConfig.set(DUMMY_SHARE, 'comment', '')
+        smbConfig.set(DUMMY_SHARE, 'read only', 'no')
+        smbConfig.set(DUMMY_SHARE, 'share type', '0')
+        smbConfig.set(DUMMY_SHARE, 'path', SMBSERVER_DIR)
 
         # IPC always needed
         smbConfig.add_section('IPC$')
-        smbConfig.set('IPC$','comment','')
-        smbConfig.set('IPC$','read only','yes')
-        smbConfig.set('IPC$','share type','3')
-        smbConfig.set('IPC$','path')
+        smbConfig.set('IPC$', 'comment', '')
+        smbConfig.set('IPC$', 'read only', 'yes')
+        smbConfig.set('IPC$', 'share type', '3')
+        smbConfig.set('IPC$', 'path')
 
-        self.smb = smbserver.SMBSERVER(('0.0.0.0',445), config_parser = smbConfig)
+        self.smb = smbserver.SMBSERVER(('0.0.0.0', 445), config_parser=smbConfig)
         logging.info('Creating tmp directory')
         try:
             os.mkdir(SMBSERVER_DIR)
@@ -123,6 +125,7 @@ class SMBServer(Thread):
         self.smb.server_close()
         self._Thread__stop()
 
+
 class CMDEXEC:
     def __init__(self, username='', password='', domain='', hashes=None, aesKey=None, doKerberos=None,
                  kdcHost=None, mode=None, share=None, port=445, serviceName=SERVICE_NAME, shell_type=None):
@@ -138,7 +141,7 @@ class CMDEXEC:
         self.__doKerberos = doKerberos
         self.__kdcHost = kdcHost
         self.__share = share
-        self.__mode  = mode
+        self.__mode = mode
         self.__shell_type = shell_type
         self.shell = None
         if hashes is not None:
@@ -146,7 +149,7 @@ class CMDEXEC:
 
     def run(self, remoteName, remoteHost):
         stringbinding = r'ncacn_np:%s[\pipe\svcctl]' % remoteName
-        logging.debug('StringBinding %s'%stringbinding)
+        logging.debug('StringBinding %s' % stringbinding)
         rpctransport = transport.DCERPCTransportFactory(stringbinding)
         rpctransport.set_dport(self.__port)
         rpctransport.setRemoteHost(remoteHost)
@@ -175,6 +178,7 @@ class CMDEXEC:
                 self.shell.finish()
             sys.stdout.flush()
             sys.exit(1)
+
 
 class RemoteShell(cmd.Cmd):
     def __init__(self, share, rpc, mode, serviceName, shell_type):
@@ -216,18 +220,18 @@ class RemoteShell(cmd.Cmd):
     def finish(self):
         # Just in case the service is still created
         try:
-           self.__scmr = self.__rpc.get_dce_rpc()
-           self.__scmr.connect()
-           self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
-           resp = scmr.hROpenSCManagerW(self.__scmr)
-           self.__scHandle = resp['lpScHandle']
-           resp = scmr.hROpenServiceW(self.__scmr, self.__scHandle, self.__serviceName)
-           service = resp['lpServiceHandle']
-           scmr.hRDeleteService(self.__scmr, service)
-           scmr.hRControlService(self.__scmr, service, scmr.SERVICE_CONTROL_STOP)
-           scmr.hRCloseServiceHandle(self.__scmr, service)
+            self.__scmr = self.__rpc.get_dce_rpc()
+            self.__scmr.connect()
+            self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
+            resp = scmr.hROpenSCManagerW(self.__scmr)
+            self.__scHandle = resp['lpScHandle']
+            resp = scmr.hROpenServiceW(self.__scmr, self.__scHandle, self.__serviceName)
+            service = resp['lpServiceHandle']
+            scmr.hRDeleteService(self.__scmr, service)
+            scmr.hRControlService(self.__scmr, service, scmr.SERVICE_CONTROL_STOP)
+            scmr.hRCloseServiceHandle(self.__scmr, service)
         except scmr.DCERPCException:
-           pass
+            pass
 
     def do_shell(self, s):
         os.system(s)
@@ -247,10 +251,10 @@ class RemoteShell(cmd.Cmd):
         if len(s) > 0:
             logging.error("You can't CD under SMBEXEC. Use full paths.")
 
-        self.execute_remote('cd ' )
+        self.execute_remote('cd ')
         if len(self.__outputBuffer) > 0:
             # Stripping CR/LF
-            self.prompt = self.__outputBuffer.decode().replace('\r\n','') + '>'
+            self.prompt = self.__outputBuffer.decode().replace('\r\n', '') + '>'
             if self.__shell_type == 'powershell':
                 self.prompt = 'PS ' + self.prompt + ' '
             self.__outputBuffer = b''
@@ -260,7 +264,25 @@ class RemoteShell(cmd.Cmd):
 
     def default(self, line):
         if line != '':
-            self.send_data(line)
+            command_failed = False
+            if line.find('&') == -1:
+                self.send_data(line)
+            else:
+                splitone = line.split(' && ')
+                final = []
+                for item in splitone:
+                    secondsplit = item.split(' & ')
+                    for thing in secondsplit:
+                        final.append(thing)
+
+                for comand in final:
+                    if command_failed == False:
+                        tmphold = self.send_data(comand)
+                    else:
+                        print("Skipping {} due to net use command failing".format(comand))
+
+                    if options.unsafe_exec == False and tmphold.find('The command completed successfully') == -1 and tmphold.find('System error 85 has occurred') != -1:
+                        command_failed = True
 
     def get_output(self):
         def output_callback(data):
@@ -270,7 +292,7 @@ class RemoteShell(cmd.Cmd):
             self.transferClient.getFile(self.__share, OUTPUT_FILENAME, output_callback)
             self.transferClient.deleteFile(self.__share, OUTPUT_FILENAME)
         else:
-            fd = open(SMBSERVER_DIR + '/' + OUTPUT_FILENAME,'r')
+            fd = open(SMBSERVER_DIR + '/' + OUTPUT_FILENAME, 'r')
             output_callback(fd.read())
             fd.close()
             os.unlink(SMBSERVER_DIR + '/' + OUTPUT_FILENAME)
@@ -293,9 +315,9 @@ class RemoteShell(cmd.Cmd):
         service = resp['lpServiceHandle']
 
         try:
-           scmr.hRStartServiceW(self.__scmr, service)
+            scmr.hRStartServiceW(self.__scmr, service)
         except:
-           pass
+            pass
         scmr.hRDeleteService(self.__scmr, service)
         scmr.hRCloseServiceHandle(self.__scmr, service)
         self.get_output()
@@ -303,7 +325,10 @@ class RemoteShell(cmd.Cmd):
     def send_data(self, data):
         self.execute_remote(data, self.__shell_type)
         try:
+            dat_out = self.__outputBuffer.decode(CODEC)
             print(self.__outputBuffer.decode(CODEC))
+            self.__outputBuffer = b''
+            return dat_out
         except UnicodeDecodeError:
             logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                           'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
@@ -319,45 +344,45 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName or address>')
-    parser.add_argument('-share', action='store', default = 'C$', help='share where the output will be grabbed from '
-                                                                       '(default C$)')
-    parser.add_argument('-mode', action='store', choices = {'SERVER','SHARE'}, default='SHARE',
+    parser.add_argument('-share', action='store', default='C$', help='share where the output will be grabbed from '
+                                                                     '(default C$)')
+    parser.add_argument('-mode', action='store', choices={'SERVER', 'SHARE'}, default='SHARE',
                         help='mode to use (default SHARE, SERVER needs root!)')
     parser.add_argument('-ts', action='store_true', help='adds timestamp to every logging output')
+    parser.add_argument('-unsafe-exec', action='store_true', help='Allows commands to continue running even if a drive is in use when net use was attempted')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
                                                        'map the result with '
-                          'https://docs.python.org/3/library/codecs.html#standard-encodings and then execute smbexec.py '
-                          'again with -codec and the corresponding codec ' % CODEC)
-    parser.add_argument('-shell-type', action='store', default = 'cmd', choices = ['cmd', 'powershell'], help='choose '
-                        'a command processor for the semi-interactive shell')
+                                                       'https://docs.python.org/3/library/codecs.html#standard-encodings and then execute smbexec.py '
+                                                       'again with -codec and the corresponding codec ' % CODEC)
+    parser.add_argument('-shell-type', action='store', default='cmd', choices=['cmd', 'powershell'], help='choose '
+                                                                                                          'a command processor for the semi-interactive shell')
 
     group = parser.add_argument_group('connection')
 
-    group.add_argument('-dc-ip', action='store',metavar = "ip address", help='IP Address of the domain controller. '
-                       'If omitted it will use the domain part (FQDN) specified in the target parameter')
+    group.add_argument('-dc-ip', action='store', metavar="ip address", help='IP Address of the domain controller. '
+                                                                            'If omitted it will use the domain part (FQDN) specified in the target parameter')
     group.add_argument('-target-ip', action='store', metavar="ip address", help='IP Address of the target machine. If '
-                       'ommited it will use whatever was specified as target. This is useful when target is the NetBIOS '
-                       'name and you cannot resolve it')
+                                                                                'ommited it will use whatever was specified as target. This is useful when target is the NetBIOS '
+                                                                                'name and you cannot resolve it')
     group.add_argument('-port', choices=['139', '445'], nargs='?', default='445', metavar="destination port",
                        help='Destination port to connect to SMB Server')
-    group.add_argument('-service-name', action='store', metavar="service_name", default = SERVICE_NAME, help='The name of the'
-                                         'service used to trigger the payload')
+    group.add_argument('-service-name', action='store', metavar="service_name", default=SERVICE_NAME, help='The name of the'
+                                                                                                           'service used to trigger the payload')
 
     group = parser.add_argument_group('authentication')
 
-    group.add_argument('-hashes', action="store", metavar = "LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
+    group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
     group.add_argument('-no-pass', action="store_true", help='don\'t ask for password (useful for -k)')
     group.add_argument('-k', action="store_true", help='Use Kerberos authentication. Grabs credentials from ccache file '
-                       '(KRB5CCNAME) based on target parameters. If valid credentials cannot be found, it will use the '
-                       'ones specified in the command line')
-    group.add_argument('-aesKey', action="store", metavar = "hex key", help='AES key to use for Kerberos Authentication '
-                                                                            '(128 or 256 bits)')
+                                                       '(KRB5CCNAME) based on target parameters. If valid credentials cannot be found, it will use the '
+                                                       'ones specified in the command line')
+    group.add_argument('-aesKey', action="store", metavar="hex key", help='AES key to use for Kerberos Authentication '
+                                                                          '(128 or 256 bits)')
     group.add_argument('-keytab', action="store", help='Read keys for SPN from keytab file')
 
-
-    if len(sys.argv)==1:
+    if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
@@ -385,14 +410,15 @@ if __name__ == '__main__':
         domain = ''
 
     if options.keytab is not None:
-        Keytab.loadKeysFromKeytab (options.keytab, username, domain, options)
+        Keytab.loadKeysFromKeytab(options.keytab, username, domain, options)
         options.k = True
 
     if password == '' and username != '' and options.hashes is None and options.no_pass is False and options.aesKey is None:
         from getpass import getpass
+
         password = getpass("Password:")
-    
-    if options.hashes is not None and options.hashes.find(':') == -1: # quick check to prevent formatting error with hashes
+
+    if options.hashes is not None and options.hashes.find(':') == -1:  # quick check to prevent formatting error with hashes
         options.hashes = ':{}'.format(options.hashes)
 
     if options.target_ip is None:
@@ -408,6 +434,7 @@ if __name__ == '__main__':
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
+
             traceback.print_exc()
         logging.critical(str(e))
     sys.exit(0)
