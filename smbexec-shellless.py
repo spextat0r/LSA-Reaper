@@ -141,7 +141,25 @@ class RemoteShell():
         self.__scHandle = resp['lpScHandle']
         self.transferClient = rpc.get_smb_connection()
         self.do_cd('')
-        self.send_data(command)
+        command_failed = False
+        if command.find('&') == -1:
+            self.send_data(command)
+        else:
+            splitone = command.split(' && ')
+            final = []
+            for item in splitone:
+                secondsplit = item.split(' & ')
+                for thing in secondsplit:
+                    final.append(thing)
+
+            for comand in final:
+                if command_failed == False:
+                    tmphold = self.send_data(comand)
+                else:
+                    print("Skipping {} due to net use command failing".format(comand))
+
+                if options.unsafe_exec == False and tmphold.find('The command completed successfully') == -1 and tmphold.find('System error 85 has occurred') != -1:
+                    command_failed = True
 
 
     def finish(self):
@@ -204,7 +222,10 @@ class RemoteShell():
     def send_data(self, data):
         self.execute_remote(data, self.__shell_type)
         try:
+            dat_out = self.__outputBuffer.decode(CODEC)
             print(self.__outputBuffer.decode(CODEC))
+            self.__outputBuffer = b''
+            return dat_out
         except UnicodeDecodeError:
             logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                           'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
@@ -217,6 +238,8 @@ class RemoteShell():
 if __name__ == '__main__':
     print(version.BANNER)
 
+    print('WARNING: The multiple command at once feature is extremely basic and has no error checking besides preventing overwriting of a mounted network drive')
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName or address>')
@@ -225,6 +248,7 @@ if __name__ == '__main__':
                                                                      '(default C$)')
     parser.add_argument('-ts', action='store_true', help='adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
+    parser.add_argument('-unsafe-exec', action='store_true', help='Allows commands to continue running even if a drive is in use when net use was attempted')
     parser.add_argument('-codec', action='store', help='Sets encoding used (codec) from the target\'s output (default '
                                                        '"%s"). If errors are detected, run chcp.com at the target, '
                                                        'map the result with '
