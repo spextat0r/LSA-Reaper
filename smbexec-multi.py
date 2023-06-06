@@ -288,6 +288,8 @@ def mt_execute(ip):  # multithreading requires a function
 if __name__ == '__main__':
     print(version.BANNER)
 
+    print('WARNING: The multiple command at once feature is extremely basic and has no error checking besides preventing overwriting of a mounted network drive')
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName or address>')
@@ -337,7 +339,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     options = parser.parse_args()
-
+    
     # Init the example's logger theme
     logger.init(options.ts)
     command = options.command
