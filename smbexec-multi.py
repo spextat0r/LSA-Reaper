@@ -406,7 +406,7 @@ if __name__ == '__main__':
     addresses = do_ip(address, local_ip)  # gets a list of up hosts
 
     if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
-        prin("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
+        print("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
         exit(0)
 
     print('Total targets: {}'.format(len(addresses)))
