@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName or address>')
+    parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, cidr range, or iprange ex: 10.0.0.1, 10.0.0.0/24 10.0.0.10-25>')
     parser.add_argument('command', action='store', help='commandtorun')
     parser.add_argument('-share', action='store', default='C$', help='share where the output will be grabbed from '
                                                                      '(default C$)')
