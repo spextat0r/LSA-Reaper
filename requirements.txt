@@ -1,5 +1,5 @@
 python-nmap>=0.7.1
 netifaces>=0.11.0
-pypykatz==0.6.6
-minikerberos==0.4.0
+pypykatz>=0.6.6
+minikerberos>=0.4.0
 Pebble>=5.0.2
