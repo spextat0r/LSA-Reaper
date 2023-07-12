@@ -11,8 +11,10 @@ import ntpath
 import socket
 import random
 import string
+import hashlib
 import logging
 import fnmatch
+import requests
 import argparse
 import threading
 import subprocess
@@ -1360,6 +1362,18 @@ def port445_check(interface_ip):
 
     sock.close()
 
+def update_chk():
+
+    req = requests.get('https://raw.githubusercontent.com/samiam1086/LSA-Reaper/main/lsa-reaper.py')
+    reqhash = hashlib.sha256(req.content).hexdigest()
+
+    with open(__file__, 'rb') as f:
+        dat = f.read()
+        f.close
+    localhash = hashlib.sha256(dat).hexdigest()
+
+    if localhash != reqhash:
+        print('{}WARNING Your LSA-Reaper is out of date{}'.format(color_YELL, color_reset))
 
 # Process command-line arguments.
 if __name__ == '__main__':
@@ -1372,6 +1386,7 @@ if __name__ == '__main__':
         os.makedirs(cwd + "/loot")
 
     printnlog(reaper_banner)
+    update_chk()
     printnlog(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description="", epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
