@@ -1363,17 +1363,20 @@ def port445_check(interface_ip):
     sock.close()
 
 def update_chk():
-
-    req = requests.get('https://raw.githubusercontent.com/samiam1086/LSA-Reaper/main/lsa-reaper.py')
-    reqhash = hashlib.sha256(req.content).hexdigest()
-
-    with open(__file__, 'rb') as f:
-        dat = f.read()
-        f.close
-    localhash = hashlib.sha256(dat).hexdigest()
-
-    if localhash != reqhash:
-        print('{}WARNING Your LSA-Reaper is out of date{}\n'.format(color_YELL, color_reset))
+    try:
+        req = requests.get('https://raw.githubusercontent.com/samiam1086/LSA-Reaper/main/lsa-reaper.py')
+        reqhash = hashlib.sha256(req.content).hexdigest()
+    
+        with open(__file__, 'rb') as f:
+            dat = f.read()
+            f.close
+        localhash = hashlib.sha256(dat).hexdigest()
+    
+        if localhash != reqhash:
+            print('{}WARNING Your LSA-Reaper is out of date{}\n'.format(color_YELL, color_reset))
+    except:
+        print('{}Unable to check for updates{}\n'.format(color_YELL, color_reset))
+        pass
 
 # Process command-line arguments.
 if __name__ == '__main__':
