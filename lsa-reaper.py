@@ -1373,7 +1373,7 @@ def update_chk():
     localhash = hashlib.sha256(dat).hexdigest()
 
     if localhash != reqhash:
-        print('{}WARNING Your LSA-Reaper is out of date{}'.format(color_YELL, color_reset))
+        print('{}WARNING Your LSA-Reaper is out of date{}\n'.format(color_YELL, color_reset))
 
 # Process command-line arguments.
 if __name__ == '__main__':
