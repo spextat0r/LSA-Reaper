@@ -35,7 +35,6 @@
 # albert-a's fix of 'sed -ri "s|(command\s*\+=.*')del|\1%COMSPEC% /Q /c del|" /usr/share/doc/python3-impacket/examples/smbexec.py'
 # This makes smbexec.py work much better over a relay on ntlmrelayx.py and in general with certain Server 2019 builds of Windows
 #!!# This is a heavily modified version of forta's smbexec.py to allow for a command to be passed from the command line as an argument rather than drop into a shell
-# Added multithreading to allow for multiple targets to be hit with the same command.
 #
 
 from __future__ import division
@@ -340,7 +339,11 @@ if __name__ == '__main__':
         sys.exit(1)
 
     options = parser.parse_args()
-    
+
+    if os.geteuid() != 0:
+        print("[!] Must be run as sudo")
+        sys.exit(1)
+        
     # Init the example's logger theme
     logger.init(options.ts)
     command = options.command
@@ -427,4 +430,3 @@ if __name__ == '__main__':
                 continue
             except KeyboardInterrupt as e:
                 continue
-
