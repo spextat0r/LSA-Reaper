@@ -36,6 +36,7 @@
 # This makes smbexec.py work much better over a relay on ntlmrelayx.py and in general with certain Server 2019 builds of Windows
 #!!# This is a heavily modified version of forta's smbexec.py to allow for a command to be passed from the command line as an argument rather than drop into a shell
 #
+# Added multithreading to allow for multiple targets to be hit with the same command.
 
 from __future__ import division
 from __future__ import print_function
