@@ -1535,7 +1535,7 @@ if __name__ == '__main__':
         if options.aesKey is not None:
             options.k = True
 
-        if options.drive is not None and options.drive.isalpha() and len(options.drive) < 2:  # did we get a drive letter?
+        if options.drive is not None and options.drive.isalpha() and len(options.drive) == 1:  # did we get a drive letter?
             drive_letter = str(options.drive).upper()
         else:
             drive_letter = 'Q'
