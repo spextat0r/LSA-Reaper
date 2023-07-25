@@ -1173,7 +1173,7 @@ def alt_exec():
         pass
 
     print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
-    exit(0)
+    sys.exit(0)
 
 
 def exec_wmic(ip, domain):
@@ -1266,7 +1266,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                             pass
 
                         print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
-                        exit(0)
+                        sys.exit(0)
                 continue
             # end of antilocout check
 
@@ -1317,7 +1317,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
     if yn.lower() == 'y':
         return least_common[0]
     else:
-        exit(0)
+        sys.exit(0)
 
 
 def mt_execute(ip, count):  # multithreading requires a function
@@ -1389,7 +1389,7 @@ if __name__ == '__main__':
     # quick checks to see if were good
     if sys.platform != "linux":
         printnlog("[!] This program is Linux only")
-        exit(1)
+        sys.exit(1)
 
     if os.path.isdir(cwd + "/loot") == False:
         os.makedirs(cwd + "/loot")
@@ -1450,7 +1450,7 @@ if __name__ == '__main__':
 
     if os.geteuid() != 0:
         printnlog("[!] Must be run as sudo")
-        exit(1)
+        sys.exit(1)
 
     options = parser.parse_args()
 
@@ -1481,7 +1481,7 @@ if __name__ == '__main__':
     if options.payload == 'dllsideload' and options.method == 'wmiexec':
         cont = input("{}[!]{} Warning you are attempting to run dllsideload via wmiexec which will work, however it will hang until timeout do you want to (c)ontinue, (n)o exit, or (y)es switch to smbexec: ".format(color_YELL, color_reset))
         if cont.lower() == 'n':
-            exit(0)
+            sys.exit(0)
         elif cont.lower() == 'y':
             options.method = 'smbexec'
 
@@ -1549,7 +1549,7 @@ if __name__ == '__main__':
                     printnlog("local IP => " + local_ip)
             except BaseException as exc:
                 printnlog('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
-                exit(0)
+                sys.exit(0)
         else:
             # print local interfaces and ips
             print("")
@@ -1574,7 +1574,7 @@ if __name__ == '__main__':
 
             if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
                 printnlog("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
-                exit(0)
+                sys.exit(0)
 
             if os.path.isfile('{}/hist'.format(cwd)):
                 if options.sh:
@@ -1606,13 +1606,13 @@ if __name__ == '__main__':
 
             if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
                 printnlog("{}[!]{} There are no targets up or the provided list is empty or you skipped all of the targets from previous history.".format(color_RED, color_reset))
-                exit(0)
+                sys.exit(0)
 
             if len(addresses) > 500:  # ensure that they dont waste over 25 gb of storage
                 printnlog("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses) * 52) / 1024)))
                 choice = input("(N/y): ")
                 if choice.lower() == 'n':
-                    exit(0)
+                    sys.exit(0)
 
         share_name, share_user, share_pass, payload_name, share_group = setup_share()  # creates and starts our share
         printnlog("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
@@ -1793,7 +1793,7 @@ if __name__ == '__main__':
             pass
 
         print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
-        exit(0)
+        sys.exit(0)
 
     printnlog("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
