@@ -106,6 +106,7 @@ def printnlog(printlogme):
 
     print(printlogme)
 
+
 if os.path.isfile('{}/indivlog.txt'.format(cwd)):
     os.system('sudo rm {}/indivlog.txt'.format(cwd))
 
@@ -191,7 +192,7 @@ class SMBEXECShell():
         self.__scHandle = resp['lpScHandle']
         self.transferClient = rpc.get_smb_connection()
         self.do_cd('', addr)
-        if command2run == 'net use':  # so auto drive can work since it does not conatin any & symbols
+        if command2run == 'wmic logicaldisk get name ':  # so auto drive can work since it does not conatin any & symbols
             self.send_data(command2run, addr)
         else:
             tmphold = self.send_data(command2run[:command2run.find('&')], addr)
@@ -274,10 +275,14 @@ class SMBEXECShell():
             self.__outputBuffer = b''
             return data_out
         except UnicodeDecodeError:
-            logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
-                          'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
-                          'again with -codec and the corresponding codec')
-            printnlog('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
+            if data != 'wmic logicaldisk get name ':
+                logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
+                              'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
+                              'again with -codec and the corresponding codec')
+                printnlog('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
+            with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
+                f.write(self.__outputBuffer.decode(CODEC, errors='replace')[3:])
+                f.close()
 
         self.__outputBuffer = b''
 
@@ -1171,14 +1176,14 @@ def alt_exec():
     exit(0)
 
 
-def exec_netuse(ip, domain):
+def exec_wmic(ip, domain):
     try:
         if options.method == 'wmiexec':
-            executer = WMIEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.share,
+            executer = WMIEXEC('wmic logicaldisk get name ', username, password, domain, options.hashes, options.aesKey, options.share,
                                False, options.k, options.dc_ip, 'cmd')
             executer.run(ip, False)
         elif options.method == 'smbexec':
-            executer = CMDEXEC('net use', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
+            executer = CMDEXEC('wmic logicaldisk get name ', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
                                'C$', 445, options.service_name, 'cmd')
             executer.run(ip, ip)
     except Exception as e:
@@ -1216,7 +1221,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                     logging.error('{}: {}'.format(addresses[x], str(e)))
                     failed_logons += 1
 
-                if failed_logons >= 3 and options.localauth == False:
+                if failed_logons >= 2 and options.localauth == False:
                     cont = input('{}[!]{} Warning you got the user\'s password wrong on {} machines, you may lock the account out if the password is incorrect and you continue, please validate the password! Do you wish to continue? (y/N) '.format(color_YELL, color_reset, failed_logons))
                     if cont.lower() == 'n':
                         printnlog("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
@@ -1272,7 +1277,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
             if options.localauth:
                 domain = ip
             try:
-                out = thread_exe.schedule(exec_netuse, (ip, domain,), timeout=25)
+                out = thread_exe.schedule(exec_wmic, (ip, domain,), timeout=25)
             except Exception as e:
                 if logging.getLogger().level == logging.DEBUG:
                     import traceback
@@ -1288,17 +1293,12 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
         with open('{}/drives.txt'.format(cwd), 'r') as f:
             data = f.read()
             f.close()
-        outdata = re.findall('[A-Z][:]', data)  # rip out all the A: C: drive letters
+        outdata = re.findall('[A-Z]', data)  # rip out all the A: C: drive letters
+
     except BaseException as e:
         pass
-
-    cleaned_outdata = []
-    for drive in outdata:  # strip the :
-        cleaned_outdata.append(drive.replace(":", ""))
-
     inuse_driveletters = []
-
-    for letter in cleaned_outdata:
+    for letter in outdata:
         if letter not in inuse_driveletters:
             inuse_driveletters.append(letter)
 
@@ -1362,21 +1362,27 @@ def port445_check(interface_ip):
 
     sock.close()
 
+
 def update_chk():
     try:
-        req = requests.get('https://raw.githubusercontent.com/samiam1086/LSA-Reaper/main/lsa-reaper.py')
+        printnlog('{}Checking for updates{}'.format(color_YELL, color_reset))
+        req = requests.get('https://raw.githubusercontent.com/samiam1086/LSA-Reaper/main/lsa-reaper.py', timeout=5)
         reqhash = hashlib.sha256(req.content).hexdigest()
-    
+
         with open(__file__, 'rb') as f:
             dat = f.read()
             f.close
         localhash = hashlib.sha256(dat).hexdigest()
-    
+
         if localhash != reqhash:
-            print('{}WARNING Your LSA-Reaper is out of date{}\n'.format(color_YELL, color_reset))
-    except:
-        print('{}Unable to check for updates{}\n'.format(color_YELL, color_reset))
+            printnlog('{}WARNING Your LSA-Reaper is out of date{}\n'.format(color_YELL, color_reset))
+    except KeyboardInterrupt as e:
+        printnlog('{}Ctrl C detected skipping{}'.format(color_YELL, color_reset))
         pass
+    except:
+        printnlog('{}Unable to check for updates{}\n'.format(color_YELL, color_reset))
+        pass
+
 
 # Process command-line arguments.
 if __name__ == '__main__':
