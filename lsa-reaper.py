@@ -192,7 +192,7 @@ class SMBEXECShell():
         self.__scHandle = resp['lpScHandle']
         self.transferClient = rpc.get_smb_connection()
         self.do_cd('', addr)
-        if command2run == 'wmic logicaldisk get name ':  # so auto drive can work since it does not conatin any & symbols
+        if command2run == 'wmic logicaldisk get caption ':  # so auto drive can work since it does not conatin any & symbols
             self.send_data(command2run, addr)
         else:
             tmphold = self.send_data(command2run[:command2run.find('&')], addr)
@@ -275,13 +275,13 @@ class SMBEXECShell():
             self.__outputBuffer = b''
             return data_out
         except UnicodeDecodeError:
-            if data != 'wmic logicaldisk get name ':
+            if data != 'wmic logicaldisk get caption ':
                 logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                               'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
                               'again with -codec and the corresponding codec')
                 printnlog('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
             with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
-                f.write(self.__outputBuffer.decode(CODEC, errors='replace')[3:])
+                f.write(self.__outputBuffer.decode(CODEC, errors='replace'))
                 f.close()
 
         self.__outputBuffer = b''
@@ -651,10 +651,12 @@ class RemoteShell(cmd.Cmd):
             try:
                 self.__outputBuffer += data.decode(CODEC)
             except UnicodeDecodeError:
-                logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
-                              'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute wmiexec.py '
-                              'again with -codec and the corresponding codec')
+                if logging.getLogger().level == logging.DEBUG and options.drive != None:
+                    logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
+                                  'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute wmiexec.py '
+                                  'again with -codec and the corresponding codec')
                 self.__outputBuffer += data.decode(CODEC, errors='replace')
+
 
         if self.__noOutput is True:
             self.__outputBuffer = ''
@@ -1179,11 +1181,11 @@ def alt_exec():
 def exec_wmic(ip, domain):
     try:
         if options.method == 'wmiexec':
-            executer = WMIEXEC('wmic logicaldisk get name ', username, password, domain, options.hashes, options.aesKey, options.share,
+            executer = WMIEXEC('wmic logicaldisk get caption ', username, password, domain, options.hashes, options.aesKey, options.share,
                                False, options.k, options.dc_ip, 'cmd')
             executer.run(ip, False)
         elif options.method == 'smbexec':
-            executer = CMDEXEC('wmic logicaldisk get name ', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
+            executer = CMDEXEC('wmic logicaldisk get caption ', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
                                'C$', 445, options.service_name, 'cmd')
             executer.run(ip, ip)
     except Exception as e:
@@ -1297,6 +1299,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
     except BaseException as e:
         pass
+
     inuse_driveletters = []
     for letter in outdata:
         if letter not in inuse_driveletters:
