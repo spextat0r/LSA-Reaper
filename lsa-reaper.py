@@ -1204,11 +1204,11 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
         for x in range(2):
             try:
                 if options.method == 'wmiexec':
-                    executer = WMIEXEC('net use ', username, password, domain, options.hashes, options.aesKey, options.share,
+                    executer = WMIEXEC('wmic logicaldisk get caption ', username, password, domain, options.hashes, options.aesKey, options.share,
                                        False, options.k, options.dc_ip, 'cmd')
                     executer.run(addresses[x], False)
                 elif options.method == 'smbexec':
-                    executer = CMDEXEC('net use ', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
+                    executer = CMDEXEC('wmic logicaldisk get caption ', username, password, domain, options.hashes, options.aesKey, options.k, options.dc_ip,
                                        'C$', 445, options.service_name, 'cmd')
                     executer.run(addresses[x], addresses[x])
 
