@@ -3,3 +3,4 @@ netifaces>=0.11.0
 pypykatz>=0.6.6
 minikerberos>=0.4.0
 Pebble>=5.0.2
+requests>=2.31.0
