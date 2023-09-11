@@ -15,7 +15,7 @@ LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](http
 
 [itm4n](https://github.com/itm4n/PPLcontrol) made the RunAsPPL bypass that is used.
 
-[w1u0u1](https://github.com/w1u0u1/minidump/tree/main) made the modified mdwd functionality that is used.
+[Inf0secRabbit]([https://github.com/w1u0u1/minidump/tree/main](https://github.com/Inf0secRabbit/MiniDumpSnapshot)) made the modified mdwd functionality that is used.
 
 
 ## Requirements
@@ -27,10 +27,13 @@ python3 netifaces
 python3 python-nmap
 python3 Pebble
 Samba
+mono-complete
 ```
 
 ## Installation
 ```
+sudo apt-get install samba
+sudo apt-get install mono-complete
 git clone https://github.com/samiam1086/LSA-Reaper.git
 cd LSA-Reaper
 sudo python3 -m pip install -r requirements.txt
