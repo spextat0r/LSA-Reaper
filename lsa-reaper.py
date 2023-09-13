@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import re
 import sys
+import apt
 import cmd
 import time
 import nmap
@@ -1679,6 +1680,31 @@ def update_chk():
         printnlog('{}Unable to check for updates{}\n'.format(color_YELL, color_reset))
         pass
 
+def apt_package_chk():
+    errors = False
+    cache = apt.Cache()
+    try:
+        if cache['samba'].is_installed:
+            pass
+        else:
+            print(color_RED + '[!] ERROR: samba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install samba -y')
+            errors = True
+    except ValueError:
+        print(color_RED + '[!] ERROR: samba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install samba -y')
+        errors = True
+
+    try:
+        if cache['mono-complete'].is_installed:
+            pass
+        else:
+            print(color_RED + '[!] ERROR: mono-complete is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
+            errors = True
+    except ValueError:
+        print(color_RED + '[!] ERROR: samono-completemba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
+        errors = True
+
+    if errors:
+        sys.exit(1)
 
 # Process command-line arguments.
 if __name__ == '__main__':
@@ -1695,6 +1721,7 @@ if __name__ == '__main__':
 
     printnlog(reaper_banner)
     update_chk()
+    apt_package_chk()
     printnlog(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description='', epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs', formatter_class=RawTextHelpFormatter)
