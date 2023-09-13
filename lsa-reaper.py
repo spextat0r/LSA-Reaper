@@ -1788,8 +1788,8 @@ if __name__ == '__main__':
     # Init the example's logger theme
     logger.init(options.ts)
 
-    if '-share' not in sys.argv and options.method == 'wmiexec':  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
-        options.share = 'ADMIN$'
+    #if '-share' not in sys.argv and options.method == 'wmiexec':  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
+        #options.share = 'ADMIN$' # ADMIN$ has been getting flaged as malware with wmiexec so moving it to default to C$
 
     if options.runasppl and options.method != 'smbexec':  # check to see if they are trying to run runasppl bypass with something other than smbexec
         printnlog('{}[!]{} RunAsPPL Bypass only works with the SMBExec method'.format(color_RED, color_reset))
