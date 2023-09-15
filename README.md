@@ -5,7 +5,7 @@
 
 ## WARNING READ ME BEFORE USING
 
-The MSBuild payload and any ending with mdwd will cause explorer to hang indefinatly if the Windows Defender security intelligence is on 1.397.814.0 and a few versions before it (Microsoft made Defender into a DOS) on the latest version it appears to be fixed. This does not seem to affect any of the mdwdpss payloads.
+The MSBuild payload and any ending with mdwd will cause explorer to hang indefinatly if the Windows Defender security intelligence is on 1.397.814.0 and a few versions before it (Microsoft made Defender into a DOS) on the latest version it appears to be fixed (1.393.939.0 or newer). This does not seem to affect any of the mdwdpss payloads.
 
 ## You are responsible for your own actions use this software on your own systems ONLY!
 
