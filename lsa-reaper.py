@@ -888,6 +888,7 @@ def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter
     exe_payload += '            catch (Exception)\n'
     exe_payload += '            {\n'
     exe_payload += '                Console.WriteLine("Error happened");\n'
+    exe_payload += '                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n'
     exe_payload += '            }\n'
     exe_payload += '            return 1;'
 
@@ -1371,6 +1372,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     xml_payload += '            catch (Exception)\n'
     xml_payload += '            {\n'
     xml_payload += '                Console.WriteLine("Error happened");\n'
+    xml_payload += '                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n'
     xml_payload += '            }\n'
 
     xml_payload += '			return true;\n'
