@@ -1874,7 +1874,7 @@ if __name__ == '__main__':
         if plzno.lower() != 'y':
             sys.exit(0)
 
-    if options.payload == 'dllsideload' and options.method == 'wmiexec':
+    if options.payload.find('dllsideload') != -1 and options.method == 'wmiexec':
         cont = input('{}[!]{} Warning you are attempting to run dllsideload via wmiexec which will work, however it will hang until timeout do you want to (c)ontinue, (n)o exit, or (y)es switch to smbexec: '.format(color_YELL, color_reset))
         if cont.lower() == 'n':
             sys.exit(0)
