@@ -1,5 +1,5 @@
 sudo apt-get update
-sudo apt-get install python-apt -y
+sudo apt-get install python3-apt -y
 sudo apt-get install samba -y
 sudo apt-get install mono-complete -y
 sudo python3 -m pip install -r requirements.txt
