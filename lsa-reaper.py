@@ -17,6 +17,7 @@ import fnmatch
 import requests
 import argparse
 import threading
+import ipaddress
 import subprocess
 import collections
 import socket, errno
@@ -2128,7 +2129,11 @@ if __name__ == '__main__':
                             msv_creds_cleaned.append(cred)
                     if len(msv_creds_cleaned) > 0:
                         ip_to_check_against = input('\nEnter an IP to check the accounts against (Preferably a domain controller): ')
-
+                         try: # this ensures that they gave a valid ip address
+                            ipaddress.ip_address(ip_to_check_against)
+                        except ValueError as e:
+                            ip_to_check_against = addresses[0]
+                    
                         printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
                         tried_full = []
                         for item in msv_creds_cleaned:
