@@ -39,6 +39,7 @@ python3-apt
 ```
 sudo apt-get install samba
 sudo apt-get install mono-complete
+sudo apt-get install python3-apt
 git clone https://github.com/samiam1086/LSA-Reaper.git
 cd LSA-Reaper
 sudo python3 -m pip install -r requirements.txt
