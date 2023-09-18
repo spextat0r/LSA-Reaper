@@ -1780,11 +1780,11 @@ def apt_package_chk():
 if __name__ == '__main__':
     # quick checks to see if were good
     if sys.platform != 'linux':
-        printnlog('[!] This program is Linux only')
+        print('[!] This program is Linux only')
         sys.exit(1)
 
     if os.geteuid() != 0:
-        printnlog('[!] Must be run as sudo')
+        print('[!] Must be run as sudo')
         sys.exit(1)
 
     if os.path.isdir('{}/loot'.format(cwd)) == False:
