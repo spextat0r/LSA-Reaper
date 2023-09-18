@@ -19,7 +19,7 @@ LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](http
 
 [itm4n](https://github.com/itm4n/PPLcontrol) made the RunAsPPL bypass that is used.
 
-[Inf0secRabbit]([https://github.com/w1u0u1/minidump/tree/main](https://github.com/Inf0secRabbit/MiniDumpSnapshot)) made the modified mdwd functionality that is used.
+[Inf0secRabbit](https://github.com/Inf0secRabbit/MiniDumpSnapshot) made the modified mdwd functionality that is used.
 
 
 ## Requirements
