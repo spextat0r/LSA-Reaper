@@ -2132,7 +2132,7 @@ if __name__ == '__main__':
                         try: # prevent the user from giving a non ip
                             ipaddress.ip_address(ip_to_check_against)
                         except ValueError as e:
-                            ip_to_check_against = options.target
+                            ip_to_check_against = addresses[0]
 
                         printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
                         tried_full = []
