@@ -116,8 +116,6 @@ def printnlog(printlogme):
 if os.path.isfile('{}/indivlog.txt'.format(cwd)):
     os.system('sudo rm {}/indivlog.txt'.format(cwd))
 
-lognoprint('\n{}{}{}\n'.format(color_PURP, timestamp, color_reset))
-
 
 ################################################ Start of SMBEXEC ###############################################################
 
@@ -1785,11 +1783,17 @@ if __name__ == '__main__':
         printnlog('[!] This program is Linux only')
         sys.exit(1)
 
+    if os.geteuid() != 0:
+        printnlog('[!] Must be run as sudo')
+        sys.exit(1)
+
     if os.path.isdir('{}/loot'.format(cwd)) == False:
         os.makedirs('{}/loot'.format(cwd))
 
     if os.path.isfile('{}/indivlog.txt'.format(cwd)):
         os.system('sudo rm {}/indivlog.txt'.format(cwd))
+
+    lognoprint('\n{}{}{}\n'.format(color_PURP, timestamp, color_reset))
 
     printnlog(reaper_banner)
     if '-sku' not in sys.argv:
@@ -1849,9 +1853,6 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(1)
 
-    if os.geteuid() != 0:
-        printnlog('[!] Must be run as sudo')
-        sys.exit(1)
 
     options = parser.parse_args()
 
