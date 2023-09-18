@@ -32,6 +32,7 @@ python3 python-nmap
 python3 Pebble
 Samba
 mono-complete
+python3-apt
 ```
 
 ## Installation
