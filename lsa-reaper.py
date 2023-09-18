@@ -3,7 +3,6 @@ from __future__ import print_function
 import os
 import re
 import sys
-import apt
 import cmd
 import time
 import nmap
@@ -40,6 +39,12 @@ from impacket.ntlm import compute_lmhash, compute_nthash
 from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
 from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_GSS_NEGOTIATE, RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 from impacket.smbconnection import SMBConnection, SMB_DIALECT, SMB2_DIALECT_002, SMB2_DIALECT_21
+
+try:
+    import apt
+except ModuleNotFoundError:
+    print('Missing python-apt install with sudo apt install python-apt')
+    sys.exit(1)
 
 try:
     import ConfigParser
