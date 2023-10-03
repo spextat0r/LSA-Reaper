@@ -143,3 +143,12 @@ Now that LSA-Reaper is running we can begin to execute each command from the lar
 Now you can press enter to end LSA-Reaper and navigate to the ```loot``` directory within the LSA-Reaper folder and then into the newest loot file. All that is left to do is use pypykatz to dump the DMP file.
 
 ![](/assets/dumped.png)
+
+
+## FAQ
+pypykatz is giving an error ```oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto```
+This is due to oscrypto which is a python module not recognizing a newer version of openssl and a solution can be found [here](https://github.com/wbond/oscrypto/commit/d5f3437ed24257895ae1edd9e503cfb352e635a8) its just a simple regex issue.
+
+
+
+
