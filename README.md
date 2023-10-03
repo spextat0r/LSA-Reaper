@@ -167,7 +167,7 @@ Now you can press enter to end LSA-Reaper and navigate to the ```loot``` directo
 
 ## FAQ
 pypykatz is giving an error ```oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto```
-This is due to oscrypto which is a python module not recognizing a newer version of openssl and a solution can be found [here](https://github.com/wbond/oscrypto/commit/d5f3437ed24257895ae1edd9e503cfb352e635a8) its just a simple regex issue. Removing and reinstall oscrypto did not fix the issue for me I had to manually edit the files shows in that link.
+This is due to oscrypto which is a python module not recognizing a newer version of openssl and a solution can be found [here](https://github.com/wbond/oscrypto/commit/d5f3437ed24257895ae1edd9e503cfb352e635a8) its just a simple regex issue. Removing and reinstalling oscrypto did not fix the issue for me I had to manually edit the files shown in that link.
 
 
 
