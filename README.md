@@ -11,6 +11,17 @@ The MSBuild payload and any ending with mdwd will cause explorer to hang indefin
 
 LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](https://github.com/SecureAuthCorp/impacket) wmiexec, smbexec, or atexec. Bypassing Windows Application Whitelisting through multiple techniques such as MSBuild, RegSvr32, and sideloading a DLL through calc.exe. LSA-Reaper can even bypass the RunAsPPL flag for LSASS.
 
+
+## Index
+[Credits](https://github.com/samiam1086/LSA-Reaper#credits)
+[Requirements](https://github.com/samiam1086/LSA-Reaper#requirements)
+[Installation](https://github.com/samiam1086/LSA-Reaper#installation)
+[Methodology](https://github.com/samiam1086/LSA-Reaper#methodology)
+[Usage](https://github.com/samiam1086/LSA-Reaper#usage)
+[Examples](https://github.com/samiam1086/LSA-Reaper#examples)
+[Usage with Impacket's ntlmrelayx](https://github.com/samiam1086/LSA-Reaper#usage-with-impackets-ntlmrelayx)
+[FAQ](https://github.com/samiam1086/LSA-Reaper#faq)
+
 ## Credits
 
 [Forta](https://github.com/SecureAuthCorp/impacket) for making awesome open source tools.
