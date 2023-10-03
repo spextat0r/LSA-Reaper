@@ -15,19 +15,20 @@ LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](http
 ## Index
 ### [Credits](https://github.com/samiam1086/LSA-Reaper#credits)
 
-[Requirements](https://github.com/samiam1086/LSA-Reaper#requirements)
+### [Requirements](https://github.com/samiam1086/LSA-Reaper#requirements)
 
-[Installation](https://github.com/samiam1086/LSA-Reaper#installation)
+### [Installation](https://github.com/samiam1086/LSA-Reaper#installation)
 
-[Methodology](https://github.com/samiam1086/LSA-Reaper#methodology)
+### [Methodology](https://github.com/samiam1086/LSA-Reaper#methodology)
 
-[Usage](https://github.com/samiam1086/LSA-Reaper#usage)
+### [Usage](https://github.com/samiam1086/LSA-Reaper#usage)
 
-[Examples](https://github.com/samiam1086/LSA-Reaper#examples)
+### [Examples](https://github.com/samiam1086/LSA-Reaper#examples)
 
-[Usage with Impacket's ntlmrelayx](https://github.com/samiam1086/LSA-Reaper#usage-with-impackets-ntlmrelayx)
+### [Usage with Impacket's ntlmrelayx](https://github.com/samiam1086/LSA-Reaper#usage-with-impackets-ntlmrelayx)
 
-[FAQ](https://github.com/samiam1086/LSA-Reaper#faq)
+### [FAQ](https://github.com/samiam1086/LSA-Reaper#faq)
+
 
 
 ## Credits
