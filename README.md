@@ -13,7 +13,7 @@ LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](http
 
 
 ## Index
-[Credits](https://github.com/samiam1086/LSA-Reaper#credits)
+### [Credits](https://github.com/samiam1086/LSA-Reaper#credits)
 
 [Requirements](https://github.com/samiam1086/LSA-Reaper#requirements)
 
