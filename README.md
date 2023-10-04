@@ -7,6 +7,8 @@
 
 The MSBuild payload and any ending with mdwd will cause explorer to hang indefinatly if the Windows Defender security intelligence is on 1.397.814.0 and a few versions before it (Microsoft made Defender into a DOS) on the latest version it appears to be fixed (1.393.939.0 or newer). This does not seem to affect any of the mdwdpss payloads.
 
+I recommend using this tool in a virtual Python environment due to possible dependency conflicts with other popular tools you can find how to set that up [here](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/).
+
 ## You are responsible for your own actions use this software on your own systems ONLY!
 
 LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](https://github.com/SecureAuthCorp/impacket) wmiexec, smbexec, or atexec. Bypassing Windows Application Whitelisting through multiple techniques such as MSBuild, RegSvr32, and sideloading a DLL through calc.exe. LSA-Reaper can even bypass the RunAsPPL flag for LSASS.
