@@ -151,6 +151,7 @@ Now run the command ```net use``` to view if any network drives are mounted on t
 ![](/assets/netuse.png)
 
 Now startup LSA-Reaper with the -oe flag
+sudo python3 lsa-reaper.py -oe -ap
 
 ![](/assets/runningreaper.png)
 
@@ -162,7 +163,7 @@ Now that LSA-Reaper is running we can begin to execute each command from the lar
 
 ![](/assets/dismountshare.png)
 
-Now you can press enter to end LSA-Reaper and navigate to the ```loot``` directory within the LSA-Reaper folder and then into the newest loot file. All that is left to do is use pypykatz to dump the DMP file.
+Now you can press enter to end LSA-Reaper and navigate to the ```loot``` directory within the LSA-Reaper folder and then into the newest loot file. All that is left to do is use pypykatz to dump the DMP file. (Note this step is not required if you use the -ap flag)
 
 ![](/assets/dumped.png)
 
