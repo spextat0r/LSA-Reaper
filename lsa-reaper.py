@@ -1927,7 +1927,7 @@ if __name__ == '__main__':
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
-    parser.add_argument('-payload', '-p', action='store', default='regsvr32-mdwdpss', choices=['msbuild', 'regsvr32-mdwdpss', 'regsvr32-mdwd', 'dllsideload-mdwdpss', 'dllsideload-mdwd', 'exe-mdwdpss', 'exe-mdwd'], help='Choose a payload type')
+    parser.add_argument('-payload', '-p', action='store', default='exe-mdwdpss', choices=['msbuild', 'regsvr32-mdwdpss', 'regsvr32-mdwd', 'dllsideload-mdwdpss', 'dllsideload-mdwd', 'exe-mdwdpss', 'exe-mdwd'], help='Choose a payload type')
     parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-runasppl', action='store_true', default=False, help='Attempts to bypass RunAsPPL (WARNING THIS USES A SYSTEM DRIVER AND INTERACTS AT A KERNEL LEVEL DO NOT USE IN PROD)')
