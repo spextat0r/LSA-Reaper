@@ -211,9 +211,9 @@ class SMBEXECShell():
 
         except BaseException as e:
             if str(e).lower().find('dce') != -1:
-                print('DCE RPC Error')
+                printnlog('DCE RPC Error')
             else:
-                print('Error in here: ' + str(e))
+                printnlog('Error in here: {}'.format(str(e)))
 
 
     def finish(self):
