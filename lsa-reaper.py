@@ -191,23 +191,30 @@ class SMBEXECShell():
 
         # We don't wanna deal with timeouts from now on.
         s.setTimeout(100000)
-
-        self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
-        resp = scmr.hROpenSCManagerW(self.__scmr)
-        self.__scHandle = resp['lpScHandle']
-        self.transferClient = rpc.get_smb_connection()
-        self.do_cd('', addr)
-        if command2run == 'wmic logicaldisk get caption ':  # so auto drive can work since it does not conatin any & symbols
-            self.send_data(command2run, addr)
-        else:
-            tmphold = self.send_data(command2run[:command2run.find('&')], addr)
-            if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred') == -1):  # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares ##
-                command2run = command2run[command2run.find('&&') + 3:]
-                tmphold = self.send_data(command2run[:command2run.find('&')], addr)
-                command2run = command2run[command2run.find('&&') + 3:]
-                tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+        try:
+            self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
+            resp = scmr.hROpenSCManagerW(self.__scmr)
+            self.__scHandle = resp['lpScHandle']
+            self.transferClient = rpc.get_smb_connection()
+            self.do_cd('', addr)
+            if command2run == 'wmic logicaldisk get caption ':  # so auto drive can work since it does not conatin any & symbols
+                self.send_data(command2run, addr)
             else:
-                printnlog('{}: {}'.format(addr, tmphold))
+                tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+                if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred') == -1):  # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares ##
+                    command2run = command2run[command2run.find('&&') + 3:]
+                    tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+                    command2run = command2run[command2run.find('&&') + 3:]
+                    tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+                else:
+                    printnlog('{}: {}'.format(addr, tmphold))
+
+        except BaseException as e:
+            if str(e).lower().find('dce') != -1:
+                print('DCE RPC Error')
+            else:
+                print('Error in here: ' + str(e))
+
 
     def finish(self):
         # Just in case the service is still created
