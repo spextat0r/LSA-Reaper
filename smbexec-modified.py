@@ -67,6 +67,7 @@ SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange
 CODEC = sys.stdout.encoding
 command_failed = False
 
+
 class SMBServer(Thread):
     def __init__(self):
         Thread.__init__(self)
@@ -185,7 +186,7 @@ class RemoteShell(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.__share = share
         self.__mode = mode
-        self.__output = '\\\\127.0.0.1\\' + self.__share + '\\' + OUTPUT_FILENAME
+        self.__output = '\\\\%COMPUTERNAME%\\' + self.__share + '\\' + OUTPUT_FILENAME
         self.__batchFile = '%TEMP%\\' + BATCH_FILENAME
         self.__outputBuffer = b''
         self.__command = ''
@@ -372,7 +373,7 @@ if __name__ == '__main__':
                                                                                                            'service used to trigger the payload')
 
     group = parser.add_argument_group('authentication')
-    
+
     group.add_argument('-localauth', action="store_true", default=False, help='Use local account authentication')
     group.add_argument('-hashes', action="store", metavar="LMHASH:NTHASH", help='NTLM hashes, format is LMHASH:NTHASH')
     group.add_argument('-no-pass', action="store_true", help='don\'t ask for password (useful for -k)')
@@ -429,7 +430,7 @@ if __name__ == '__main__':
 
     if options.aesKey is not None:
         options.k = True
-        
+
     if options.localauth:
         domain = remoteName
 
