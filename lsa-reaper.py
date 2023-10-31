@@ -1597,23 +1597,34 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
+def get_size(path):
+    size = os.path.getsize(path)
+    if size < 1000:
+        return f"{size} bytes"
+    elif size < pow(1000, 2):
+        return f"{round(size / 1000, 2)} KB"
+    elif size < pow(1000, 3):
+        return f"{round(size / (pow(1000, 2)), 2)} MB"
+    elif size < pow(1000, 4):
+        return f"{round(size / (pow(1000, 3)), 2)} GB"
+
 def alt_exec_newfile_printer(): # im aware of the issue with getting the loop to exit at the end of the run youll just have to deal with pressing ctrl c
     file_arr_hist = []
     try:
         while True:
             file_arr = glob.glob('/var/tmp/{}/*.dmp'.format(share_name))
             for file in file_arr:
+                orig_file = file
                 file = file[file.rfind('/')+1:]
                 if file not in file_arr_hist:
                     file_arr_hist.append(file)
-                    printnlog('{}[+]{} New DMP file {}'.format(color_BLU, color_reset, file))
+                    printnlog('{}[+]{} New DMP file {} Size: {}'.format(color_BLU, color_reset, file, get_size(orig_file)))
             time.sleep(3)
 
     except KeyboardInterrupt:
         pass
 
 def alt_exec():
-
 
     thread1 = threading.Thread(target=alt_exec_newfile_printer)
     thread1.start()
