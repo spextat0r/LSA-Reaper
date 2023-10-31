@@ -114,7 +114,7 @@ class RemoteShell():
     def __init__(self, share, rpc, serviceName, shell_type):
 
         self.__share = share
-        self.__output = '\\\\127.0.0.1\\' + self.__share + '\\' + OUTPUT_FILENAME
+        self.__output = '\\\\%COMPUTERNAME%\\' + self.__share + '\\' + OUTPUT_FILENAME
         self.__batchFile = '%TEMP%\\' + BATCH_FILENAME
         self.__outputBuffer = b''
         self.__command = ''
