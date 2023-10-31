@@ -34,7 +34,7 @@
 # Modified to implement a fix for https://github.com/fortra/impacket/issues/777
 # albert-a's fix of 'sed -ri "s|(command\s*\+=.*')del|\1%COMSPEC% /Q /c del|" /usr/share/doc/python3-impacket/examples/smbexec.py'
 # This makes smbexec.py work much better over a relay on ntlmrelayx.py and in general with certain Server 2019 builds of Windows
-#!!# This is a heavily modified version of forta's smbexec.py to allow for a command to be passed from the command line as an argument rather than drop into a shell
+# !!# This is a heavily modified version of forta's smbexec.py to allow for a command to be passed from the command line as an argument rather than drop into a shell
 #
 # Added multithreading to allow for multiple targets to be hit with the same command.
 
@@ -79,6 +79,8 @@ BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randran
 SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 CODEC = sys.stdout.encoding
 command = ''
+
+
 class CMDEXEC:
     def __init__(self, username='', password='', domain='', hashes=None, aesKey=None, doKerberos=None,
                  kdcHost=None, share=None, port=445, serviceName=SERVICE_NAME, shell_type=None):
@@ -124,11 +126,12 @@ class CMDEXEC:
             sys.stdout.flush()
             sys.exit(1)
 
+
 class RemoteShell():
     def __init__(self, share, rpc, serviceName, shell_type, addr):
 
         self.__share = share
-        self.__output = '\\\\127.0.0.1\\' + self.__share + '\\' + OUTPUT_FILENAME
+        self.__output = '\\\\%COMPUTERNAME%\\' + self.__share + '\\' + OUTPUT_FILENAME
         self.__batchFile = '%TEMP%\\' + BATCH_FILENAME
         self.__outputBuffer = b''
         self.__command = ''
@@ -176,7 +179,6 @@ class RemoteShell():
                 if options.unsafe_exec == False and tmphold.find('The command completed successfully') == -1 and tmphold.find('System error 85 has occurred') != -1:
                     command_failed = True
 
-
     def finish(self):
         # Just in case the service is still created
         try:
@@ -201,7 +203,7 @@ class RemoteShell():
         self.execute_remote('cd ')
         if len(self.__outputBuffer) > 0:
             # Stripping CR/LF
-            self.prompt = self.__outputBuffer.decode().replace('\r\n','') + '>'
+            self.prompt = self.__outputBuffer.decode().replace('\r\n', '') + '>'
             if self.__shell_type == 'powershell':
                 self.prompt = 'PS ' + self.prompt + ' '
             self.__outputBuffer = b''
@@ -212,7 +214,6 @@ class RemoteShell():
 
         self.transferClient.getFile(self.__share, OUTPUT_FILENAME, output_callback)
         self.transferClient.deleteFile(self.__share, OUTPUT_FILENAME)
-
 
     def execute_remote(self, data, shell_type='cmd'):
 
@@ -267,6 +268,7 @@ def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan t
 
     return uphosts
 
+
 def mt_execute(ip):  # multithreading requires a function
     print("{} Executing against {}".format(green_plus, ip))
     try:
@@ -281,8 +283,6 @@ def mt_execute(ip):  # multithreading requires a function
         logging.critical(str(e))
         logging.error('{}: {}'.format(ip, str(e)))
         pass
-
-
 
 
 # Process command-line arguments.
@@ -344,7 +344,7 @@ if __name__ == '__main__':
     if os.geteuid() != 0:
         print("[!] Must be run as sudo")
         sys.exit(1)
-        
+
     # Init the example's logger theme
     logger.init(options.ts)
     command = options.command
