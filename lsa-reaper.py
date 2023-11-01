@@ -23,6 +23,7 @@ import subprocess
 import collections
 import socket, errno
 import netifaces as ni
+from threading import Thread
 from base64 import b64encode
 from datetime import datetime
 from pebble import ProcessPool
@@ -35,7 +36,7 @@ from impacket.examples import logger
 from impacket.krb5.keytab import Keytab
 from impacket.dcerpc.v5.dcom import wmi
 from impacket.dcerpc.v5.dtypes import NULL
-from impacket.dcerpc.v5 import tsch, transport
+from impacket.dcerpc.v5 import tsch, transport, scmr
 from impacket.examples.utils import parse_target
 from impacket.ntlm import compute_lmhash, compute_nthash
 from impacket.dcerpc.v5.dcomrt import DCOMConnection, COMVERSION
@@ -58,9 +59,6 @@ try:
 except ImportError:
     import configparser as ConfigParser
 
-from threading import Thread
-from impacket import version, smbserver
-from impacket.dcerpc.v5 import transport, scmr
 
 BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
 SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
