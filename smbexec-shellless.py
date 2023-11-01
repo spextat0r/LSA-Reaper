@@ -227,23 +227,26 @@ class RemoteShell():
             self.__outputBuffer = b''
             return dat_out
         except UnicodeDecodeError:
-            logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
-                          'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
-                          'again with -codec and the corresponding codec')
+            if options.silent == False:
+                logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
+                              'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
+                              'again with -codec and the corresponding codec')
             print(self.__outputBuffer.decode(CODEC, errors='replace'))
         self.__outputBuffer = b''
 
 
 # Process command-line arguments.
 if __name__ == '__main__':
-    print(version.BANNER)
 
-    print('WARNING: The multiple command at once feature is extremely basic and has no error checking besides preventing overwriting of a mounted network drive')
+    if '-silent' not in str(sys.argv):
+        print(version.BANNER)
+        print('WARNING: The multiple command at once feature is extremely basic and has no error checking besides preventing overwriting of a mounted network drive')
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument('target', action='store', help='[[domain/]username[:password]@]<targetName or address>')
     parser.add_argument('command', action='store', help='commandtorun')
+    parser.add_argument('-silent', action='store_true', help='silent mode no banner output or anything')
     parser.add_argument('-share', action='store', default='C$', help='share where the output will be grabbed from '
                                                                      '(default C$)')
     parser.add_argument('-ts', action='store_true', help='adds timestamp to every logging output')
