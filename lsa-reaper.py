@@ -68,7 +68,7 @@ CODEC = sys.stdout.encoding
 today = datetime.now()
 hour = today.strftime("%H")
 ltime = time.localtime(time.time())
-timestamp = '%s-%s-%s_%s-%s-%s' % (str(ltime.tm_year).zfill(2), str(ltime.tm_mon).zfill(2), str(ltime.tm_mday).zfill(2),  str(hour).zfill(2), str(ltime.tm_min).zfill(2), str(ltime.tm_sec).zfill(2))
+timestamp = '%s-%s-%s_%s-%s-%s' % ( str(ltime.tm_mon).zfill(2), str(ltime.tm_mday).zfill(2), str(ltime.tm_year).zfill(2), str(hour).zfill(2), str(ltime.tm_min).zfill(2), str(ltime.tm_sec).zfill(2))
 
 acct_chk_fail = []  # this list is used to track failed login attempts
 acct_chk_valid = []  # this is used to track previously valid accounts
