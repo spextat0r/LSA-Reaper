@@ -64,7 +64,12 @@ BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randran
 SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 OUTPUT_FILENAME = '__' + str(time.time())
 CODEC = sys.stdout.encoding
-timestamp = str(datetime.fromtimestamp(time.time())).replace(' ', '_')
+
+today = datetime.now()
+hour = today.strftime("%H")
+ltime = time.localtime(time.time())
+timestamp = '%s-%s-%s_%s-%s-%s' % (str(ltime.tm_year).zfill(2), str(ltime.tm_mon).zfill(2), str(ltime.tm_mday).zfill(2),  str(hour).zfill(2), str(ltime.tm_min).zfill(2), str(ltime.tm_sec).zfill(2))
+
 acct_chk_fail = []  # this list is used to track failed login attempts
 acct_chk_valid = []  # this is used to track previously valid accounts
 
@@ -1606,6 +1611,15 @@ def alt_exec_exit():
         os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
     except BaseException as e:
         pass
+
+    dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(cwd, timestamp))  # gets a list of all the .dmp file names within the output dir
+    dumped_hosts_fin = []
+    for item in dumped_hosts:
+        dumped_hosts_fin.append(item[item.rfind('/') + 1:item.rfind('.')])  # this substring should make the filename hostname-ip only
+    with open('{}/loot/{}/dumped_hosts.txt'.format(cwd, timestamp), 'w') as f:  # writes the list to a file
+        for host in dumped_hosts_fin:
+            f.write(host + '\n')
+        f.close()
 
     if options.ap:  # autoparse
         printnlog('\n[parsing files]')
