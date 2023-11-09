@@ -74,7 +74,7 @@ color_PURP = '\033[35m'
 color_reset = '\033[0m'
 green_plus = "{}[+]{}".format(color_GRE, color_reset)
 
-OUTPUT_FILENAME = '__output'
+OUTPUT_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 25)))
 BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
 SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
 CODEC = sys.stdout.encoding
