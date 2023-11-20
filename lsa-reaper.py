@@ -1733,6 +1733,9 @@ def alt_exec_newfile_printer(): # im aware of the issue with getting the loop to
                     file_arr_hist.append(file)
                     printnlog('{}[+]{} New DMP file {} Size: {}'.format(color_BLU, color_reset, file, get_size(orig_file)))
             time.sleep(3)
+            if os.path.isfile('{}/exit'.format(cwd)):
+                os.system('sudo rm {}/exit'.format(cwd))
+                break
 
     except KeyboardInterrupt:
         pass
@@ -1795,7 +1798,8 @@ def alt_exec(relayx, reaper_command):
         relayx_dump(reaper_command)
 
     yes = input('Press enter to exit \n')
-
+    os.system('touch {}/exit'.format(cwd))
+    thread1.join()
     alt_exec_exit()
 
 
@@ -2043,6 +2047,9 @@ if __name__ == '__main__':
     if os.geteuid() != 0:
         print('[!] Must be run as sudo')
         sys.exit(1)
+
+    if os.path.isfile('{}/exit'.format(cwd)):
+        os.system('sudo rm {}/exit'.format(cwd))
 
     if os.path.isdir('{}/loot'.format(cwd)) == False:
         os.makedirs('{}/loot'.format(cwd))
