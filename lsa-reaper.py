@@ -62,7 +62,7 @@ except ImportError:
 
 BATCH_FILENAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15))) + '.bat'
 SERVICE_NAME = ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 15)))
-OUTPUT_FILENAME = '__' + str(time.time())
+OUTPUT_FILENAME = '__' + ''.join(random.choices(string.ascii_uppercase, k=random.randrange(8, 17)))
 CODEC = sys.stdout.encoding
 
 today = datetime.now()
