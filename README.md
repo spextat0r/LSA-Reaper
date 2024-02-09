@@ -46,10 +46,15 @@ LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](http
 [Inf0secRabbit](https://github.com/Inf0secRabbit/MiniDumpSnapshot) made the modified mdwd functionality that is used.
 
 ## Dumping Methods 
+
 These are all dumping methods that I have explored a :x: indicates that Windows Defender detects and blocks while a :heavy_check_mark: indicates the method works
+
 comsvcs.dll :x:
+
 MiniDumpWriteDump :x::heavy_check_mark: (might be causing explorer to hang?)
+
 MiniDumpWriteDump + PSSCaptureSnapShot :heavy_check_mark:
+
 SQLDumper.exe :x:
 
 ## Requirements
