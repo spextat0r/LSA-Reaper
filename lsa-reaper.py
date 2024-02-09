@@ -2104,7 +2104,7 @@ def apt_package_chk():
             printnlog(color_RED + '[!] ERROR: mono-complete is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
             errors = True
     except ValueError:
-        printnlog(color_RED + '[!] ERROR: samono-completemba is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
+        printnlog(color_RED + '[!] ERROR: mono-complete is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
         errors = True
 
     if errors:
