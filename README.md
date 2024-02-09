@@ -57,6 +57,10 @@ MiniDumpWriteDump + PSSCaptureSnapShot :heavy_check_mark:
 
 SQLDumper.exe :x:
 
+Procdump.exe :x:
+
+Task Manager :x::heavy_check_mark: (Sometimes works you just need to manually copy the dmp file to save it from deletion)
+
 ## Requirements
 ```
 Linux
