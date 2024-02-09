@@ -1814,7 +1814,6 @@ def relayx_dump(reaper_command):
                 ips = f.read()
                 dumped_ips = ips.split('\n')
         if len(items) > 0:
-            time.sleep(5)
             tmp = result.decode()
             tmp = tmp.replace('[', '')
             tmp = tmp.replace('"', '')
