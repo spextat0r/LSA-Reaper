@@ -2145,7 +2145,7 @@ if __name__ == '__main__':
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-sku', action='store_true', help='Skips the update check (good for if you do not have internet and dont want to wait for it to timeout)')
-    parser.add_argument('-oe', action='store_true', default=False, help='Pause just before the execution of the payload (Good for when you want to execute the payload using other methods)')
+    parser.add_argument('-oe', action='store_true', default=False, help='"Other Exec" Pause just before the execution of the payload (Good for when you want to execute the payload using other methods eg crackmapexec\'s -x)')
     parser.add_argument('-relayx', action='store_true', help='Use ntlmrelayx relays for authentication')
     parser.add_argument('-ap', action='store_true', default=False, help='Turn auto parsing of .dmp files ON this will parse the .dmp files into dumped_full.txt, dumped_full_grep.grep, and dumped_msv.txt')
     parser.add_argument('-av', action='store_true', default=False, help='Turn auto validation of found accounts ON this will try to authenticate to a domain controller using any usernames and NT hashes that were found (Requires -ap)')
