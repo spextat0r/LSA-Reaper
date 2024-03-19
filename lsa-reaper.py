@@ -229,24 +229,24 @@ class SMBEXECShell():
                 # run the command
                 if password != '' and nthash == '': # if we are using a password to authenticate
                     if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
-                        printnlog('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                        printnlog('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
                     else:  # otherwise just log it to the outputfile
-                        lognoprint('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
-                    data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
-    
-                    while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
-                        data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
-                else:# if we are using a nthash to authenticate
-                    
-                    if logging.getLogger().level == logging.DEBUG:  
-                        printnlog('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
-                    else:  # otherwise just log it to the outputfile
-                        lognoprint('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
-                        
-                    data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+                        lognoprint('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                    data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
 
                     while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
-                        data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+                        data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                else:# if we are using a nthash to authenticate
+
+                    if logging.getLogger().level == logging.DEBUG:
+                        printnlog('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+                    else:  # otherwise just log it to the outputfile
+                        lognoprint('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+                        
+                    data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+
+                    while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
+                        data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
 
                 if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
                     printnlog(data_out)
