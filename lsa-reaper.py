@@ -266,9 +266,10 @@ class SMBEXECShell():
                 else:
                     printnlog('You dont seem to have {}/smbexec-shellless.py you should put that in the same directory as lsa-reaper.py as it is required'.format(cwd))
             else:
-                printnlog('Error in here: {}'.format(str(e)))
-                import traceback
-                traceback.print_exc()
+                printnlog('{}: Error in here: {}'.format(addr, str(e)))
+                if logging.getLogger().level == logging.DEBUG:
+                    import traceback
+                    traceback.print_exc()
 
 
 
@@ -2513,7 +2514,13 @@ if __name__ == '__main__':
     #if '-share' not in sys.argv and options.method == 'wmiexec':  # ADMIN$ is the default share for wmiexec wheres C$ is the default for smbexec and we need a way to determine if the user has not provided on to used the default for this
         #options.share = 'ADMIN$' # ADMIN$ has been getting flaged as malware with wmiexec so moving it to default to C$
 
-    if options.method == 'smbexec' or options.relayx:
+    if options.payload == 'msbuild' or options.payload.endswith('mdwd'):
+        yon = input('\n{}WARNING{}: the mdwd payloads used in msbuild and ones ending with -mdwd have caused the Windows OS to crash/hang indefinitely are you sure you wish to continue? (y/N): '.format(color_RED, color_reset))
+        if yon.lower() == 'n':
+            print('Exiting')
+            sys.exit(0)
+
+    if options.method == 'smbexec' or options.relayx: # smbexec required smbexec-shellless to work right
         if os.path.isfile('{}/smbexec-shellless.py'.format(cwd)) == False:
             print('Error you are missing {}/smbexec-shellless.py go get it from github'.format(cwd))
             sys.exit(1)
