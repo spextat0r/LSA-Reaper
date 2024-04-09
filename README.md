@@ -143,7 +143,7 @@ sudo python3 lsa-reaper.py -ip eth0 testdomain/testuser:'P@ssw0rd!'@10.0.0.100 -
 ![](/assets/example.png)
 
 ## Usage with Impacket's ntlmrelayx
-First things first you need to run mitm6 and ntlmrelayx
+First things first you need to run mitm6 and ntlmrelayx NOTE you can skip all of this by using ```-relayx``` and ```-oe```
 
 ![](/assets/mitm6run.png)
 
