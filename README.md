@@ -143,7 +143,7 @@ sudo python3 lsa-reaper.py -ip eth0 testdomain/testuser:'P@ssw0rd!'@10.0.0.100 -
 ![](/assets/example.png)
 
 ## Usage with Impacket's ntlmrelayx
-First things first you need to run mitm6 and ntlmrelayx NOTE you can skip all of this by using ```-relayx``` and ```-oe```
+First things first you need to run mitm6 and ntlmrelayx
 
 ![](/assets/mitm6run.png)
 
@@ -161,7 +161,7 @@ Now we need to modify our proxychains.conf in /etc/ (It may be called proxychain
 
 ![](/assets/proxychains.png)
 
-With this set and saved we can move to LSA-Reaper.
+With this set and saved we can move to LSA-Reaper. NOTE you can skip all of this by using ```-relayx``` and ```-oe``` within lsa-reaper.py
 
 Run smbexec-modified.py through proxychains. (Note that the domain is not the fqdn which should be testenvironment.local for our example. It MUST be what ntlmrelayx puts for the domain in the socks connections)
 
