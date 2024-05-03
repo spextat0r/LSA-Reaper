@@ -235,16 +235,21 @@ class SMBEXECShell():
                             lognoprint('{}: Executing python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\'\n'.format(addr, cwd, domain, username, password, addr, command2run))
 
                         data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
-
+                        retries = 0
                         while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
                             data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
                             if logging.getLogger().level == logging.DEBUG:
                                 printnlog('{}: {}'.format(addr, data_out))
                             else:
                                 lognoprint('{}: {}'.format(addr, data_out))
+                            if retries >= 12:
+                                printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, addr))
+                                break
+                            else:
+                                retries += 1
 
                     else:# if we are using a nthash to authenticate
-
+                        retries = 0
                         if logging.getLogger().level == logging.DEBUG:
                             printnlog('{}: Executing python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\'\n'.format(addr, cwd, domain, username, addr, nthash, command2run))
                         else:  # otherwise just log it to the outputfile
@@ -258,6 +263,11 @@ class SMBEXECShell():
                                 printnlog('{}: {}'.format(addr, data_out))
                             else:
                                 lognoprint('{}: {}'.format(addr, data_out))
+                            if retries >= 12:
+                                printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, addr))
+                                break
+                            else:
+                                retries += 1
 
                     if logging.getLogger().level == logging.DEBUG:
                         printnlog('{}: {}'.format(addr, data_out))
@@ -2130,10 +2140,14 @@ def relayx_dump(reaper_command):
                             lognoprint('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
                         # run the command
                         data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-
+                        retries = 0
                         while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1: # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
                             data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-
+                            if retries >= 12:
+                                printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, relayx_dat[1]))
+                                break
+                            else:
+                                retries += 1
                         if logging.getLogger().level == logging.DEBUG: # if were debugging print the output of smbexec-shellless
                             printnlog(data_out)
                         else: # otherwise just log it to the outputfile
@@ -2141,7 +2155,7 @@ def relayx_dump(reaper_command):
 
                         printnlog('{}[+]{} {}: Completed'.format(color_BLU, color_reset, relayx_dat[1]))
 
-                        if data_out.find('STATUS_ACCESS_DENIED') == -1 and data_out.find('STATUS_LOGON_TYPE_NOT_GRANTED') == -1 and data_out.find('Connection refused') == -1: # make sure it ran right before adding it to dumped ips
+                        if data_out.find('STATUS_ACCESS_DENIED') == -1 and data_out.find('STATUS_LOGON_TYPE_NOT_GRANTED') == -1 and data_out.find('Connection refused') == -1 and retries < 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') == -1: # make sure it ran right before adding it to dumped ips
                             dumped_ips.append(relayx_dat[1]) # add the dumped host to the dumped_ips to prevent it from being run again
                             with open('{}/hist'.format(cwd), 'a') as f: # keep a log of what ips have been dumped
                                 f.write(str(relayx_dat[1]) + '\n')
@@ -2306,7 +2320,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
         if item not in inuse_driveletters and item != 'C' and item != 'D':
             return item
 
-    least_common = collections.Counter(cleaned_outdata).most_common()[-1]
+    least_common = collections.Counter(inuse_driveletters).most_common()[-1][0]
     printnlog('{}[!]{} Between every machine all drive letters are in use'.format(color_YELL, color_reset))
     printnlog('{}[*]{} The least used drive letter is {}: it is available on {}/{} machines\n'.format(color_BLU, color_reset, least_common[0], (len(addresses) - least_common[1]), len(addresses)))
 
