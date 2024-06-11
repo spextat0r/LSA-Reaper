@@ -2619,29 +2619,62 @@ if __name__ == '__main__':
         if options.ip is not None:  # did they give us the local ip in the command line
             local_ip = options.ip
             ifaces = ni.interfaces()
-            try:  # check to see if the interface has an ip
-                if local_ip in ifaces:
-                    local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
-                    printnlog('local IP => ' + local_ip)
-            except BaseException as exc:
-                printnlog('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
-                sys.exit(0)
-        else:
-            # print local interfaces and ips
-            printnlog('')
-            ifaces = ni.interfaces()
-            for face in ifaces:
-                try:  # check to see if the interface has an ip
-                    printnlog('{} {}'.format(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr']))
+            iface_ips = []
+
+            for face in ifaces:  # get all interface ips
+                try:
+                    iface_ips.append(ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
                 except BaseException as exc:
                     continue
 
-            local_ip = input('\nEnter you local ip or interface: ')
+            try:  # check to see if the interface has an ip
+                if local_ip in ifaces:  # if the given ip is one of our interfaces eg. eth0 ,ensp01
+                    local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])  # get the ip address of the interface
+                    printnlog("local IP => {}\n".format(local_ip))
+                elif local_ip in iface_ips:  # if they gave us an ip address for -ip eg 10.10.10.10 this ensures that it is our IP were binding to
+                    printnlog("local IP => {}\n".format(local_ip))
+                else:  # if they gave us something incorrect/weird
+                    printnlog('The interface or IP you specified does not belong to the local machine')
+                    sys.exit(0)
+            except SystemExit:
+                sys.exit(0)
+            except BaseException as exc:  # if the given interface has no ip we end up here
+                printnlog('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
+                sys.exit(0)
+        else:  # no -ip in options
+            # print local interfaces and ips
+            ifaces = ni.interfaces()  # get all interfaces
+            iface_ips = []
+
+            for face in ifaces:  # get the ip for each interface that has one
+                try:
+                    iface_ips.append(ni.ifaddresses(face)[ni.AF_INET][0]['addr'])
+                except BaseException as exc:
+                    continue
+
+            for face in ifaces:
+                try:  # check to see if the interface has an ip
+                    printnlog('{} {}'.format(str(face + ':').ljust(20), ni.ifaddresses(face)[ni.AF_INET][0]['addr']))  # print(interface:      IP)
+                except BaseException as exc:
+                    continue
+
+            local_ip = input("\nEnter you local ip or interface: ")  # what do they want for their interface
 
             # lets you enter eth0 as the ip
-            if local_ip in ifaces:
-                local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
-                printnlog('local IP => ' + local_ip)
+            try:  # check to see if the interface has an ip
+                if local_ip in ifaces:  # if they gave us an interface eg eth0 or ensp01 ensure its ours
+                    local_ip = str(ni.ifaddresses(local_ip)[ni.AF_INET][0]['addr'])
+                    printnlog("local IP => {}\n".format(local_ip))
+                elif local_ip in iface_ips:  # if they gave us an ip ensure its ours
+                    printnlog("local IP => {}\n".format(local_ip))
+                else:  # if they gave us something incorrect/weird
+                    printnlog('The interface or IP you specified does not belong to the local machine')
+                    sys.exit(0)
+            except SystemExit:
+                sys.exit(0)
+            except BaseException as exc:  # if they give an interface that has no IP we end up here
+                printnlog('{}[!!]{} Error could not get that interface\'s address. Does it have an IP?'.format(color_RED, color_reset))
+                sys.exit(0)
 
         port445_check(local_ip)  # check if port 445 is in use
 
