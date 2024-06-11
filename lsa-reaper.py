@@ -2427,8 +2427,8 @@ def apt_package_chk(payload):
             printnlog(color_RED + '[!] ERROR: mingw-w64 is not installed and is required for exe-rtlcp' + color_reset + '\n please install the dependecy with sudo apt-get install mingw-w64 -y')
             errors = True
 
-        if errors:
-            sys.exit(1)
+    if errors:
+        sys.exit(1)
 
 # Process command-line arguments.
 if __name__ == '__main__':
