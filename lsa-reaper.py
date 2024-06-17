@@ -220,7 +220,7 @@ class SMBEXECShell():
 
         except BaseException as e:
             if str(e).lower().find('dce') != -1:
-                printnlog('DCE RPC Error')
+                printnlog('DCE RPC Error' + str(e))
             elif str(e).find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
                 if os.path.isfile('{}/smbexec-shellless.py'.format(cwd)):
                     if logging.getLogger().level == logging.DEBUG: # ok we got the dumb error that I cant track down so were gonna just run smbexec-shellless until it works
