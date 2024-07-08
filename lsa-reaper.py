@@ -1945,7 +1945,7 @@ def setup_share():
     proc.communicate(input=share_pass.encode() + '\n'.encode() + share_pass.encode() + '\n'.encode())
     # restart the smb service
     printnlog('{}[+]{} Restarting the SMB service'.format(color_BLU, color_reset))
-    os.system('sudo systemctl restart smbd')
+    os.system('sudo service smbd restart')
 
     return share_name, share_user, share_pass, payload_name, share_group
 
@@ -2030,7 +2030,7 @@ def alt_exec_exit():
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     try:
-        os.system('sudo systemctl stop smbd')
+        os.system('sudo service smbd stop')
         printnlog(green_plus + ' Stopped the smbd service')
     except BaseException as e:
         pass
@@ -2273,7 +2273,7 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                     if cont.lower() == 'n':
                         printnlog("\n{}[!]{} Cleaning up please wait".format(color_YELL, color_reset))
                         try:
-                            os.system('sudo systemctl stop smbd')
+                            os.system('sudo service smbd stop')
                             printnlog(green_plus + ' Stopped the smbd service')
                         except BaseException as e:
                             pass
@@ -2864,7 +2864,7 @@ if __name__ == '__main__':
             os.system('sudo rm {}/drives.txt'.format(cwd))
 
         try:
-            os.system('sudo systemctl stop smbd')
+            os.system('sudo service smbd stop')
             printnlog(green_plus + ' Stopped the smbd service')
         except BaseException as e:
             pass
@@ -2911,7 +2911,7 @@ if __name__ == '__main__':
         os.system('sudo rm {}/drives.txt'.format(cwd))
 
     try:
-        os.system('sudo systemctl stop smbd')
+        os.system('sudo service smbd stop')
         printnlog(green_plus + ' Stopped the smbd service')
     except BaseException as e:
         pass
