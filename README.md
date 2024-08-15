@@ -43,7 +43,7 @@ LSA-Reaper is a command line remote LSASS dumping tool that uses [Impacket's](ht
 
 [itm4n](https://github.com/itm4n/PPLcontrol) made the RunAsPPL bypass that is used.
 
-[Inf0secRabbit](https://github.com/Inf0secRabbit/MiniDumpSnapshot) made the modified mdwd functionality that is used.
+[Inf0secRabbit](https://github.com/Inf0secRabbit/MiniDumpSnapshot) made the modified mdwd PSSCaptureSnapShot functionality that is used.
 
 [GeneralTesler](https://gist.github.com/GeneralTesler/68903f7eb00f047d32a4d6c55da5a05c) made the RtlCreateProcessReflection payload that I modified.
 
