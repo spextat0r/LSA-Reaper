@@ -11,7 +11,7 @@ I recommend using this tool in a virtual Python environment due to possible depe
 
 ## You are responsible for your own actions use this software on your own systems ONLY!
 
-LSA-Reaper is a command line remote LSA dumping tool that uses [Impacket's](https://github.com/SecureAuthCorp/impacket) wmiexec, smbexec, or atexec. Bypassing Windows Application Whitelisting through multiple techniques such as MSBuild, RegSvr32, and sideloading a DLL through calc.exe. LSA-Reaper can even bypass the RunAsPPL flag for LSASS.
+LSA-Reaper is a command line remote LSASS dumping tool that uses [Impacket's](https://github.com/SecureAuthCorp/impacket) wmiexec, smbexec, or atexec. Bypassing Windows Application Whitelisting through multiple techniques such as MSBuild, RegSvr32, and sideloading a DLL through calc.exe. LSA-Reaper can even bypass the RunAsPPL flag for LSASS.
 
 
 ## Index
@@ -101,7 +101,7 @@ sudo sh setup.sh
 ```
 
 ## Methodology
-LSA-Reaper will begin by ping sweeping all provided IPs or IP ranges for alive hosts. LSA-Reaper will then create a SMB share with a random username and password that will act as the exfiltration point. LSA-Reaper will then execute the net use command on the victim machine via wmiexec or atexec to make the victim machine mount the share as a network drive and then execute msbuild, regsvr32, calc.exe, or an EXE file to execute the payload which will dump LSA and save it to the mounted SMB share.
+LSA-Reaper will begin by ping sweeping all provided IPs or IP ranges for alive hosts. LSA-Reaper will then create a SMB share with a random username and password that will act as the exfiltration point. LSA-Reaper will then execute the net use command on the victim machine via wmiexec or atexec to make the victim machine mount the share as a network drive and then execute msbuild, regsvr32, calc.exe, or an EXE file to execute the payload which will dump LSASS and save it to the mounted SMB share.
 
 ## Usage
 ```
