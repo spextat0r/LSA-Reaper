@@ -2402,7 +2402,7 @@ def port445_check(interface_ip):
         sock.bind((interface_ip, 445))
     except socket.error as e:
         if e.errno == errno.EADDRINUSE:
-            printnlog('{} Port 445 is already in use'.format(red_minus))
+            printnlog('{} Port 445 is already in use\nTry running "sudo netstat -plnt | grep 445" or "sudo ss -plnt | grep 445" to see active listening ports'.format(red_minus))
             sys.exit(0)
         else:
             # something else raised the socket.error exception
