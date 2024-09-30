@@ -315,19 +315,22 @@ class SMBEXECShell():
 
             self.__outputBuffer = b''
 
-    def get_output(self):
+    def get_output(self, addr):
         def output_callback(data):
             self.__outputBuffer += data
 
         while True: # this fixes the STATUS_SHARING_VIOLATION error thx Kyle <3
             try:
+                lognoprint('{}: Getting the bat file'.format(addr))
                 self.transferClient.getFile(self.__share, OUTPUT_FILENAME, output_callback)
                 break  # Exit the loop if getFile is successful
             except Exception as e:
+                lognoprint('{}: Failed to get the bat file'.format(addr))
                 time.sleep(5)
 
             # This line will only be reached if the file is successfully retrieved
         self.transferClient.deleteFile(self.__share, OUTPUT_FILENAME)
+        lognoprint('{}: Deleted the bat file'.format(addr))
 
     def execute_remote(self, data, addr, shell_type='cmd'):
 
@@ -349,7 +352,7 @@ class SMBEXECShell():
             pass
         scmr.hRDeleteService(self.__scmr, service)
         scmr.hRCloseServiceHandle(self.__scmr, service)
-        self.get_output()
+        self.get_output(addr)
 
     def send_data(self, data, addr):
         self.execute_remote(data, addr, self.__shell_type)
