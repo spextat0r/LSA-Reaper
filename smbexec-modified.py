@@ -290,8 +290,16 @@ class RemoteShell(cmd.Cmd):
             self.__outputBuffer += data
 
         if self.__mode == 'SHARE':
-            self.transferClient.getFile(self.__share, OUTPUT_FILENAME, output_callback)
+            while True:  # this fixes the STATUS_SHARING_VIOLATION error thx Kyle <3
+                try:
+                    self.transferClient.getFile(self.__share, OUTPUT_FILENAME, output_callback)
+                    break  # Exit the loop if getFile is successful
+                except Exception as e:
+                    time.sleep(5)
+                    
+                # This line will only be reached if the file is successfully retrieved
             self.transferClient.deleteFile(self.__share, OUTPUT_FILENAME)
+            
         else:
             fd = open(SMBSERVER_DIR + '/' + OUTPUT_FILENAME, 'r')
             output_callback(fd.read())
