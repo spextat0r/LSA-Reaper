@@ -17,6 +17,7 @@ import logging
 import fnmatch
 import requests
 import argparse
+import readline
 import ipaddress
 import threading
 import subprocess
