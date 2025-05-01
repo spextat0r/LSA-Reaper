@@ -43,6 +43,7 @@ from __future__ import print_function
 import sys
 import os
 import cmd
+import time
 import random
 import string
 import argparse
@@ -221,7 +222,6 @@ class RemoteShell():
 
             # This line will only be reached if the file is successfully retrieved
         self.transferClient.deleteFile(self.__share, OUTPUT_FILENAME)
-        
 
     def execute_remote(self, data, shell_type='cmd'):
 
