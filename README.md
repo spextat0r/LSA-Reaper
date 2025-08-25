@@ -195,17 +195,27 @@ Now you can press enter to end LSA-Reaper and navigate to the ```loot``` directo
 pypykatz is giving an error ```oscrypto.errors.LibraryNotFoundError: Error detecting the version of libcrypto```
 This is due to oscrypto which is a python module not recognizing a newer version of openssl and a solution can be found [here](https://github.com/wbond/oscrypto/commit/d5f3437ed24257895ae1edd9e503cfb352e635a8) its just a simple regex issue. Removing and reinstalling oscrypto did not fix the issue for me I had to manually edit the files shown in that link.
 
-Mingw is giving the error ```/var/tmp/muyoirqjosamtwtepspv/pl.cpp: In function ‘int main()’:
-/var/tmp/muyoirqjosamtwtepspv/pl.cpp:122:10: error: ‘std::this_thread’ has not been declared
-  122 |     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-      |          ^~~
-/var/tmp/muyoirqjosamtwtepspv/pl.cpp:124:10: error: ‘std::this_thread’ has not been declared
-  124 |     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      |          ^~~
-/var/tmp/muyoirqjosamtwtepspv/pl.cpp:126:10: error: ‘std::this_thread’ has not been declared
-  126 |     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-      |          ^~~
-chmod: cannot access '/var/tmp/muyoirqjosamtwtepspv/ckjocxgkvf.exe': No such file or directory```
+Mingw is giving the error ```/var/tmp/muyoirqjosamtwtepspv/pl.cpp: In function ‘int main()’:```
+
+```/var/tmp/muyoirqjosamtwtepspv/pl.cpp:122:10: error: ‘std::this_thread’ has not been declared```
+ 
+ ``` 122 |     std::this_thread::sleep_for(std::chrono::milliseconds(2000));```
+
+     ``` |          ^~~```
+
+```/var/tmp/muyoirqjosamtwtepspv/pl.cpp:124:10: error: ‘std::this_thread’ has not been declared```
+ 
+  ```124 |     std::this_thread::sleep_for(std::chrono::milliseconds(1000));```
+    
+   ```   |          ^~~```
+
+```/var/tmp/muyoirqjosamtwtepspv/pl.cpp:126:10: error: ‘std::this_thread’ has not been declared```
+  
+```  126 |     std::this_thread::sleep_for(std::chrono::milliseconds(3000));```
+     
+    ```  |          ^~~```
+
+```chmod: cannot access '/var/tmp/muyoirqjosamtwtepspv/ckjocxgkvf.exe': No such file or directory```
 This is due to mingw being very out of date and you can update it with 
 ```sudo apt update```
 ```sudo apt install mingw-w64```
