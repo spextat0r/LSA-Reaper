@@ -198,25 +198,15 @@ This is due to oscrypto which is a python module not recognizing a newer version
 Mingw is giving the error
 ``` 
 /var/tmp/muyoirqjosamtwtepspv/pl.cpp: In function ‘int main()’:
-
 /var/tmp/muyoirqjosamtwtepspv/pl.cpp:122:10: error: ‘std::this_thread’ has not been declared
-
   122 |     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-
       |          ^~~
-
 /var/tmp/muyoirqjosamtwtepspv/pl.cpp:124:10: error: ‘std::this_thread’ has not been declared
-
   124 |     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
       |          ^~~
-
 /var/tmp/muyoirqjosamtwtepspv/pl.cpp:126:10: error: ‘std::this_thread’ has not been declared
-
   126 |     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-
       |          ^~~
-
 chmod: cannot access '/var/tmp/muyoirqjosamtwtepspv/ckjocxgkvf.exe': No such file or directory
 ```
 This is due to mingw being very out of date and you can update it with 
