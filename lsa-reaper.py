@@ -903,6 +903,11 @@ def do_ip(inpu, local_ip):  # check if the inputted ips are up so we dont scan t
     except:
         pass
 
+    try:
+        uphosts.remove('127.0.0.1')  # nmap package updated, and now it adds 127.0.0.1 even if it was not in the list we gave ¯\_(ツ)_/¯
+    except:
+        pass
+
     printnlog('[scan complete]')
 
     return uphosts
@@ -3032,7 +3037,7 @@ def apt_package_chk(payload):
         errors = True
 
     try:
-        if cache['mono-complete'].is_installed:
+        if cache['mono-devel'].is_installed or cache['mono-complete'].is_installed:
             pass
         else:
             printnlog(color_RED + '[!] ERROR: mono-complete is not installed ' + color_reset + '\n please install the dependecy with sudo apt-get install mono-complete -y')
